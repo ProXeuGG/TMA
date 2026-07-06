@@ -26,9 +26,23 @@ module.exports = async (req, res) => {
         const cachedData = await redis.get('minecraft_stats');
         const minecraftStats = cachedData ? JSON.parse(cachedData) : { message: "Данных пока нет" };
 
+        // ИЗМЕНЕНИЕ: Парсим Telegram ID пользователя для проверки на админа
+        const initData = new URLSearchParams(authData);
+        const userRaw = initData.get('user');
+        let isAdmin = false;
+
+        if (userRaw) {
+            const tgUser = JSON.parse(userRaw);
+            // Сверяем ID с администраторским из переменных среды Vercel
+            if (tgUser.id && tgUser.id.toString() === process.env.ADMIN_TELEGRAM_ID) {
+                isAdmin = true;
+            }
+        }
+
         return res.status(200).json({
             status: 'success',
             user: 'authorized',
+            isAdmin: isAdmin, // Передаем статус админа на фронтенд
             serverData: minecraftStats
         });
     } catch (error) {
