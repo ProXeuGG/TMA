@@ -1,4 +1,9 @@
-export default async function handler(req, res) {
+const Redis = require('ioredis');
+
+// Подключаемся к базе напрямую через готовую переменную REDIS_URL
+const redis = new Redis(process.env.REDIS_URL);
+
+module.exports = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -10,29 +15,11 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Проверяем, что переменные базы вообще существуют
-        if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-            return res.status(500).json({ error: 'Переменные KV базы данных не найдены. Сделай передеплой проекта!' });
-        }
-
-        // Самый надежный формат отправки в Redis (массивом команд)
-        const kvRes = await fetch(process.env.KV_REST_API_URL, {
-            method: 'POST',
-            headers: { 
-                Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(['SET', 'minecraft_stats', JSON.stringify(data)])
-        });
-
-        const kvResult = await kvRes.json();
-        
-        if (kvResult.error) {
-            return res.status(500).json({ error: `Ошибка Redis: ${kvResult.error}` });
-        }
+        // Сохраняем данные в Redis как строку
+        await redis.set('minecraft_stats', JSON.stringify(data));
 
         return res.status(200).json({ status: 'success', message: 'Данные успешно синхронизированы!' });
     } catch (error) {
-        return res.status(500).json({ error: `Критический сбой KV: ${error.message}` });
+        return res.status(500).json({ error: `Ошибка базы Redis: ${error.message}` });
     }
-}
+};
