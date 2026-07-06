@@ -1,72 +1,29 @@
-const Redis = require('ioredis');
+import { Redis } from '@upstash/redis';
 
-module.exports = async (req, res) => {
-    // 1. Сразу отсекаем неверные методы. GET больше не вызовет падение!
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
-    }
+const redis = Redis.fromEnv();
 
-    // 2. Проверяем наличие критически важных переменных в Vercel
-    if (!process.env.REDIS_URL) {
-        return res.status(500).json({ 
-            error: 'Ошибка конфигурации Vercel', 
-            details: 'Переменная окружения REDIS_URL отсутствует в настройках проекта!' 
-        });
-    }
-    if (!process.env.MINECRAFT_SECRET_KEY) {
-        return res.status(500).json({ 
-            error: 'Ошибка конфигурации Vercel', 
-            details: 'Переменная окружения MINECRAFT_SECRET_KEY отсутствует в настройках проекта!' 
-        });
-    }
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Метод запрещен' });
 
-    const { secret } = req.body || {};
+    const { secret } = req.body;
 
-    // 3. Проверяем секретный ключ плагина
+    // Проверяем секретный ключ
     if (!secret || secret !== process.env.MINECRAFT_SECRET_KEY) {
-        return res.status(403).json({ error: 'Forbidden: Invalid Secret Key' });
+        return res.status(401).json({ error: 'Неверный секретный ключ' });
     }
-
-    let redis;
 
     try {
-        // 4. Безопасно инициализируем Redis прямо внутри try-catch
-        redis = new Redis(process.env.REDIS_URL, {
-            maxRetriesPerRequest: 0,
-            connectTimeout: 3000 // Ждем подключения не более 3 секунд
-        });
+        // Забираем (вырезаем) первую команду из очереди в Redis
+        const actionData = await redis.lpop('mc_action_queue');
 
-        // Перехватываем внутренние ошибки коннекта
-        redis.on('error', (err) => {
-            console.error('Redis internal error:', err.message);
-        });
-
-        // 5. Пытаемся забрать команду
-        const cmd = await redis.rpop('minecraft_cmd_queue');
-        
-        // Корректно закрываем соединение, чтобы не плодить утечки в Serverless
-        await redis.quit();
-
-        if (cmd) {
-            return res.status(200).json({
-                status: 'success',
-                actionData: cmd
-            });
+        if (actionData) {
+            // Если команда есть, отдаем её плагину Майнкрафта
+            return res.status(200).json({ status: 'success', actionData });
         }
 
-        return res.status(200).json({ status: 'empty' });
-
+        // Если кнопок никто не нажимал, говорим плагину "команд нет"
+        return res.status(200).json({ status: 'no_actions' });
     } catch (error) {
-        // Если что-то пошло не так, принудительно тушим коннект, если он успел создаться
-        if (redis) {
-            try { redis.disconnect(); } catch (e) {}
-        }
-
-        // Возвращаем детальную ошибку текстом в JSON, а не ломаем функцию
-        return res.status(500).json({ 
-            error: 'Критическая ошибка выполнения функции', 
-            message: error.message,
-            stack: error.stack
-        });
+        return res.status(500).json({ error: error.message });
     }
-};
+}
