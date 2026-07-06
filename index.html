@@ -22,7 +22,7 @@
     <!-- Верхушка панели -->
     <div class="flex items-center justify-between mb-5 border-b border-zinc-800/80 pb-4">
         <div>
-            <h1 class="text-lg font-bold text-white tracking-wide">ProfCraft Panel v2</h1>
+            <h1 class="text-lg font-bold text-white tracking-wide">ProfCraft Panel</h1>
             <p id="server-v" class="text-[10px] text-zinc-500 font-mono">Версия: загрузка...</p>
         </div>
         <div class="flex items-center gap-2">
@@ -32,7 +32,7 @@
 
     <!-- ТАБЫ (ВКЛАДКИ) -->
     <main>
-        <!-- Вкладка 1: Главная (Метрики и Плашка) -->
+        <!-- Вкладка 1: Главная -->
         <div id="tab-dash" class="tab-content active space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-zinc-900/40 border border-zinc-800 p-3 rounded-xl backdrop-blur-sm">
@@ -59,14 +59,13 @@
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-2">
                 <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">📱 ТГ Плашка (Пост в группу)</h3>
                 <div class="flex flex-col gap-2">
-                    <textarea id="ann-input" rows="2" placeholder="Введите текст постоянной плашки для Telegram..." 
+                    <textarea id="ann-input" rows="2" placeholder="Введите text постоянной плашки для Telegram..." 
                               class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300"></textarea>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="saveAnnouncement()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-medium transition active:scale-95">Сохранить текст</button>
                         <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 py-2 rounded-lg text-xs font-medium transition active:scale-95">Стереть плашку</button>
                     </div>
                 </div>
-                <!-- Кнопка принудительного обновления всей инфы на плашке -->
                 <button onclick="forceRefreshAnnouncement()" class="w-full bg-zinc-900/80 border border-dashed border-zinc-700/60 hover:border-indigo-500/50 text-indigo-400 hover:text-indigo-300 py-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
                     🔄 Принудительно обновить данные на плашке
                 </button>
@@ -84,7 +83,6 @@
         <!-- Вкладка 3: Цитаты -->
         <div id="tab-quotes" class="tab-content space-y-4">
             <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">💬 Управление цитатами</h2>
-            
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-3">
                 <h3 class="text-xs font-semibold text-zinc-500 uppercase">Добавить новую цитату</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -93,7 +91,6 @@
                 </div>
                 <button onclick="addQuote()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-medium transition">Добавить</button>
             </div>
-
             <div id="quotes-list" class="space-y-2.5">
                 <p class="text-xs text-zinc-500 italic">Загрузка списка цитат...</p>
             </div>
@@ -138,26 +135,22 @@
                     <button onclick="sendConsoleCommand()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Выполнить</button>
                 </div>
             </div>
+
+            <!-- ОКНО ДЕБАГА (ПОМОЖЕТ НАЙТИ ОШИБКУ В JAVA) -->
+            <div class="bg-zinc-900/30 border border-amber-900/40 p-4 rounded-xl">
+                <h3 class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">🐛 JSON отладки игроков (Скинь это мне)</h3>
+                <pre id="debug-json" class="text-[10px] bg-black p-3 rounded border border-zinc-800 text-emerald-400 overflow-x-auto font-mono max-h-40">Ожидание данных от сервера...</pre>
+            </div>
         </div>
     </main>
 
     <!-- НАВИГАЦИЯ -->
     <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/80 p-2 flex justify-around items-center backdrop-blur-md z-50">
-        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium tg-btn-active">
-            <span>📊</span>Главная
-        </button>
-        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium">
-            <span>👥</span>Игроки
-        </button>
-        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium">
-            <span>💬</span>Цитаты
-        </button>
-        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium">
-            <span>🏆</span>Топ
-        </button>
-        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium">
-            <span>⚙️</span>Система
-        </button>
+        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium tg-btn-active"><span>📊</span>Главная</button>
+        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>👥</span>Игроки</button>
+        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>💬</span>Цитаты</button>
+        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>🏆</span>Топ</button>
+        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>⚙️</span>Система</button>
     </div>
 
     <script>
@@ -171,20 +164,15 @@
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
 
         const metricTranslations = {
-            "blocks_broken": "⛏️ Разрушено блоков",
-            "player_kills": "⚔️ Убито игроков",
-            "mob_kills": "🦁 Истреблено мобов",
-            "deaths": "💀 Количество смертей",
-            "time_played": "⏱️ Время на сервере",
-            "jumps": "🦘 Совершено прыжков",
-            "damage_dealt": "💥 Нанесено урона",
-            "fish_caught": "🎣 Поймано рыбы"
+            "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
+            "mob_kills": "🦁 Истреблено мобов", "deaths": "💀 Количество смертей",
+            "time_played": "⏱️ Время на сервере", "jumps": "🦘 Совершено прыжков",
+            "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.fixed button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
-            
             document.getElementById(`tab-${tabId}`).classList.add('active');
             btn.classList.add('tg-btn-active');
             tg.HapticFeedback.impactOccurred('light');
@@ -207,20 +195,18 @@
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
                 tpsBadge.innerText = `TPS: ${tps}`;
-                
-                if(tps < 15) {
-                    tpsBadge.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-red-950/50 text-red-400 border border-red-800/50";
-                } else {
-                    tpsBadge.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50";
-                }
+                tpsBadge.className = tps < 15 ? "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-red-950/50 text-red-400 border border-red-800/50" : "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50";
 
                 document.getElementById('server-v').innerText = `Ядро: ${statsRes.data.version} | WL: ${statsRes.data.whitelist ? 'Вкл' : 'Выкл'}`;
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
                 const playersRes = await axios.get(`${API_URL}/api/players`);
-                const listDiv = document.getElementById('players-list');
                 
+                // Выводим сырой ответ в поле дебага
+                document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
+
+                const listDiv = document.getElementById('players-list');
                 const openedCards = [];
                 document.querySelectorAll('[id^="details-"]').forEach(el => {
                     if(!el.classList.contains('hidden')) openedCards.push(el.id);
@@ -234,81 +220,76 @@
                     playersRes.data.forEach(p => {
                         const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
                         
-                        // --- ИСПРАВЛЕНИЕ КООРДИНАТ (Умный разбор структуры) ---
+                        // Парсинг координат
                         let coordsStr = 'Не определено';
-                        if (typeof p.x !== 'undefined' && p.x !== null) {
-                            coordsStr = `${p.x} / ${p.y} / ${p.z}`;
-                        } else if (p.location && typeof p.location.x !== 'undefined') {
-                            // На случай, если в Java-классе координаты лежат внутри объекта location
-                            coordsStr = `${p.location.x} / ${p.location.y} / ${p.location.z}`;
-                        } else if (p.coords && typeof p.coords.x !== 'undefined') {
-                            // На случай, если объект называется coords
-                            coordsStr = `${p.coords.x} / ${p.coords.y} / ${p.coords.z}`;
-                        }
+                        if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
+                        else if (p.location && typeof p.location.x !== 'undefined') coordsStr = `${Math.round(p.location.x)} / ${Math.round(p.location.y)} / ${Math.round(p.location.z)}`;
+                        else if (p.coords && typeof p.coords.x !== 'undefined') coordsStr = `${Math.round(p.coords.x)} / ${Math.round(p.coords.y)} / ${Math.round(p.coords.z)}`;
 
-                        // --- ИСПРАВЛЕНИЕ УРОВНЯ ОПЫТА (Умный разбор ключей) ---
+                        // Парсинг опыта
                         let playerXp = 0;
                         if (typeof p.xp !== 'undefined' && p.xp !== null) playerXp = p.xp;
                         else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
                         else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
+                        // Всеядный вывод голов (если аватарка падает в ошибку, подменяем на универсальный скин)
+                        const pName = p.name || "Steve";
+                        const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
+
                         listDiv.innerHTML += `
                             <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden">
-                                <div onclick="togglePlayerCard('${p.name}')" class="p-3 flex items-center justify-between hover:bg-zinc-800/20 transition cursor-pointer">
+                                <div onclick="togglePlayerCard('${pName}')" class="p-3 flex items-center justify-between hover:bg-zinc-800/20 transition cursor-pointer">
                                     <div class="flex items-center gap-2.5">
-                                        <img src="https://minotar.net/avatar/${p.name}/32" class="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700/50">
+                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700/50">
                                         <div>
-                                            <p class="font-bold text-sm text-zinc-100">${p.name}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world} | Ping: ${p.ping}ms</p>
+                                            <p class="font-bold text-sm text-zinc-100">${pName}</p>
+                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world || 'world'} | Ping: ${p.ping || 0}ms</p>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <span class="text-xs font-semibold text-rose-400">❤️ ${p.health}</span>
-                                        <p class="text-[9px] text-zinc-500 font-mono">Нажмите для опций</p>
+                                        <span class="text-xs font-semibold text-rose-400">❤️ ${Math.round(p.health || 20)}</span>
+                                        <p class="text-[9px] text-zinc-500 font-mono">Опции</p>
                                     </div>
                                 </div>
 
-                                <div id="details-${p.name}" class="${isHidden} p-3 border-t border-zinc-800/50 bg-zinc-950/30 space-y-3">
-                                    
+                                <div id="details-${pName}" class="${isHidden} p-3 border-t border-zinc-800/50 bg-zinc-950/30 space-y-3">
                                     <div class="grid grid-cols-1 gap-1 text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/40 font-mono">
                                         <p class="text-zinc-400 flex justify-between"><span>Координаты:</span> <span class="text-zinc-200 text-[10px]">${coordsStr}</span></p>
                                         <p class="text-zinc-400 flex justify-between"><span>Сытость:</span> <span class="text-amber-400">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
                                         <p class="text-zinc-400 flex justify-between"><span>Уровень XP:</span> <span class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
-                                        <p class="text-zinc-400 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 uppercase font-bold">${p.gamemode}</span></p>
+                                        <p class="text-zinc-400 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 uppercase font-bold">${p.gamemode || 'SURVIVAL'}</span></p>
                                     </div>
 
                                     <div class="space-y-1">
                                         <p class="text-[10px] text-zinc-500 uppercase font-bold">Установить режим:</p>
                                         <div class="grid grid-cols-4 gap-1">
-                                            <button onclick="quickAction('gamemode creative ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Креатив</button>
-                                            <button onclick="quickAction('gamemode survival ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Выжив.</button>
-                                            <button onclick="quickAction('gamemode adventure ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Прикл.</button>
-                                            <button onclick="quickAction('gamemode spectator ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Наблюд.</button>
+                                            <button onclick="quickAction('gamemode creative ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Креатив</button>
+                                            <button onclick="quickAction('gamemode survival ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Выжив.</button>
+                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Прикл.</button>
+                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Наблюд.</button>
                                         </div>
                                     </div>
 
                                     <div class="space-y-1">
-                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Отправить личное сообщение (ЛС):</p>
+                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Личное сообщение:</p>
                                         <div class="flex gap-1.5">
-                                            <input type="text" id="msg-${p.name}" placeholder="Сообщение для ${p.name}..." class="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
-                                            <button onclick="sendPrivateMsg('${p.name}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium">ЛС</button>
+                                            <input type="text" id="msg-${pName}" placeholder="Сообщение..." class="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
+                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium">ЛС</button>
                                         </div>
                                     </div>
 
                                     <div class="grid grid-cols-3 gap-1.5 pt-1">
-                                        <button onclick="quickAction('op ${p.name}')" class="bg-zinc-950 border border-emerald-900/50 text-emerald-400 text-[10px] font-medium py-1.5 rounded hover:bg-emerald-950/20">Выдать OP</button>
-                                        <button onclick="quickAction('deop ${p.name}')" class="bg-zinc-950 border border-amber-900/50 text-amber-400 text-[10px] font-medium py-1.5 rounded hover:bg-amber-950/20">Забрать OP</button>
-                                        <button onclick="kickPlayerPrompt('${p.name}')" class="bg-red-950/20 border border-red-900/40 text-red-400 text-[10px] font-medium py-1.5 rounded hover:bg-red-900/30">Кикнуть</button>
+                                        <button onclick="quickAction('op ${pName}')" class="bg-zinc-950 border border-emerald-900/50 text-emerald-400 text-[10px] font-medium py-1.5 rounded">OP</button>
+                                        <button onclick="quickAction('deop ${pName}')" class="bg-zinc-950 border border-amber-900/50 text-amber-400 text-[10px] font-medium py-1.5 rounded">DeOP</button>
+                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-red-950/20 border border-red-900/40 text-red-400 text-[10px] font-medium py-1.5 rounded">Кикнуть</button>
                                     </div>
                                 </div>
                             </div>
                         `;
                     });
                 }
-            } catch (err) {
-                console.error("Ошибка обновления данных панели", err);
-            }
+            } catch (err) { console.error("Ошибка обновления данных панели", err); }
         }
 
         async function sendPrivateMsg(playerName) {
@@ -321,10 +302,8 @@
         }
 
         function kickPlayerPrompt(playerName) {
-            const reason = prompt(`Причина кика для ${playerName}:`, "Кикнут администратором через Mini App");
-            if (reason !== null) {
-                quickAction(`kick ${playerName} ${reason}`);
-            }
+            const reason = prompt(`Причина кика для ${playerName}:`, "Кикнут через Mini App");
+            if (reason !== null) quickAction(`kick ${playerName} ${reason}`);
         }
 
         async function loadAnnouncement() {
@@ -332,7 +311,7 @@
             try {
                 const res = await axios.get(`${API_URL}/api/announcement`);
                 document.getElementById('ann-input').value = res.data.announcement || '';
-            } catch(err) { console.error("Ошибка загрузки плашки", err); }
+            } catch(err) { console.error(err); }
         }
 
         async function saveAnnouncement() {
@@ -340,8 +319,8 @@
             try {
                 await axios.post(`${API_URL}/api/announcement`, { text: text });
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Текст плашки успешно сохранен!");
-            } catch(err) { alert("Ошибка сохранения текста плашки"); }
+                alert("Успешно сохранено!");
+            } catch(err) { alert("Ошибка сохранения"); }
         }
 
         async function clearAnnouncement() {
@@ -349,18 +328,15 @@
                 await axios.post(`${API_URL}/api/announcement`, { text: "" });
                 document.getElementById('ann-input').value = "";
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Плашка стерта.");
-            } catch(err) { alert("Ошибка очистки плашки"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
         async function forceRefreshAnnouncement() {
             try {
                 await axios.post(`${API_URL}/api/announcement/refresh`);
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Запрос на принудительный перерасчет и обновление плашки отправлен!");
-            } catch(err) {
-                alert("Ошибка принудительного обновления. Проверь эндпоинт /api/announcement/refresh в плагине.");
-            }
+                alert("Запрос отправлен!");
+            } catch(err) { alert("Ошибка запроса"); }
         }
 
         async function loadQuotes() {
@@ -370,21 +346,18 @@
                 const res = await axios.get(`${API_URL}/api/quotes`);
                 listDiv.innerHTML = '';
                 if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<p class="text-xs text-zinc-600 italic text-center py-4">Цитат не обнаружено</p>';
+                    listDiv.innerHTML = '<p class="text-xs text-zinc-600 italic text-center py-4">Цитaт нет</p>';
                     return;
                 }
                 res.data.forEach((q, idx) => {
                     listDiv.innerHTML += `
                         <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex items-center justify-between gap-2">
-                            <div class="text-xs">
-                                <span class="text-zinc-300">"${q.text}"</span> 
-                                <span class="text-indigo-400 font-medium">— ${q.author}</span>
-                            </div>
-                            <button onclick="deleteQuote(${idx})" class="text-rose-400 hover:text-rose-300 text-[10px] font-medium bg-rose-950/20 border border-rose-900/30 px-2.5 py-1 rounded-md transition">Удалить</button>
+                            <div class="text-xs"><span class="text-zinc-300">"${q.text}"</span> <span class="text-indigo-400">— ${q.author}</span></div>
+                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] bg-rose-950/20 border border-rose-900/30 px-2.5 py-1 rounded-md">Удалить</button>
                         </div>
                     `;
                 });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 italic">Ошибка загрузки цитат</p>'; }
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400">Ошибка</p>'; }
         }
 
         async function addQuote() {
@@ -397,16 +370,16 @@
                 document.getElementById('quote-text').value = '';
                 tg.HapticFeedback.notificationOccurred('success');
                 loadQuotes();
-            } catch(err) { alert("Ошибка добавления цитаты"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
         async function deleteQuote(index) {
-            if(!confirm("Удалить цитату?")) return;
+            if(!confirm("Удалить?")) return;
             try {
                 await axios.post(`${API_URL}/api/quotes`, { action: "delete", index: index });
                 tg.HapticFeedback.notificationOccurred('success');
                 loadQuotes();
-            } catch(err) { alert("Ошибка удаления"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
         async function loadLeaderboard() {
@@ -416,39 +389,14 @@
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
                 tbody.innerHTML = '';
                 let hasData = false;
-                
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
-                        const ruName = metricTranslations[key] || key;
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-zinc-900/20 border-b border-zinc-800/30 transition">
-                                <td class="p-3 font-medium text-zinc-400">${ruName}</td>
-                                <td class="p-3 text-zinc-200">${res.data.stats[key].player || '—'}</td>
-                                <td class="p-3 text-right font-mono text-indigo-400 font-semibold">${res.data.stats[key].value}</td>
-                            </tr>
-                        `;
+                        tbody.innerHTML += `<tr><td class="p-3 text-zinc-400">${metricTranslations[key] || key}</td><td class="p-3 text-zinc-200">${res.data.stats[key].player || '—'}</td><td class="p-3 text-right text-indigo-400 font-semibold">${res.data.stats[key].value}</td></tr>`;
                     }
                 }
-                
-                if(res.data.custom) {
-                    for(let key in res.data.custom) {
-                        hasData = true;
-                        const ruName = metricTranslations[key] || key;
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-zinc-900/20 border-b border-zinc-800/30 transition">
-                                <td class="p-3 font-medium text-zinc-400">${ruName} <span class="text-[9px] text-zinc-600">(Кастом)</span></td>
-                                <td class="p-3 text-zinc-200">${res.data.custom[key].player || '—'}</td>
-                                <td class="p-3 text-right font-mono text-emerald-400 font-semibold">${res.data.custom[key].value}</td>
-                            </tr>
-                        `;
-                    }
-                }
-
-                if(!hasData) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-600 text-xs italic">Таблица лидеров пуста</td></tr>';
-                }
-            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400 text-xs italic">Ошибка получения топов</td></tr>'; }
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-600 text-xs italic">Пусто</td></tr>';
+            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400 text-xs italic">Ошибка</td></tr>'; }
         }
 
         async function sendConsoleCommand() {
@@ -460,7 +408,7 @@
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 300);
-            } catch(err) { alert("Ошибка отправки команды"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
         async function sendBroadcast() {
@@ -471,21 +419,18 @@
                 await axios.post(`${API_URL}/api/broadcast`, { message: message });
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
-            } catch(err) { alert("Ошибка отправки сообщения"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
         function quickAction(cmd) {
-            axios.post(`${API_URL}/api/command`, { command: cmd })
-                .then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    setTimeout(loadData, 400);
-                });
+            axios.post(`${API_URL}/api/command`, { command: cmd }).then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 400);
+            });
         }
 
         function askRestart() {
-            if(confirm("Вы уверены, что хотите перезапустить сервер?")) {
-                quickAction("restart");
-            }
+            if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
 
         loadData();
