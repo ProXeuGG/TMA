@@ -2,71 +2,90 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ProfCraft Premium Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
         body {
             background-color: var(--tg-theme-bg-color, #09090b);
             color: var(--tg-theme-text-color, #f4f4f5);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
         }
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tg-btn-active { border-color: #818cf8; color: #818cf8; background: rgba(129, 140, 248, 0.1); }
+        .tab-content.active { display: block; animation: fadeIn 0.25s ease-out; }
+        .tg-btn-active { 
+            color: #818cf8 !important; 
+            background: rgba(129, 140, 248, 0.08);
+            border-color: rgba(129, 140, 248, 0.3) !important;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Кастомный скроллбар для консоли */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 99px; }
     </style>
 </head>
-<body class="p-4 font-sans antialiased selection:bg-indigo-500 selection:text-white pb-24">
+<body class="p-4 antialiased selection:bg-indigo-500 selection:text-white pb-28 min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900/50 to-zinc-950">
 
     <!-- Верхушка панели -->
-    <div class="flex items-center justify-between mb-5 border-b border-zinc-800/80 pb-4">
+    <div class="flex items-center justify-between mb-6 border-b border-zinc-800/60 pb-4 backdrop-blur-sm sticky top-0 bg-zinc-950/20 z-40 pt-1">
         <div>
-            <h1 class="text-lg font-bold text-white tracking-wide">ProfCraft Panel</h1>
-            <p id="server-v" class="text-[10px] text-zinc-500 font-mono">Версия: загрузка...</p>
+            <h1 class="text-xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">ProfCraft Panel</h1>
+            <p id="server-v" class="text-[11px] text-zinc-500 font-mono mt-0.5 tracking-wide">Версия: загрузка...</p>
         </div>
         <div class="flex items-center gap-2">
-            <span id="tps-badge" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50">TPS: --</span>
+            <span id="tps-badge" class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm transition-all duration-300">TPS: --</span>
         </div>
     </div>
 
     <!-- ТАБЫ (ВКЛАДКИ) -->
-    <main>
+    <main class="max-w-md mx-auto">
         <!-- Вкладка 1: Главная -->
         <div id="tab-dash" class="tab-content active space-y-4">
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-zinc-900/40 border border-zinc-800 p-3 rounded-xl backdrop-blur-sm">
-                    <p class="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Игроки онлайн</p>
-                    <p id="stat-online" class="text-xl font-bold mt-1 text-zinc-100">-- / --</p>
+                <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-2xl backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">👤 Игроки онлайн</p>
+                    <p id="stat-online" class="text-2xl font-black mt-1 text-zinc-100 font-mono">-- / --</p>
                 </div>
-                <div class="bg-zinc-900/40 border border-zinc-800 p-3 rounded-xl backdrop-blur-sm">
-                    <p class="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">ОЗУ Сервера</p>
-                    <p id="stat-ram" class="text-xl font-bold mt-1 text-zinc-100">-- МБ</p>
+                <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-2xl backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider flex items-center gap-1.5">💾 ОЗУ Сервера</p>
+                    <p id="stat-ram" class="text-2xl font-black mt-1 text-zinc-100 font-mono">-- МБ</p>
                 </div>
             </div>
 
             <!-- Быстрое оповещение в чат игры -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">📢 Объявление в чат игры</h3>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 p-4 rounded-2xl shadow-sm">
+                <h3 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">📢 Объявление в чат игры</h3>
                 <div class="flex gap-2">
                     <input type="text" id="bc-input" placeholder="Текст объявления..." 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300">
-                    <button onclick="sendBroadcast()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Оповестить</button>
+                           class="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-zinc-200 transition-all placeholder:text-zinc-600">
+                    <button onclick="sendBroadcast()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20">Оповестить</button>
                 </div>
             </div>
 
             <!-- Управление ТГ Плашкой -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-2">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">📱 ТГ Плашка (Пост в группу)</h3>
-                <div class="flex flex-col gap-2">
-                    <textarea id="ann-input" rows="2" placeholder="Введите text постоянной плашки для Telegram..." 
-                              class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300"></textarea>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 p-4 rounded-2xl space-y-3 shadow-sm">
+                <h3 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">📱 ТГ Плашка (Пост в группу)</h3>
+                <div class="flex flex-col gap-2.5">
+                    <textarea id="ann-input" rows="2" placeholder="Введите текст постоянной плашки для Telegram..." 
+                              class="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-zinc-200 transition-all placeholder:text-zinc-600 resize-none"></textarea>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="saveAnnouncement()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-medium transition active:scale-95">Сохранить текст</button>
-                        <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 py-2 rounded-lg text-xs font-medium transition active:scale-95">Стереть плашку</button>
+                        <button onclick="saveAnnouncement()" class="bg-emerald-600/90 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-sm">Сохранить текст</button>
+                        <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 hover:bg-red-500/10 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95">Стереть плашку</button>
                     </div>
                 </div>
-                <button onclick="forceRefreshAnnouncement()" class="w-full bg-zinc-900/80 border border-dashed border-zinc-700/60 hover:border-indigo-500/50 text-indigo-400 hover:text-indigo-300 py-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
+                <button onclick="forceRefreshAnnouncement()" class="w-full bg-zinc-900/60 border border-dashed border-zinc-700/60 hover:border-indigo-500/40 text-indigo-400 hover:text-indigo-300 py-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
                     🔄 Принудительно обновить данные на плашке
                 </button>
             </div>
@@ -74,42 +93,42 @@
 
         <!-- Вкладка 2: Игроки -->
         <div id="tab-players" class="tab-content space-y-3">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">👥 Управление игроками</h2>
-            <div id="players-list" class="space-y-2.5">
-                <p class="text-xs text-zinc-500 italic">Загрузка игроков...</p>
+            <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1">👥 Управление игроками</h2>
+            <div id="players-list" class="space-y-3">
+                <p class="text-xs text-zinc-500 italic p-4 text-center">Загрузка игроков...</p>
             </div>
         </div>
 
         <!-- Вкладка 3: Цитаты -->
         <div id="tab-quotes" class="tab-content space-y-4">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">💬 Управление цитатами</h2>
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-3">
-                <h3 class="text-xs font-semibold text-zinc-500 uppercase">Добавить новую цитату</h3>
+            <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">💬 Управление цитатами</h2>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 p-4 rounded-2xl space-y-3.5 shadow-sm">
+                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">Добавить новую цитату</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="quote-author" placeholder="Автор ник" class="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
-                    <input type="text" id="quote-text" placeholder="Текст цитаты" class="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="quote-author" placeholder="Автор ник" class="bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 placeholder:text-zinc-600">
+                    <input type="text" id="quote-text" placeholder="Текст цитаты" class="bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 placeholder:text-zinc-600">
                 </div>
-                <button onclick="addQuote()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-medium transition">Добавить</button>
+                <button onclick="addQuote()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95 shadow-md shadow-indigo-600/10">Добавить</button>
             </div>
-            <div id="quotes-list" class="space-y-2.5">
-                <p class="text-xs text-zinc-500 italic">Загрузка списка цитат...</p>
+            <div id="quotes-list" class="space-y-2">
+                <p class="text-xs text-zinc-500 italic p-4 text-center">Загрузка списка цитат...</p>
             </div>
         </div>
 
         <!-- Вкладка 4: Доска почета -->
         <div id="tab-leader" class="tab-content space-y-4">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">🏆 Доска почёта</h2>
-            <div class="bg-zinc-900/30 border border-zinc-800/80 rounded-xl overflow-hidden">
+            <h2 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1 flex items-center gap-1">🏆 Доска почёта</h2>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm backdrop-blur-md">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="bg-zinc-900/60 border-b border-zinc-800 text-zinc-400 font-medium">
-                            <th class="p-3">Номинация</th>
-                            <th class="p-3">Лидер сервера</th>
-                            <th class="p-3 text-right">Результат</th>
+                        <tr class="bg-zinc-900/50 border-b border-zinc-800/80 text-zinc-400 font-semibold tracking-wide">
+                            <th class="p-3.5 pl-4">Номинация</th>
+                            <th class="p-3.5">Лидер сервера</th>
+                            <th class="p-3.5 text-right pr-4">Результат</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-data" class="divide-y divide-zinc-800/50 text-zinc-300">
-                        <tr><td colspan="3" class="p-4 text-center text-zinc-500 italic">Загрузка топов...</td></tr>
+                    <tbody id="leaderboard-data" class="divide-y divide-zinc-800/40 text-zinc-300 font-medium">
+                        <tr><td colspan="3" class="p-6 text-center text-zinc-500 italic">Загрузка топов...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -117,40 +136,50 @@
 
         <!-- Вкладка 5: Консоль и Система -->
         <div id="tab-sys" class="tab-content space-y-4">
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">🛠️ Быстрые действия</h3>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 p-4 rounded-2xl shadow-sm">
+                <h3 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-1">🛠️ Быстрые действия</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="quickAction('whitelist on')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Вкл Whitelist</button>
-                    <button onclick="quickAction('whitelist off')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Выкл Whitelist</button>
-                    <button onclick="quickAction('save-all')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Сохранить мир</button>
-                    <button onclick="askRestart()" class="bg-red-950/30 border border-red-900/50 text-red-400 py-2 rounded-lg text-xs font-medium hover:bg-red-900/30 transition">Рестарт сервера</button>
+                    <button onclick="quickAction('whitelist on')" class="bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95">Вкл Whitelist</button>
+                    <button onclick="quickAction('whitelist off')" class="bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95">Выкл Whitelist</button>
+                    <button onclick="quickAction('save-all')" class="bg-zinc-900/80 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-95">Сохранить мир</button>
+                    <button onclick="askRestart()" class="bg-red-950/20 border border-red-900/40 text-red-400 py-2.5 rounded-xl text-xs font-semibold hover:bg-red-900/20 transition-all active:scale-95">Рестарт сервера</button>
                 </div>
             </div>
 
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Прямая Консоль</h3>
+            <div class="bg-zinc-900/20 border border-zinc-800/80 p-4 rounded-2xl shadow-sm">
+                <h3 class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">💻 Прямая Консоль</h3>
                 <div class="flex gap-2">
                     <input type="text" id="cmd-input" placeholder="Команда без /" 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 font-mono text-zinc-300">
-                    <button onclick="sendConsoleCommand()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Выполнить</button>
+                           class="w-full bg-zinc-950/80 border border-zinc-800/80 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 font-mono text-zinc-200 transition-all placeholder:text-zinc-600">
+                    <button onclick="sendConsoleCommand()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 shadow-md shadow-indigo-600/10">Выполнить</button>
                 </div>
             </div>
 
             <!-- ОКНО ДЕБАГА (ПОМОЖЕТ НАЙТИ ОШИБКУ В JAVA) -->
-            <div class="bg-zinc-900/30 border border-amber-900/40 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">🐛 JSON отладки игроков (Скинь это мне)</h3>
-                <pre id="debug-json" class="text-[10px] bg-black p-3 rounded border border-zinc-800 text-emerald-400 overflow-x-auto font-mono max-h-40">Ожидание данных от сервера...</pre>
+            <div class="bg-zinc-900/20 border border-amber-500/10 p-4 rounded-2xl shadow-sm">
+                <h3 class="text-[11px] font-bold text-amber-400/90 uppercase tracking-wider mb-2.5 flex items-center gap-1">🐛 JSON отладки игроков (Скинь это мне)</h3>
+                <pre id="debug-json" class="text-[10px] bg-black/60 p-3 rounded-xl border border-zinc-800/80 text-emerald-400 overflow-x-auto font-mono max-h-40 backdrop-blur-md">Ожидание данных от сервера...</pre>
             </div>
         </div>
     </main>
 
-    <!-- НАВИГАЦИЯ -->
-    <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/80 p-2 flex justify-around items-center backdrop-blur-md z-50">
-        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium tg-btn-active"><span>📊</span>Главная</button>
-        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>👥</span>Игроки</button>
-        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>💬</span>Цитаты</button>
-        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>🏆</span>Топ</button>
-        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium"><span>⚙️</span>Система</button>
+    <!-- НАВИГАЦИЯ (СТИЛЬНЫЙ FLOATING DOCK) -->
+    <div class="fixed bottom-4 left-4 right-4 bg-zinc-950/80 border border-zinc-800/80 p-1.5 flex justify-around items-center backdrop-blur-lg z-50 rounded-2xl shadow-2xl shadow-black/60 max-w-md mx-auto">
+        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-3 py-2 rounded-xl transition-all duration-200 text-[10px] font-semibold border border-transparent w-full tg-btn-active">
+            <span class="text-base leading-none">📊</span>Главная
+        </button>
+        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-3 py-2 rounded-xl transition-all duration-200 text-[10px] font-semibold border border-transparent w-full hover:text-zinc-300">
+            <span class="text-base leading-none">👥</span>Игроки
+        </button>
+        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-3 py-2 rounded-xl transition-all duration-200 text-[10px] font-semibold border border-transparent w-full hover:text-zinc-300">
+            <span class="text-base leading-none">💬</span>Цитаты
+        </button>
+        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-3 py-2 rounded-xl transition-all duration-200 text-[10px] font-semibold border border-transparent w-full hover:text-zinc-300">
+            <span class="text-base leading-none">🏆</span>Топ
+        </button>
+        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-3 py-2 rounded-xl transition-all duration-200 text-[10px] font-semibold border border-transparent w-full hover:text-zinc-300">
+            <span class="text-base leading-none">⚙️</span>Система
+        </button>
     </div>
 
     <script>
@@ -195,7 +224,7 @@
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
                 tpsBadge.innerText = `TPS: ${tps}`;
-                tpsBadge.className = tps < 15 ? "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-red-950/50 text-red-400 border border-red-800/50" : "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50";
+                tpsBadge.className = tps < 15 ? "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm" : "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm";
 
                 document.getElementById('server-v').innerText = `Ядро: ${statsRes.data.version} | WL: ${statsRes.data.whitelist ? 'Вкл' : 'Выкл'}`;
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
@@ -215,7 +244,7 @@
                 listDiv.innerHTML = '';
 
                 if(playersRes.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-8 text-zinc-600 text-xs italic">На сервере сейчас никого нет</div>';
+                    listDiv.innerHTML = '<div class="text-center py-10 bg-zinc-900/10 border border-zinc-800/60 rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас никого нет</div>';
                 } else {
                     playersRes.data.forEach(p => {
                         const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
@@ -238,51 +267,51 @@
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
                         listDiv.innerHTML += `
-                            <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden">
-                                <div onclick="togglePlayerCard('${pName}')" class="p-3 flex items-center justify-between hover:bg-zinc-800/20 transition cursor-pointer">
-                                    <div class="flex items-center gap-2.5">
-                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700/50">
+                            <div class="bg-zinc-900/20 border border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm backdrop-blur-md">
+                                <div onclick="togglePlayerCard('${pName}')" class="p-3.5 flex items-center justify-between hover:bg-zinc-800/30 transition cursor-pointer">
+                                    <div class="flex items-center gap-3">
+                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 shadow-inner">
                                         <div>
-                                            <p class="font-bold text-sm text-zinc-100">${pName}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world || 'world'} | Ping: ${p.ping || 0}ms</p>
+                                            <p class="font-bold text-sm text-zinc-100 tracking-tight">${pName}</p>
+                                            <p class="text-[10px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-700">|</span> Ping: <span class="text-indigo-400">${p.ping || 0}ms</span></p>
                                         </div>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="text-xs font-semibold text-rose-400">❤️ ${Math.round(p.health || 20)}</span>
-                                        <p class="text-[9px] text-zinc-500 font-mono">Опции</p>
+                                    <div class="text-right flex flex-col items-end gap-1">
+                                        <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
+                                        <p class="text-[9px] text-zinc-600 uppercase font-bold tracking-wider">Опции ▾</p>
                                     </div>
                                 </div>
 
-                                <div id="details-${pName}" class="${isHidden} p-3 border-t border-zinc-800/50 bg-zinc-950/30 space-y-3">
-                                    <div class="grid grid-cols-1 gap-1 text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/40 font-mono">
-                                        <p class="text-zinc-400 flex justify-between"><span>Координаты:</span> <span class="text-zinc-200 text-[10px]">${coordsStr}</span></p>
-                                        <p class="text-zinc-400 flex justify-between"><span>Сытость:</span> <span class="text-amber-400">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
-                                        <p class="text-zinc-400 flex justify-between"><span>Уровень XP:</span> <span class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
-                                        <p class="text-zinc-400 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 uppercase font-bold">${p.gamemode || 'SURVIVAL'}</span></p>
+                                <div id="details-${pName}" class="${isHidden} p-4 border-t border-zinc-800/60 bg-zinc-950/40 space-y-4">
+                                    <div class="grid grid-cols-1 gap-1.5 text-xs bg-zinc-950/80 p-3 rounded-xl border border-zinc-800/60 font-mono">
+                                        <p class="text-zinc-500 flex justify-between"><span>Координаты:</span> <span class="text-zinc-200 text-[11px]">${coordsStr}</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span class="text-amber-400 font-bold">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Уровень XP:</span> <span class="text-emerald-400 font-bold">${playerXp} LVVL</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 font-bold">${p.gamemode || 'SURVIVAL'}</span></p>
                                     </div>
 
-                                    <div class="space-y-1">
-                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Установить режим:</p>
+                                    <div class="space-y-1.5">
+                                        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Установить режим:</p>
                                         <div class="grid grid-cols-4 gap-1">
-                                            <button onclick="quickAction('gamemode creative ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Креатив</button>
-                                            <button onclick="quickAction('gamemode survival ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Выжив.</button>
-                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Прикл.</button>
-                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300">Наблюд.</button>
+                                            <button onclick="quickAction('gamemode creative ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1.5 rounded-lg font-semibold text-zinc-300 hover:bg-zinc-800 active:scale-95 transition-all">Креатив</button>
+                                            <button onclick="quickAction('gamemode survival ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1.5 rounded-lg font-semibold text-zinc-300 hover:bg-zinc-800 active:scale-95 transition-all">Выжив.</button>
+                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1.5 rounded-lg font-semibold text-zinc-300 hover:bg-zinc-800 active:scale-95 transition-all">Прикл.</button>
+                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1.5 rounded-lg font-semibold text-zinc-300 hover:bg-zinc-800 active:scale-95 transition-all">Наблюд.</button>
                                         </div>
                                     </div>
 
-                                    <div class="space-y-1">
-                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Личное сообщение:</p>
+                                    <div class="space-y-1.5">
+                                        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Личное сообщение:</p>
                                         <div class="flex gap-1.5">
-                                            <input type="text" id="msg-${pName}" placeholder="Сообщение..." class="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
-                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium">ЛС</button>
+                                            <input type="text" id="msg-${pName}" placeholder="Сообщение..." class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-indigo-500">
+                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-semibold active:scale-95 transition-all shadow-md shadow-indigo-600/10">ЛС</button>
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-3 gap-1.5 pt-1">
-                                        <button onclick="quickAction('op ${pName}')" class="bg-zinc-950 border border-emerald-900/50 text-emerald-400 text-[10px] font-medium py-1.5 rounded">OP</button>
-                                        <button onclick="quickAction('deop ${pName}')" class="bg-zinc-950 border border-amber-900/50 text-amber-400 text-[10px] font-medium py-1.5 rounded">DeOP</button>
-                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-red-950/20 border border-red-900/40 text-red-400 text-[10px] font-medium py-1.5 rounded">Кикнуть</button>
+                                    <div class="grid grid-cols-3 gap-2 pt-1">
+                                        <button onclick="quickAction('op ${pName}')" class="bg-zinc-950/60 border border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 text-[11px] font-bold py-2 rounded-xl transition-all active:scale-95">OP</button>
+                                        <button onclick="quickAction('deop ${pName}')" class="bg-zinc-950/60 border border-amber-500/20 hover:border-amber-500/40 text-amber-400 text-[11px] font-bold py-2 rounded-xl transition-all active:scale-95">DeOP</button>
+                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] font-bold py-2 rounded-xl transition-all active:scale-95 hover:bg-red-500/20">Кикнуть</button>
                                     </div>
                                 </div>
                             </div>
@@ -346,18 +375,18 @@
                 const res = await axios.get(`${API_URL}/api/quotes`);
                 listDiv.innerHTML = '';
                 if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<p class="text-xs text-zinc-600 italic text-center py-4">Цитaт нет</p>';
+                    listDiv.innerHTML = '<div class="text-center py-6 bg-zinc-900/10 border border-zinc-800/60 rounded-2xl text-zinc-500 text-xs italic">Цитат нет</div>';
                     return;
                 }
                 res.data.forEach((q, idx) => {
                     listDiv.innerHTML += `
-                        <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex items-center justify-between gap-2">
-                            <div class="text-xs"><span class="text-zinc-300">"${q.text}"</span> <span class="text-indigo-400">— ${q.author}</span></div>
-                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] bg-rose-950/20 border border-rose-900/30 px-2.5 py-1 rounded-md">Удалить</button>
+                        <div class="bg-zinc-900/20 border border-zinc-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-sm backdrop-blur-md">
+                            <div class="text-xs leading-relaxed"><span class="text-zinc-200 font-medium">"${q.text}"</span> <span class="text-indigo-400 font-semibold ml-1">— ${q.author}</span></div>
+                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl transition-all hover:bg-rose-500/20 active:scale-95 shrink-0">Удалить</button>
                         </div>
                     `;
                 });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400">Ошибка</p>'; }
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 p-4 text-center">Ошибка загрузки</p>'; }
         }
 
         async function addQuote() {
@@ -392,11 +421,16 @@
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
-                        tbody.innerHTML += `<tr><td class="p-3 text-zinc-400">${metricTranslations[key] || key}</td><td class="p-3 text-zinc-200">${res.data.stats[key].player || '—'}</td><td class="p-3 text-right text-indigo-400 font-semibold">${res.data.stats[key].value}</td></tr>`;
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-zinc-900/40 transition-all">
+                                <td class="p-3.5 pl-4 text-zinc-400 font-medium">${metricTranslations[key] || key}</td>
+                                <td class="p-3.5 text-zinc-200 font-bold">${res.data.stats[key].player || '—'}</td>
+                                <td class="p-3.5 text-right pr-4 text-indigo-400 font-extrabold font-mono text-sm">${res.data.stats[key].value}</td>
+                            </tr>`;
                     }
                 }
-                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-600 text-xs italic">Пусто</td></tr>';
-            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400 text-xs italic">Ошибка</td></tr>'; }
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-zinc-500 text-xs italic">Пусто</td></tr>';
+            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-6 text-center text-red-400 text-xs italic">Ошибка получения данных топов</td></tr>'; }
         }
 
         async function sendConsoleCommand() {
