@@ -234,7 +234,7 @@
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
                         // Всеядный вывод голов (если аватарка падает в ошибку, подменяем на универсальный скин)
-                        const pName = p.name || "Steve";
+                        const pName = (p.name || "Steve").replace('/', '_');
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
                         listDiv.innerHTML += `
