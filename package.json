@@ -1,0 +1,9 @@
+{
+  "name": "k-tech-tma-backend",
+  "version": "1.0.0",
+  "description": "Backend for Minecraft TMA",
+  "main": "index.js",
+  "dependencies": {
+    "ioredis": "^5.4.1"
+  }
+}
