@@ -3,12 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft TMA</title>
+    <title>Панель Профкрафт</title>
+    <!-- Подключаем Телеграм скрипт -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --container-bg: #161920;
+            --text-color: #f5f6f9;
+            --text-muted: #8a90a2;
+            --accent-color: #4f46e5; /* Электрик блю */
+            --accent-hover: #6366f1;
+            --success-color: #10b981; /* Зеленый онлайн */
+            --button-bg: #1f242f;
+            --button-hover: #282e3d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .panel-container {
+            width: 100%;
+            max-width: 420px;
+            background: var(--container-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+        }
+
+        /* Шапка панели */
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin: 0 0 8px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #a5b4fc, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Виджет Статистики */
+        .stats-widget {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+            box-shadow: 0 0 8px var(--success-color);
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .stats-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* Сетка инлайн-кнопок меню */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .inline-btn {
+            background-color: var(--button-bg);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-color);
+            padding: 14px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .inline-btn:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .inline-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Стрелочка справа, как в iOS/Telegram меню */
+        .btn-arrow {
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+
+        .inline-btn:hover .btn-arrow {
+            color: var(--text-color);
+            transform: translateX(2px);
+        }
+
+        /* Кнопка главного действия (выделенная) */
+        .inline-btn.primary {
+            background: var(--accent-color);
+            border: none;
+        }
+        .inline-btn.primary:hover {
+            background: var(--accent-hover);
+        }
+        .inline-btn.primary .btn-arrow {
+            color: #fff;
+        }
+
+        /* Скелетон загрузки */
+        .loading {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            padding: 40px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Панель K-TECH</h1>
-    <div id="status">Проверка авторизации...</div>
-    <script src="app.js"></script>
+
+<div class="panel-container">
+    <!-- Шапка -->
+    <div class="header">
+        <h1 id="server-name">Профкрафт Panel</h1>
+        <p class="welcome-text" id="username">Загрузка авторизации...</p>
+    </div>
+
+    <!-- Основной контент (скрыт пока идет загрузка) -->
+    <div id="content" style="display: none;">
+        
+        <!-- Живой виджет онлайна из нашей новой базы -->
+        <div class="stats-widget">
+            <div>
+                <span class="status-dot"></span>
+                <span class="stats-label">Статус сервера</span>
+            </div>
+            <div class="stats-value" id="online-counter">0 / 0</div>
+        </div>
+
+        <!-- Кнопки меню (Админ-панелька) -->
+        <div class="menu-grid">
+            <button class="inline-btn primary" onclick="showAlert('Раздел профиля в разработке')">
+                <span>👤 Мой персонаж</span>
+                <span class="btn-arrow">→</span>
+            </button>
+            
+            <button class="inline-btn" onclick="showAlert('Магазин откроется скоро!')">
+                <span>🛒 Донат-магазин</span>
+                <span class="btn-arrow">→</span>
+            </button>
+
+            <button class="inline-btn" onclick="showAlert('Тут будет топ игроков из leaderboard.yml')">
+                <span>🏆 Топ игроков</span>
+                <span class="btn-arrow">→</span>
+            </button>
+
+            <button class="inline-btn" onclick="executeAdminAction()">
+                <span>⚙️ Управление Профкрафт (Админ)</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div id="loader" class="loading">Синхронизация с сервером...</div>
+</div>
+
+<script>
+    // Инициализируем Telegram WebApp API
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Разворачиваем на весь экран телефона
+
+    // Получаем имя игрока из Телеграма
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+        document.getElementById('username').innerText = `Привет, ${user.first_name || 'Игрок'}! Успешный вход.`;
+    } else {
+        document.getElementById('username').innerText = `Привет, Тестировщик!`;
+    }
+
+    // Функция запроса к нашему новому бэкэнду на Vercel
+    async function loadServerData() {
+        try {
+            const response = await fetch('https://ТВОЙ_ПРОЕКТ.vercel.app/api/auth-check', {
+                method: 'POST',
+                headers: {
+                    'X-TMA-Auth': tg.initData, // Передаем данные авторизации ТГ
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success' && result.serverData) {
+                // Прячем загрузку, показываем меню
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+                // Засовываем реальный онлайн из Redis в виджет
+                const stats = result.serverData;
+                if(stats.current_online !== undefined) {
+                    document.getElementById('online-counter').innerText = `${stats.current_online} / ${stats.max_players}`;
+                } else {
+                    document.getElementById('online-counter').innerText = "Сервер спит";
+                }
+            } else {
+                document.getElementById('loader').innerText = "Ошибка авторизации бэкэнда.";
+            }
+        } catch (error) {
+            document.getElementById('loader').innerText = "Не удалось связаться с базой данных.";
+            console.error(error);
+        }
+    }
+
+    // Вспомогательные функции для кликов
+    function showAlert(message) {
+        tg.showAlert(message);
+    }
+
+    function executeAdminAction() {
+        tg.showPopup({
+            title: 'Админ-зона',
+            message: 'Вы уверены, что хотите перезагрузить Профкрафт?',
+            buttons: [
+                {id: 'reload', type: 'destructive', text: 'Рестарт сервера'},
+                {id: 'cancel', type: 'cancel', text: 'Отмена'}
+            ]
+        }, (buttonId) => {
+            if (buttonId === 'reload') {
+                tg.showAlert('Команда на рестарт отправлена!');
+            }
+        });
+    }
+
+    // Запускаем загрузку данных при старте страницы
+    window.onload = loadServerData;
+</script>
+
 </body>
 </html>
