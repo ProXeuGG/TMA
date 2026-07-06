@@ -1,49 +1,72 @@
 const Redis = require('ioredis');
-const redis = new Redis(process.env.REDIS_URL);
-
-// Добавляем настройки, чтобы Redis не ждал вечно
-const redis = new Redis(process.env.REDIS_URL, {
-    maxRetriesPerRequest: 0, // Выдавать ошибку сразу, а не пытаться подключиться вечно
-    connectTimeout: 2000     // Если за 2 секунды не подключился — прерывать поток
-});
-
-// Перехватываем ошибки подключения, чтобы они не роняли сам Node.js процесс
-redis.on('error', (err) => {
-    console.error('Redis Connection Error:', err);
-});
 
 module.exports = async (req, res) => {
-    // ... весь остальной код оставляем без изменений
-module.exports = async (req, res) => {
-    // Разрешаем только POST запросы от плагина
+    // 1. Сразу отсекаем неверные методы. GET больше не вызовет падение!
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { secret } = req.body;
+    // 2. Проверяем наличие критически важных переменных в Vercel
+    if (!process.env.REDIS_URL) {
+        return res.status(500).json({ 
+            error: 'Ошибка конфигурации Vercel', 
+            details: 'Переменная окружения REDIS_URL отсутствует в настройках проекта!' 
+        });
+    }
+    if (!process.env.MINECRAFT_SECRET_KEY) {
+        return res.status(500).json({ 
+            error: 'Ошибка конфигурации Vercel', 
+            details: 'Переменная окружения MINECRAFT_SECRET_KEY отсутствует в настройках проекта!' 
+        });
+    }
 
-    // Проверяем секретный ключ плагина
+    const { secret } = req.body || {};
+
+    // 3. Проверяем секретный ключ плагина
     if (!secret || secret !== process.env.MINECRAFT_SECRET_KEY) {
         return res.status(403).json({ error: 'Forbidden: Invalid Secret Key' });
     }
 
+    let redis;
+
     try {
-        // Забираем команду из Redis ровно ОДИН раз (без циклов и setTimeout)
+        // 4. Безопасно инициализируем Redis прямо внутри try-catch
+        redis = new Redis(process.env.REDIS_URL, {
+            maxRetriesPerRequest: 0,
+            connectTimeout: 3000 // Ждем подключения не более 3 секунд
+        });
+
+        // Перехватываем внутренние ошибки коннекта
+        redis.on('error', (err) => {
+            console.error('Redis internal error:', err.message);
+        });
+
+        // 5. Пытаемся забрать команду
         const cmd = await redis.rpop('minecraft_cmd_queue');
         
+        // Корректно закрываем соединение, чтобы не плодить утечки в Serverless
+        await redis.quit();
+
         if (cmd) {
-            // Если в Redis лежал чистый текст (например, "act:gm1:Player"), 
-            // отдаем его в ключе actionData, который ждет наш Minecraft-плагин
             return res.status(200).json({
                 status: 'success',
                 actionData: cmd
             });
         }
 
-        // Если очереди нет — мгновенно закрываем запрос. Никаких зависаний и 502 ошибок!
         return res.status(200).json({ status: 'empty' });
 
     } catch (error) {
-        return res.status(500).json({ error: `Ошибка базы данных Redis: ${error.message}` });
+        // Если что-то пошло не так, принудительно тушим коннект, если он успел создаться
+        if (redis) {
+            try { redis.disconnect(); } catch (e) {}
+        }
+
+        // Возвращаем детальную ошибку текстом в JSON, а не ломаем функцию
+        return res.status(500).json({ 
+            error: 'Критическая ошибка выполнения функции', 
+            message: error.message,
+            stack: error.stack
+        });
     }
 };
