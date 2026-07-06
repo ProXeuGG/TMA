@@ -55,17 +55,21 @@
                 </div>
             </div>
 
-            <!-- Управление ТГ Плашкой (Закрепленное сообщение в группе) -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">📱 ТГ Плашка (Пост в группу)</h3>
+            <!-- Управление ТГ Плашкой -->
+            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-2">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">📱 ТГ Плашка (Пост в группу)</h3>
                 <div class="flex flex-col gap-2">
                     <textarea id="ann-input" rows="2" placeholder="Введите текст постоянной плашки для Telegram..." 
                               class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300"></textarea>
-                    <div class="flex gap-2">
-                        <button onclick="saveAnnouncement()" class="bg-emerald-600 hover:bg-emerald-500 text-white flex-1 py-2 rounded-lg text-sm font-medium transition active:scale-95">Обновить плашку</button>
-                        <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition active:scale-95">Стереть</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="saveAnnouncement()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-xs font-medium transition active:scale-95">Сохранить текст</button>
+                        <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 py-2 rounded-lg text-xs font-medium transition active:scale-95">Стереть плашку</button>
                     </div>
                 </div>
+                <!-- Кнопка принудительного обновления всей инфы на плашке -->
+                <button onclick="forceRefreshAnnouncement()" class="w-full bg-zinc-900/80 border border-dashed border-zinc-700/60 hover:border-indigo-500/50 text-indigo-400 hover:text-indigo-300 py-2.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 active:scale-[0.98]">
+                    🔄 Принудительно обновить данные на плашке
+                </button>
             </div>
         </div>
 
@@ -116,7 +120,6 @@
 
         <!-- Вкладка 5: Консоль и Система -->
         <div id="tab-sys" class="tab-content space-y-4">
-            <!-- Быстрые команды -->
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
                 <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">🛠️ Быстрые действия</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -127,9 +130,8 @@
                 </div>
             </div>
 
-            <!-- Terminal -->
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Прямая Консоль</h3>
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Пнямая Консоль</h3>
                 <div class="flex gap-2">
                     <input type="text" id="cmd-input" placeholder="Команда без /" 
                            class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 font-mono text-zinc-300">
@@ -139,7 +141,7 @@
         </div>
     </main>
 
-    <!-- НИЖНЕЕ МЕНЮ НАВИГАЦИИ (ФУТЕР) -->
+    <!-- НАВИГАЦИЯ -->
     <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/80 p-2 flex justify-around items-center backdrop-blur-md z-50">
         <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[10px] font-medium tg-btn-active">
             <span>📊</span>Главная
@@ -168,7 +170,6 @@
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
 
-        // Словарь перевода игровых метрик
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков",
             "player_kills": "⚔️ Убито игроков",
@@ -202,7 +203,6 @@
         async function loadData() {
             if(!API_URL || !TOKEN) return;
             try {
-                // Загрузка глобального статуса сервера
                 const statsRes = await axios.get(`${API_URL}/api/stats`);
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
@@ -218,11 +218,9 @@
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
-                // Загрузка игроков онлайн
                 const playersRes = await axios.get(`${API_URL}/api/players`);
                 const listDiv = document.getElementById('players-list');
                 
-                // Запоминаем какие карточки открыты, чтобы не схлопывались каждые 4 секунды
                 const openedCards = [];
                 document.querySelectorAll('[id^="details-"]').forEach(el => {
                     if(!el.classList.contains('hidden')) openedCards.push(el.id);
@@ -236,23 +234,8 @@
                     playersRes.data.forEach(p => {
                         const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
                         
-                        // Рендеринг персональной статистики игрока из оперативной памяти сервера (p.stats)
-                        let statsHtml = '';
-                        if(p.stats && Object.keys(p.stats).length > 0) {
-                            statsHtml += `<div class="bg-zinc-950/60 p-2.5 rounded-lg border border-zinc-800/40 mt-2">
-                                <p class="text-[10px] text-zinc-500 uppercase font-bold mb-1.5">📈 Персональная статистика (кэш):</p>
-                                <div class="grid grid-cols-1 gap-1 text-[11px]">`;
-                            for(let sKey in p.stats) {
-                                const sName = metricTranslations[sKey] || sKey;
-                                statsHtml += `<div class="text-zinc-400 flex justify-between border-b border-zinc-900 pb-0.5"><span>${sName}:</span> <span class="font-mono text-indigo-400 font-bold">${p.stats[sKey]}</span></div>`;
-                            }
-                            statsHtml += `</div></div>`;
-                        } else {
-                            statsHtml = `<p class="text-[10px] text-zinc-600 italic mt-1">Дополнительная статистика в кэше пуста</p>`;
-                        }
-
-                        // Координаты берутся без округления в исходном виде
-                        const coordsStr = (p.x !== undefined) ? `${p.x} / ${p.y} / ${p.z}` : 'Не определено';
+                        // Строгая проверка существования координат (чтобы избежать "Не определено" при валидных 0 0 0)
+                        const coordsStr = (typeof p.x !== 'undefined' && p.x !== null) ? `${p.x} / ${p.y} / ${p.z}` : 'Не определено';
 
                         listDiv.innerHTML += `
                             <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden">
@@ -270,10 +253,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Развернутое меню опций -->
                                 <div id="details-${p.name}" class="${isHidden} p-3 border-t border-zinc-800/50 bg-zinc-950/30 space-y-3">
                                     
-                                    <!-- Полная информация -->
                                     <div class="grid grid-cols-1 gap-1 text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/40 font-mono">
                                         <p class="text-zinc-400 flex justify-between"><span>Координаты:</span> <span class="text-zinc-200 text-[10px]">${coordsStr}</span></p>
                                         <p class="text-zinc-400 flex justify-between"><span>Сытость:</span> <span class="text-amber-400">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
@@ -281,10 +262,6 @@
                                         <p class="text-zinc-400 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 uppercase font-bold">${p.gamemode}</span></p>
                                     </div>
 
-                                    <!-- Вставка персональной статы из кэша -->
-                                    ${statsHtml}
-
-                                    <!-- Изменение игрового режима -->
                                     <div class="space-y-1">
                                         <p class="text-[10px] text-zinc-500 uppercase font-bold">Установить режим:</p>
                                         <div class="grid grid-cols-4 gap-1">
@@ -295,7 +272,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Отправка личного сообщения -->
                                     <div class="space-y-1">
                                         <p class="text-[10px] text-zinc-500 uppercase font-bold">Отправить личное сообщение (ЛС):</p>
                                         <div class="flex gap-1.5">
@@ -304,7 +280,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Административные команды -->
                                     <div class="grid grid-cols-3 gap-1.5 pt-1">
                                         <button onclick="quickAction('op ${p.name}')" class="bg-zinc-950 border border-emerald-900/50 text-emerald-400 text-[10px] font-medium py-1.5 rounded hover:bg-emerald-950/20">Выдать OP</button>
                                         <button onclick="quickAction('deop ${p.name}')" class="bg-zinc-950 border border-amber-900/50 text-amber-400 text-[10px] font-medium py-1.5 rounded hover:bg-amber-950/20">Забрать OP</button>
@@ -320,7 +295,6 @@
             }
         }
 
-        // ЛС через консольную отправку /msg
         async function sendPrivateMsg(playerName) {
             const input = document.getElementById(`msg-${playerName}`);
             const text = input.value.trim();
@@ -337,7 +311,6 @@
             }
         }
 
-        // Загрузка плашки (Закрепленного ТГ-сообщения)
         async function loadAnnouncement() {
             if(!API_URL || !TOKEN) return;
             try {
@@ -351,8 +324,8 @@
             try {
                 await axios.post(`${API_URL}/api/announcement`, { text: text });
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Плашка успешно обновлена в Telegram!");
-            } catch(err) { alert("Ошибка сохранения плашки"); }
+                alert("Текст плашки успешно сохранен!");
+            } catch(err) { alert("Ошибка сохранения текста плашки"); }
         }
 
         async function clearAnnouncement() {
@@ -360,11 +333,21 @@
                 await axios.post(`${API_URL}/api/announcement`, { text: "" });
                 document.getElementById('ann-input').value = "";
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Плашка удалена.");
-            } catch(err) { alert("Ошибка удаления плашки"); }
+                alert("Плашка стерта.");
+            } catch(err) { alert("Ошибка очистки плашки"); }
         }
 
-        // Загрузка Цитат
+        // Логика кнопки принудительного обновления плашки в ТГ
+        async function forceRefreshAnnouncement() {
+            try {
+                await axios.post(`${API_URL}/api/announcement/refresh`);
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("Запрос на принудительный перерасчет и обновление плашки отправлен!");
+            } catch(err) {
+                alert("Ошибка принудительного обновления. Проверь эндпоинт /api/announcement/refresh в плагине.");
+            }
+        }
+
         async function loadQuotes() {
             if(!API_URL || !TOKEN) return;
             const listDiv = document.getElementById('quotes-list');
@@ -411,7 +394,6 @@
             } catch(err) { alert("Ошибка удаления"); }
         }
 
-        // Загрузка Доски Почёта без потери метрик
         async function loadLeaderboard() {
             if(!API_URL || !TOKEN) return;
             const tbody = document.getElementById('leaderboard-data');
@@ -420,11 +402,10 @@
                 tbody.innerHTML = '';
                 let hasData = false;
                 
-                // Рендерим стандартные метрики (res.data.stats)
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
-                        const ruName = metricTranslations[key] || key; // Если перевода нет, выведет исходное имя
+                        const ruName = metricTranslations[key] || key;
                         tbody.innerHTML += `
                             <tr class="hover:bg-zinc-900/20 border-b border-zinc-800/30 transition">
                                 <td class="p-3 font-medium text-zinc-400">${ruName}</td>
@@ -435,7 +416,6 @@
                     }
                 }
                 
-                // Рендерим кастомные метрики (res.data.custom)
                 if(res.data.custom) {
                     for(let key in res.data.custom) {
                         hasData = true;
@@ -493,7 +473,6 @@
             }
         }
 
-        // Автообновление
         loadData();
         loadAnnouncement();
         setInterval(loadData, 4000);
