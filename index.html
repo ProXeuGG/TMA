@@ -228,7 +228,7 @@
     // Функция запроса к нашему новому бэкэнду на Vercel
     async function loadServerData() {
         try {
-            const response = await fetch('https://ТВОЙ_ПРОЕКТ.vercel.app/api/auth-check', {
+            const response = await fetch('https://tma-brown-nine.vercel.app/api/auth-check', {
                 method: 'POST',
                 headers: {
                     'X-TMA-Auth': tg.initData, // Передаем данные авторизации ТГ
