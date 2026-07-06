@@ -1,6 +1,19 @@
 const Redis = require('ioredis');
 const redis = new Redis(process.env.REDIS_URL);
 
+// Добавляем настройки, чтобы Redis не ждал вечно
+const redis = new Redis(process.env.REDIS_URL, {
+    maxRetriesPerRequest: 0, // Выдавать ошибку сразу, а не пытаться подключиться вечно
+    connectTimeout: 2000     // Если за 2 секунды не подключился — прерывать поток
+});
+
+// Перехватываем ошибки подключения, чтобы они не роняли сам Node.js процесс
+redis.on('error', (err) => {
+    console.error('Redis Connection Error:', err);
+});
+
+module.exports = async (req, res) => {
+    // ... весь остальной код оставляем без изменений
 module.exports = async (req, res) => {
     // Разрешаем только POST запросы от плагина
     if (req.method !== 'POST') {
