@@ -131,7 +131,7 @@
             </div>
 
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Пнямая Консоль</h3>
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Прямая Консоль</h3>
                 <div class="flex gap-2">
                     <input type="text" id="cmd-input" placeholder="Команда без /" 
                            class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 font-mono text-zinc-300">
@@ -234,8 +234,24 @@
                     playersRes.data.forEach(p => {
                         const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
                         
-                        // Строгая проверка существования координат (чтобы избежать "Не определено" при валидных 0 0 0)
-                        const coordsStr = (typeof p.x !== 'undefined' && p.x !== null) ? `${p.x} / ${p.y} / ${p.z}` : 'Не определено';
+                        // --- ИСПРАВЛЕНИЕ КООРДИНАТ (Умный разбор структуры) ---
+                        let coordsStr = 'Не определено';
+                        if (typeof p.x !== 'undefined' && p.x !== null) {
+                            coordsStr = `${p.x} / ${p.y} / ${p.z}`;
+                        } else if (p.location && typeof p.location.x !== 'undefined') {
+                            // На случай, если в Java-классе координаты лежат внутри объекта location
+                            coordsStr = `${p.location.x} / ${p.location.y} / ${p.location.z}`;
+                        } else if (p.coords && typeof p.coords.x !== 'undefined') {
+                            // На случай, если объект называется coords
+                            coordsStr = `${p.coords.x} / ${p.coords.y} / ${p.coords.z}`;
+                        }
+
+                        // --- ИСПРАВЛЕНИЕ УРОВНЯ ОПЫТА (Умный разбор ключей) ---
+                        let playerXp = 0;
+                        if (typeof p.xp !== 'undefined' && p.xp !== null) playerXp = p.xp;
+                        else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
+                        else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
+                        else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
                         listDiv.innerHTML += `
                             <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden">
@@ -258,7 +274,7 @@
                                     <div class="grid grid-cols-1 gap-1 text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/40 font-mono">
                                         <p class="text-zinc-400 flex justify-between"><span>Координаты:</span> <span class="text-zinc-200 text-[10px]">${coordsStr}</span></p>
                                         <p class="text-zinc-400 flex justify-between"><span>Сытость:</span> <span class="text-amber-400">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
-                                        <p class="text-zinc-400 flex justify-between"><span>Уровень XP:</span> <span class="text-emerald-400">${p.xp !== undefined ? p.xp : '0'} LVL</span></p>
+                                        <p class="text-zinc-400 flex justify-between"><span>Уровень XP:</span> <span class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
                                         <p class="text-zinc-400 flex justify-between"><span>Режим игры:</span> <span class="text-indigo-400 uppercase font-bold">${p.gamemode}</span></p>
                                     </div>
 
@@ -337,7 +353,6 @@
             } catch(err) { alert("Ошибка очистки плашки"); }
         }
 
-        // Логика кнопки принудительного обновления плашки в ТГ
         async function forceRefreshAnnouncement() {
             try {
                 await axios.post(`${API_URL}/api/announcement/refresh`);
