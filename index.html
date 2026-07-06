@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Панель Профкрафт</title>
-    <!-- Подключаем Телеграм скрипт -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -12,9 +11,10 @@
             --container-bg: #161920;
             --text-color: #f5f6f9;
             --text-muted: #8a90a2;
-            --accent-color: #4f46e5; /* Электрик блю */
+            --accent-color: #4f46e5;
             --accent-hover: #6366f1;
-            --success-color: #10b981; /* Зеленый онлайн */
+            --success-color: #10b981;
+            --danger-color: #ef4444;
             --button-bg: #1f242f;
             --button-hover: #282e3d;
         }
@@ -40,7 +40,6 @@
             box-sizing: border-box;
         }
 
-        /* Шапка панели */
         .header {
             text-align: center;
             margin-bottom: 24px;
@@ -64,7 +63,6 @@
             margin: 0;
         }
 
-        /* Виджет Статистики */
         .stats-widget {
             background: rgba(16, 185, 129, 0.05);
             border: 1px solid rgba(16, 185, 129, 0.2);
@@ -97,7 +95,6 @@
             color: var(--text-color);
         }
 
-        /* Сетка инлайн-кнопок меню */
         .menu-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -118,6 +115,8 @@
             align-items: center;
             transition: all 0.2s ease;
             text-align: left;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .inline-btn:hover {
@@ -126,11 +125,6 @@
             border-color: rgba(255, 255, 255, 0.08);
         }
 
-        .inline-btn:active {
-            transform: translateY(1px);
-        }
-
-        /* Стрелочка справа, как в iOS/Telegram меню */
         .btn-arrow {
             color: var(--text-muted);
             font-size: 14px;
@@ -142,19 +136,32 @@
             transform: translateX(2px);
         }
 
-        /* Кнопка главного действия (выделенная) */
-        .inline-btn.primary {
-            background: var(--accent-color);
-            border: none;
+        /* Стили для админ-панели */
+        .admin-section {
+            border: 1px dashed rgba(99, 102, 241, 0.4);
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(99, 102, 241, 0.02);
+            margin-top: 8px;
         }
-        .inline-btn.primary:hover {
-            background: var(--accent-hover);
-        }
-        .inline-btn.primary .btn-arrow {
-            color: #fff;
+        
+        .admin-title {
+            font-size: 13px;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 10px 4px;
+            font-weight: 600;
         }
 
-        /* Скелетон загрузки */
+        .inline-btn.danger {
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .inline-btn.danger:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger-color);
+        }
+
         .loading {
             text-align: center;
             color: var(--text-muted);
@@ -166,16 +173,14 @@
 <body>
 
 <div class="panel-container">
-    <!-- Шапка -->
     <div class="header">
         <h1 id="server-name">Профкрафт Panel</h1>
         <p class="welcome-text" id="username">Загрузка авторизации...</p>
     </div>
 
-    <!-- Основной контент (скрыт пока идет загрузка) -->
+    <!-- Основной контент -->
     <div id="content" style="display: none;">
         
-        <!-- Живой виджет онлайна из нашей новой базы -->
         <div class="stats-widget">
             <div>
                 <span class="status-dot"></span>
@@ -184,9 +189,8 @@
             <div class="stats-value" id="online-counter">0 / 0</div>
         </div>
 
-        <!-- Кнопки меню (Админ-панелька) -->
         <div class="menu-grid">
-            <button class="inline-btn primary" onclick="showAlert('Раздел профиля в разработке')">
+            <button class="inline-btn" onclick="showAlert('Раздел профиля в разработке')">
                 <span>👤 Мой персонаж</span>
                 <span class="btn-arrow">→</span>
             </button>
@@ -201,54 +205,73 @@
                 <span class="btn-arrow">→</span>
             </button>
 
-            <button class="inline-btn" onclick="executeAdminAction()">
-                <span>⚙️ Управление Профкрафт (Админ)</span>
-                <span class="btn-arrow">→</span>
-            </button>
+            <!-- БЛОК АДМИНА: По умолчанию скрыт (display: none) -->
+            <div id="admin-panel" class="admin-section" style="display: none;">
+                <div class="admin-title">⚙️ Управление Профкрафт (Админ)</div>
+                <div class="menu-grid">
+                    <button class="inline-btn" onclick="sendAdminAction('reload_plugin', 'Перезагрузка плагина...')">
+                        <span>🔄 Перезагрузить плагин</span>
+                        <span class="btn-arrow">⚡</span>
+                    </button>
+                    <button class="inline-btn" onclick="sendAdminAction('toggle_whitelist', 'Переключение Вайтлиста...')">
+                        <span>🔒 Белый список (Вкл/Выкл)</span>
+                        <span class="btn-arrow">⚡</span>
+                    </button>
+                    <button class="inline-btn" onclick="promptBroadcast()">
+                        <span>📢 Объявление на сервер</span>
+                        <span class="btn-arrow">⚡</span>
+                    </button>
+                    <button class="inline-btn danger" onclick="confirmRestart()">
+                        <span style="color: var(--danger-color);">🚀 Рестарт сервера</span>
+                        <span class="btn-arrow">⚠️</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Индикатор загрузки -->
     <div id="loader" class="loading">Синхронизация с сервером...</div>
 </div>
 
 <script>
-    // Инициализируем Telegram WebApp API
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачиваем на весь экран телефона
+    tg.expand();
 
-    // Получаем имя игрока из Телеграма
     const user = tg.initDataUnsafe?.user;
     if (user) {
-        document.getElementById('username').innerText = `Привет, ${user.first_name || 'Игрок'}! Успешный вход.`;
+        document.getElementById('username').innerText = `Привет, ${user.first_name || 'Игрок'}!`;
     } else {
         document.getElementById('username').innerText = `Привет, Тестировщик!`;
     }
 
-    // Функция запроса к нашему новому бэкэнду на Vercel
     async function loadServerData() {
         try {
-            const response = await fetch('https://tma-brown-nine.vercel.app/api/auth-check', {
+            const response = await fetch('/api/auth-check', {
                 method: 'POST',
                 headers: {
-                    'X-TMA-Auth': tg.initData, // Передаем данные авторизации ТГ
+                    'X-TMA-Auth': tg.initData,
                     'Content-Type': 'application/json'
                 }
             });
 
             const result = await response.json();
 
-            if (result.status === 'success' && result.serverData) {
-                // Прячем загрузку, показываем меню
+            if (result.status === 'success') {
                 document.getElementById('loader').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
 
-                // Засовываем реальный онлайн из Redis в виджет
+                // Выводим онлайн
                 const stats = result.serverData;
-                if(stats.current_online !== undefined) {
+                if(stats && stats.current_online !== undefined) {
                     document.getElementById('online-counter').innerText = `${stats.current_online} / ${stats.max_players}`;
                 } else {
-                    document.getElementById('online-counter').innerText = "Сервер спит";
+                    document.getElementById('online-counter').innerText = "Сервер оффлайн";
+                }
+
+                // ИЗМЕНЕНИЕ: Включаем отображение админки только если бэкэнд подтвердил флаг isAdmin
+                if (result.isAdmin === true) {
+                    document.getElementById('admin-panel').style.display = 'block';
                 }
             } else {
                 document.getElementById('loader').innerText = "Ошибка авторизации бэкэнда.";
@@ -259,27 +282,67 @@
         }
     }
 
-    // Вспомогательные функции для кликов
-    function showAlert(message) {
-        tg.showAlert(message);
+    // Универсальная функция отправки админских команд в плагин Майнкрафта
+    async function sendAdminAction(actionType, loadingMessage, extraData = {}) {
+        tg.MainButton.setText(loadingMessage);
+        tg.MainButton.show();
+        tg.MainButton.disable();
+
+        try {
+            const response = await fetch('/api/admin/execute', {
+                method: 'POST',
+                headers: {
+                    'X-TMA-Auth': tg.initData, // Передаем данные сессии для валидации на стороне плагина
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: actionType,
+                    ...extraData
+                })
+            });
+
+            if (response.ok) {
+                tg.showAlert('Действие успешно выполнено сервером!');
+            } else {
+                tg.showAlert(`Ошибка сервера: ${response.status}`);
+            }
+        } catch (err) {
+            tg.showAlert(`Не удалось отправить команду: ${err.message}`);
+        } finally {
+            tg.MainButton.hide();
+        }
     }
 
-    function executeAdminAction() {
+    // Кастомный попап для подтверждения рестарта
+    function confirmRestart() {
         tg.showPopup({
-            title: 'Админ-зона',
-            message: 'Вы уверены, что хотите перезагрузить Профкрафт?',
+            title: 'Опасное действие',
+            message: 'Вы уверены, что хотите принудительно перезагрузить игровой сервер?',
             buttons: [
-                {id: 'reload', type: 'destructive', text: 'Рестарт сервера'},
+                {id: 'restart', type: 'destructive', text: 'Да, рестарт'},
                 {id: 'cancel', type: 'cancel', text: 'Отмена'}
             ]
         }, (buttonId) => {
-            if (buttonId === 'reload') {
-                tg.showAlert('Команда на рестарт отправлена!');
+            if (buttonId === 'restart') {
+                sendAdminAction('server_restart', 'Отправка команды рестарта...');
             }
         });
     }
 
-    // Запускаем загрузку данных при старте страницы
+    // Ввод текста объявления через стандартный интерфейс ТГ
+    function promptBroadcast() {
+        // Из-за ограничений WebApp prompt вызываем нативно или через стандартную логику ввода,
+        // для простоты используем нативный промис ввода, если ТГ поддерживает, либо обычный prompt
+        const text = prompt("Введите текст объявления для отправки в общий чат:");
+        if (text && text.trim() !== "") {
+            sendAdminAction('broadcast', 'Отправка объявления...', { message: text });
+        }
+    }
+
+    function showAlert(message) {
+        tg.showAlert(message);
+    }
+
     window.onload = loadServerData;
 </script>
 
