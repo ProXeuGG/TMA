@@ -2,135 +2,414 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель Управления Сервером</title>
-    <!-- Подключаем официальный скрипт Телеграма для Mini App -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>K-TECH Advanced Admin Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Настройка фона и шрифтов под тему Телеграма */
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #17212b);
+            --text-color: var(--tg-theme-text-color, #f5f5f5);
+            --hint-color: var(--tg-theme-hint-color, #708499);
+            --button-color: var(--tg-theme-button-color, #2b5278);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #10171d);
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --danger-color: #e53935;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            background-color: var(--secondary-bg);
+            color: var(--text-color);
             margin: 0;
+            padding: 0;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Шапка панели */
+        .header {
+            background-color: var(--bg-color);
             padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: var(--text-color);
+        }
+
+        .header .server-tag {
+            font-size: 11px;
+            color: var(--button-color);
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Навигация (Вкладки) */
+        .tabs {
+            display: flex;
+            background-color: var(--bg-color);
+            padding: 4px;
+            margin: 12px;
+            border-radius: 10px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--hint-color);
+            padding: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--button-color);
+            color: var(--button-text-color);
+        }
+
+        /* Контент вкладок */
+        .tab-content {
+            display: none;
+            padding: 0 12px 24px 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Карточки мониторинга */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-color);
+            padding: 14px;
+            border-radius: 12px;
+            border-left: 4px solid var(--button-color);
+        }
+
+        .stat-card.tps-good { border-left-color: var(--success-color); }
+        .stat-card.tps-warn { border-left-color: var(--warning-color); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--hint-color);
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Стилизация списков (Игроки) */
+        .player-list {
             display: flex;
             flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-item {
+            background-color: var(--bg-color);
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
 
-        h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: var(--tg-theme-hint-color, #aaaaaa);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Контейнер для кнопок, имитирующий сетку (Grid) инлайн-клавиатуры */
-        .keyboard-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Две кнопки в ряд, как в ботах */
-            gap: 8px; /* Расстояние между кнопками */
-            width: 100%;
-            max-width: 400px;
+        .player-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background-color: #555;
         }
 
-        /* Кнопка на всю ширину (если нужно сделать один важный ряд) */
-        .full-width {
-            grid-column: span 2;
-        }
-
-        /* Стилизация кнопок точь-в-точь как Telegram Inline Keyboards */
-        .tg-button {
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            border-radius: 8px; /* Закругление как у стандартных кнопок */
-            padding: 12px 16px;
+        .player-name {
             font-size: 14px;
             font-weight: 500;
+        }
+
+        .player-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            color: var(--hint-color);
+        }
+
+        /* Кнопки действий (Сетка старой инлайн клавиатуры, но чище) */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 14px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 10px;
             cursor: pointer;
-            transition: opacity 0.2s ease;
-            text-align: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
         }
 
-        /* Эффект при нажатии */
-        .tg-button:active {
-            opacity: 0.8;
+        .btn:active {
+            background-color: rgba(255,255,255,0.05);
         }
 
-        /* Кнопки предупреждения (например, стоп или кик) */
-        .danger {
-            background-color: #e53935;
+        .btn-primary { background-color: var(--button-color); color: var(--button-text-color); }
+        .btn-danger { background-color: var(--danger-color); color: #fff; }
+        .btn-warn { background-color: var(--warning-color); color: #fff; }
+        .btn-full { grid-column: span 2; }
+
+        /* Консольный ввод */
+        .console-box {
+            background-color: #0c1014;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            color: #00ff00;
+            border: 1px solid #222;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .input-field {
+            flex: 1;
+            background-color: var(--bg-color);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-color);
+            padding: 12px;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <h2 id="server-status">Загрузка статуса...</h2>
+    <div class="header">
+        <h1>K-TECH CONTROL SYSTEM</h1>
+        <span class="server-tag">Core v2.1 • Live Sync</span>
+    </div>
 
-    <!-- Сетка кнопок (наша Mini Keyboard) -->
-    <div class="keyboard-container">
-        
-        <button class="tg-button full-width" onclick="sendAction('status')">🔄 Обновить статус</button>
-        
-        <button class="tg-button" onclick="sendAction('whitelist_on')">🔐 Вкл. Вайтлист</button>
-        <button class="tg-button" onclick="sendAction('whitelist_off')">🔓 Выкл. Вайтлист</button>
-        
-        <button class="tg-button" onclick="sendAction('say_hello')">📢 Объявление в чат</button>
-        <button class="tg-button danger" onclick="sendAction('kick_all')">🛑 Кикнуть всех</button>
-        
-        <button class="tg-button danger full-width" onclick="sendAction('stop_server')">⚠️ Выключить сервер</button>
+    <!-- Переключатель вкладок -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('dash')">📊 ИНФО</button>
+        <button class="tab-btn" onclick="switchTab('players')">👥 ИГРОКИ (<span id="p-count">0</span>)</button>
+        <button class="tab-btn" onclick="switchTab('actions')">⚙️ СЕРВЕР</button>
+        <button class="tab-btn" onclick="switchTab('console')">💻 РУТЫ</button>
+    </div>
 
+    <!-- Вкладка 1: Мониторинг -->
+    <div id="tab-dash" class="tab-content active">
+        <div class="stats-grid">
+            <div class="stat-card tps-good" id="tps-card">
+                <div class="stat-label">Стабильность</div>
+                <div class="stat-value" id="val-tps">20.00 TPS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Онлайн</div>
+                <div class="stat-value" id="val-online">0 / 50</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ОЗУ Сервера</div>
+                <div class="stat-value" id="val-ram">0.0 GB</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Вайтлист</div>
+                <div class="stat-value" id="val-wl">Выкл</div>
+            </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="fetchServerData()">🔄 Обновить метрики</button>
+    </div>
+
+    <!-- Вкладка 2: Список игроков и быстрые действия -->
+    <div id="tab-players" class="tab-content">
+        <div class="player-list" id="players-container">
+            <!-- Сюда JS будет рендерить игроков динамически -->
+            <div style="text-align: center; color: var(--hint-color); padding: 20px;">Игроков нет онлайн</div>
+        </div>
+    </div>
+
+    <!-- Вкладка 3: Управление сервером (Старая клавиатура) -->
+    <div id="tab-actions" class="tab-content">
+        <div class="action-grid">
+            <button class="btn" onclick="sendAction('whitelist on')">🔐 Вкл. Вайтлист</button>
+            <button class="btn" onclick="sendAction('whitelist off')">🔓 Выкл. Вайтлист</button>
+            <button class="btn" onclick="sendAction('whitelist reload')">♻️ Обновить WL</button>
+            <button class="btn" onclick="openPromptAndSend('whitelist add ', 'Введите ник для WL:')">➕ Добавить в WL</button>
+            
+            <button class="btn btn-warn btn-full" onclick="openPromptAndSend('say ', 'Введите текст объявления:')">📢 Сказать от имени сервера</button>
+            <button class="btn btn-danger" onclick="sendAction('kickall')">🛑 Кикнуть всех</button>
+            <button class="btn btn-danger" onclick="sendAction('stop')">⚠️ Выключить сервер</button>
+        </div>
+    </div>
+
+    <!-- Вкладка 4: Прямая Консоль -->
+    <div id="tab-console" class="tab-content">
+        <div class="console-box" id="console-logs">
+            [System] Подключено к очереди команд...<br>
+            [System] Ожидание ввода директив RCON...
+        </div>
+        <div class="input-group">
+            <input type="text" id="cmd-input" class="input-field" placeholder="Команда без / (например: op andit)">
+            <button class="btn btn-primary" onclick="sendCustomCommand()">Выполнить</button>
+        </div>
     </div>
 
     <script>
-        // Инициализируем Telegram WebApp API
         const tg = window.Telegram.WebApp;
-        tg.ready(); // Сообщаем ТГ, что приложение готово
-        tg.expand(); // Разворачиваем на максимум для удобства
+        tg.ready();
+        tg.expand();
 
-        // Функция отправки команды на наш бэкенд Vercel
-        async function sendAction(actionCommand) {
-            // Виброотклик при нажатии на кнопку (как в Телеграме!)
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('medium');
-            }
+        // Смена вкладок
+        function switchTab(tabName) {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
 
-            // Собираем данные авторизации Телеграма и саму команду
-            const payload = {
-                initData: tg.initData, // Передаем строку инициализации для проверки прав
-                actionData: actionCommand // Передаем саму команду (например, 'kick_all')
-            };
-
+        // Отправка базовых команд
+        async function sendAction(cmd) {
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            
             try {
-                // Делаем запрос к нашему эндпоинту action.js, который мы создали на прошлом шаге
                 const response = await fetch('/api/admin/action', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData, actionData: cmd })
                 });
-
-                const result = await response.json();
-
-                if (result.status === 'queued') {
-                    // Красивое всплывающее уведомление внутри Телеграма
-                    tg.showAlert(`Команда "${actionCommand}" успешно отправлена на сервер!`);
-                } else {
-                    tg.showPopup({ title: 'Ошибка', message: 'Не удалось поставить команду в очередь.' });
+                const res = await response.json();
+                if (res.status === 'queued') {
+                    logToConsole(`[Отправлено] Команда затарена в Redis: ${cmd}`);
+                    tg.showAlert(`Выполнено: ${cmd}`);
                 }
-
-            } catch (error) {
-                tg.showPopup({ title: 'Ошибка сети', message: error.message });
+            } catch (e) {
+                tg.showAlert(`Ошибка отправки: ${e.message}`);
             }
         }
 
-        // В будущем здесь будет код, который берет данные из Redis и обновляет статус h2
-        document.getElementById('server-status').innerText = "K-TECH ПАНЕЛЬ УПРАВЛЕНИЯ";
+        // Кастомный ввод через всплывающее ТГ окно
+        function openPromptAndSend(prefix, title) {
+            const result = prompt(title);
+            if (result) {
+                sendAction(prefix + result.trim());
+            }
+        }
+
+        // Отправка команды из вкладки "Консоль"
+        function sendCustomCommand() {
+            const input = document.getElementById('cmd-input');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            
+            sendAction(cmd);
+            input.value = '';
+        }
+
+        function logToConsole(text) {
+            const box = document.getElementById('console-logs');
+            box.innerHTML += `<br>${text}`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Запрос метрик сервера с бэкенда (из Redis)
+        async function fetchServerData() {
+            try {
+                // В реальной сборке мы делаем GET к нашему апи, который читает ключ 'mc_server_state' из Redis
+                const response = await fetch('/api/admin/get-state'); 
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                // Обновляем дашборд данными из Java плагина
+                document.getElementById('val-tps').innerText = data.tps.toFixed(2) + ' TPS';
+                document.getElementById('val-online').innerText = `${data.online} / ${data.max_players}`;
+                document.getElementById('val-ram').innerText = data.ram;
+                document.getElementById('val-wl').innerText = data.whitelist ? 'Вкл' : 'Выкл';
+                document.getElementById('p-count').innerText = data.online;
+
+                // Цветовая индикация лагов
+                const tpsCard = document.getElementById('tps-card');
+                if (data.tps < 16) {
+                    tpsCard.className = 'stat-card tps-warn';
+                } else {
+                    tpsCard.className = 'stat-card tps-good';
+                }
+
+                // Рендерим игроков
+                const container = document.getElementById('players-container');
+                if(data.players && data.players.length > 0) {
+                    container.innerHTML = data.players.map(p => `
+                        <div class="player-item">
+                            <div class="player-info">
+                                <img class="player-avatar" src="https://minotar.net/avatar/${p}/24" onerror="this.style.display='none'">
+                                <span class="player-name">${p}</span>
+                            </div>
+                            <button class="btn btn-danger" style="padding:6px 12px; font-size:11px;" onclick="sendAction('kick ${p}')">KICK</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 20px;">Игроков нет онлайн</div>';
+                }
+
+            } catch (e) {
+                console.log('Ждем генерации ключей в Redis...', e);
+            }
+        }
+
+        // Авто-обновление раз в 5 секунд, чтобы не грузить телефон
+        setInterval(fetchServerData, 5000);
+        fetchServerData();
     </script>
 </body>
 </html>
