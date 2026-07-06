@@ -1,33 +1,39 @@
-// Инициализируем Telegram Web App
 const tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand(); // Разворачиваем на всю высоту
+const statusDiv = document.getElementById('status');
 
-const authStatusDiv = document.getElementById('auth-status');
-const contentDiv = document.getElementById('content');
-
-// Проверяем, что запущено внутри Telegram
-if (!tg.initData) {
-    authStatusDiv.innerHTML = "<p style='color:red;'>Открыть можно только через Telegram Mini App!</p>";
-} else {
-    // Отправляем данные авторизации на наш Bukkit-сервер
-    fetch('/api/auth-check', {
-        method: 'POST',
-        headers: {
-            'X-TMA-Auth': tg.initData
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            authStatusDiv.innerHTML = `<p style='color:green;'>Успешно авторизован как: ${tg.initDataUnsafe.user.username}</p>`;
-            contentDiv.style.display = 'block';
-        } else {
-            authStatusDiv.innerHTML = `<p style='color:red;'>Ошибка авторизации: ${data.message}</p>`;
-        }
-    })
-    .catch(err => {
-        authStatusDiv.innerHTML = "<p style='color:red;'>Не удалось связаться с сервером Майнкрафта</p>";
-        console.error(err);
-    });
+try {
+    tg.ready();
+    
+    if (!tg.initData) {
+        statusDiv.innerText = "Открыть можно только через Telegram!";
+    } else {
+        statusDiv.innerText = "Отправка запроса на бэкэнд Майнкрафта...";
+        
+        fetch('/api/auth-check', {
+            method: 'POST',
+            headers: {
+                'X-TMA-Auth': tg.initData,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            statusDiv.innerText = `Получен ответ от Vercel. Статус: ${res.status}`;
+            if (!res.ok) {
+                throw new Error(`Vercel вернул ошибку ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                statusDiv.innerText = `Привет, ${tg.initDataUnsafe.user.username}! Успешный вход.`;
+            } else {
+                statusDiv.innerText = `Сервер отклонил вход: ${data.message}`;
+            }
+        })
+        .catch(err => {
+            statusDiv.innerText = `Ошибка: ${err.message}. Проверь, запущен ли плагин и открыт ли порт!`;
+        });
+    }
+} catch (e) {
+    statusDiv.innerText = `Критический сбой скрипта: ${e.message}`;
 }
