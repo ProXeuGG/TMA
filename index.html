@@ -45,7 +45,7 @@
                 </div>
             </div>
 
-            <!-- Быстрое объявление -->
+            <!-- Быстрое объявление (Плашка / Чат) -->
             <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
                 <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">📢 Объявление на весь сервер</h3>
                 <div class="flex gap-2">
@@ -54,57 +54,26 @@
                     <button onclick="sendBroadcast()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Оповестить</button>
                 </div>
             </div>
-
-            <!-- [ДОБАВЛЕНО] Управление ТГ Плашкой -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">📱 ТГ Плашка (Объявление)</h3>
-                <div class="flex flex-col gap-2">
-                    <textarea id="ann-input" rows="2" placeholder="Загрузка текста плашки..." 
-                              class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300"></textarea>
-                    <div class="flex gap-2">
-                        <button onclick="saveAnnouncement()" class="bg-indigo-600 hover:bg-indigo-500 text-white flex-1 py-2 rounded-lg text-sm font-medium transition active:scale-95">Обновить</button>
-                        <button onclick="clearAnnouncement()" class="bg-zinc-900 border border-zinc-800 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition active:scale-95">Стереть</button>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Вкладка 2: Игроки -->
+        <!-- Вкладка 2: Игроки (ПРОКАЧАННАЯ) -->
         <div id="tab-players" class="tab-content space-y-3">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">👥 Управление игроками</h2>
+            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">👥 Управление игроками (Нажми для настроек)</h2>
             <div id="players-list" class="space-y-2.5">
                 <p class="text-xs text-zinc-500 italic">Загрузка игроков...</p>
             </div>
         </div>
 
-        <!-- [ДОБАВЛЕНО] Вкладка 4: Цитаты -->
-        <div id="tab-quotes" class="tab-content space-y-4">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">💬 Управление цитатами</h2>
-            
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl space-y-3">
-                <h3 class="text-xs font-semibold text-zinc-500 uppercase">Добавить новую</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="quote-author" placeholder="Автор" class="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
-                    <input type="text" id="quote-text" placeholder="Текст цитаты" class="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
-                </div>
-                <button onclick="addQuote()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-xs font-medium transition">Добавить цитату</button>
-            </div>
-
-            <div id="quotes-list" class="space-y-2.5">
-                <p class="text-xs text-zinc-500 italic">Загрузка цитат...</p>
-            </div>
-        </div>
-
-        <!-- [ДОБАВЛЕНО] Вкладка 5: Лидерборд -->
+        <!-- Вкладка 4: Доска почета (ПРОКАЧАННАЯ) -->
         <div id="tab-leader" class="tab-content space-y-4">
             <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">🏆 Доска почёта</h2>
             <div class="bg-zinc-900/30 border border-zinc-800/80 rounded-xl overflow-hidden">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-zinc-900/60 border-b border-zinc-800 text-zinc-400 font-medium">
-                            <th class="p-3">Метрика</th>
-                            <th class="p-3">Игрок</th>
-                            <th class="p-3 text-right">Значение</th>
+                            <th class="p-3">Номинация</th>
+                            <th class="p-3">Лидер</th>
+                            <th class="p-3 text-right">Результат</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-data" class="divide-y divide-zinc-800/50 text-zinc-300">
@@ -141,20 +110,16 @@
 
     <!-- НИЖНЕЕ МЕНЮ НАВИГАЦИИ (ФУТЕР) -->
     <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/80 p-2 flex justify-around items-center backdrop-blur-md">
-        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[11px] font-medium tg-btn-active">
+        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium tg-btn-active">
             <span>📊</span>Главная
         </button>
-        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[11px] font-medium">
+        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium">
             <span>👥</span>Игроки
         </button>
-        <!-- [ДОБАВЛЕНО] Новые кнопки меню -->
-        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[11px] font-medium">
-            <span>💬</span>Цитаты
-        </button>
-        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[11px] font-medium">
+        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium">
             <span>🏆</span>Топ
         </button>
-        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-2 py-1.5 rounded-xl transition text-[11px] font-medium">
+        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium">
             <span>⚙️</span>Система
         </button>
     </div>
@@ -169,6 +134,18 @@
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
 
+        // Словарь для перевода английских метрик в крутые русские названия
+        const metricTranslations = {
+            "blocks_broken": "⛏️ Прораб года (Блоков сломано)",
+            "player_kills": "⚔️ Охотник за головами (Убито игроков)",
+            "mob_kills": "🦁 Истребитель фауны (Убито мобов)",
+            "deaths": "💀 Постоянный гость спавна (Смертей)",
+            "time_played": "⏱️ Задрот сервера (Время в игре)",
+            "jumps": "🦘 Прыгучий кузнечик (Прыжков)",
+            "damage_dealt": "💥 Берсерк (Нанесено урона)",
+            "fish_caught": "🎣 Главный рыбак (Поймано рыбы)"
+        };
+
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.fixed button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
@@ -177,10 +154,18 @@
             btn.classList.add('tg-btn-active');
             tg.HapticFeedback.impactOccurred('light');
 
-            // [ДОБАВЛЕНО] Подгрузка контента под конкретные вкладки при клике
-            if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
-            if(tabId === 'dash') loadAnnouncement();
+        }
+
+        // Переключалка видимости детальной инфы игрока
+        function togglePlayerCard(name) {
+            const card = document.getElementById(`details-${name}`);
+            if(card.classList.contains('hidden')) {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+            tg.HapticFeedback.impactOccurred('light');
         }
 
         async function loadData() {
@@ -205,29 +190,89 @@
                 // Игроки
                 const playersRes = await axios.get(`${API_URL}/api/players`);
                 const listDiv = document.getElementById('players-list');
+                
+                // Сохраняем ID открытых карточек, чтобы они не закрывались при автообновлении раз в 4 секунды
+                const openedCards = [];
+                document.querySelectorAll('[id^="details-"]').forEach(el => {
+                    if(!el.classList.contains('hidden')) openedCards.push(el.id);
+                });
+
                 listDiv.innerHTML = '';
 
                 if(playersRes.data.length === 0) {
                     listDiv.innerHTML = '<div class="text-center py-8 text-zinc-600 text-xs italic">На сервере сейчас никого нет</div>';
                 } else {
                     playersRes.data.forEach(p => {
+                        const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
+                        
+                        // Рендерим кастомные статы из кэша (если они пришли в объекте p.stats)
+                        let statsHtml = '';
+                        if(p.stats) {
+                            statsHtml += `<div class="bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/50 mt-2"><p class="text-[10px] text-zinc-500 uppercase font-bold mb-1">📊 Статистика из кэша:</p><div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">`;
+                            for(let sKey in p.stats) {
+                                const sName = metricTranslations[sKey] || sKey;
+                                statsHtml += `<div class="text-zinc-400 flex justify-between"><span>${sName}:</span> <span class="font-mono text-indigo-400">${p.stats[sKey]}</span></div>`;
+                            }
+                            statsHtml += `</div></div>`;
+                        }
+
                         listDiv.innerHTML += `
-                            <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex flex-col gap-3">
-                                <div class="flex items-center justify-between">
+                            <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-xl overflow-hidden">
+                                <!-- Шапка карточки (кликабельная) -->
+                                <div onclick="togglePlayerCard('${p.name}')" class="p-3 flex items-center justify-between hover:bg-zinc-800/20 transition cursor-pointer">
                                     <div class="flex items-center gap-2.5">
                                         <img src="https://crafatar.com/avatars/${p.uuid}?size=32&overlay" class="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700/50">
                                         <div>
                                             <p class="font-bold text-sm text-zinc-100">${p.name}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world} | MS: ${p.ping} | GM: ${p.gamemode}</p>
+                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world} | MS: ${p.ping}</p>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-semibold text-rose-400">❤️ ${p.health}</span>
+                                    <div class="text-right">
+                                        <span class="text-xs font-semibold text-rose-400">❤️ ${p.health}</span>
+                                        <p class="text-[9px] text-zinc-500 font-mono">Нажми для опций</p>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-1.5 border-t border-zinc-800/40 pt-2.5">
-                                    <button onclick="quickAction('gamemode creative ${p.name}')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">Креатив</button>
-                                    <button onclick="quickAction('gamemode survival ${p.name}')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">Выжив.</button>
-                                    <button onclick="quickAction('tp ${p.name} ~ ~ ~')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">К себе</button>
-                                    <button onclick="quickAction('kick ${p.name} Кикнут через TMA')" class="bg-red-950/20 border border-red-900/30 text-[10px] font-medium py-1 rounded-md text-red-400 hover:bg-red-900/20">Кик</button>
+
+                                <!-- Внутрянка: Полноценное доп. меню -->
+                                <div id="details-${p.name}" class="${isHidden} p-3 border-t border-zinc-800/50 bg-zinc-950/30 space-y-3">
+                                    
+                                    <!-- Полная инфа -->
+                                    <div class="grid grid-cols-2 gap-2 text-xs bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/40 font-mono">
+                                        <p class="text-zinc-400">Координаты: <span class="text-zinc-200 text-[11px]">${p.x !== undefined ? `${Math.round(p.x)} ${Math.round(p.y)} ${Math.round(p.z)}` : '0 64 0'}</span></p>
+                                        <p class="text-zinc-400">Сытость: <span class="text-amber-400">${p.food !== undefined ? p.food : '20'}🍖</span></p>
+                                        <p class="text-zinc-400">Опыт (XP): <span class="text-emerald-400">${p.xp !== undefined ? p.xp : '0'} LVL</span></p>
+                                        <p class="text-zinc-400">Режим: <span class="text-indigo-400">${p.gamemode}</span></p>
+                                    </div>
+
+                                    <!-- Вывод статов игрока -->
+                                    ${statsHtml}
+
+                                    <!-- Селектор режимов -->
+                                    <div class="space-y-1">
+                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Изменить режим:</p>
+                                        <div class="grid grid-cols-4 gap-1">
+                                            <button onclick="quickAction('gamemode creative ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Креатив</button>
+                                            <button onclick="quickAction('gamemode survival ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Выжив.</button>
+                                            <button onclick="quickAction('gamemode adventure ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Прикл.</button>
+                                            <button onclick="quickAction('gamemode spectator ${p.name}')" class="bg-zinc-900 border border-zinc-800 text-[10px] py-1 rounded text-zinc-300 hover:bg-zinc-800">Наблюд.</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Отправка ЛС -->
+                                    <div class="space-y-1">
+                                        <p class="text-[10px] text-zinc-500 uppercase font-bold">Написать лично (ЛС):</p>
+                                        <div class="flex gap-1.5">
+                                            <input type="text" id="msg-${p.name}" placeholder="Сообщение игроку..." class="w-full bg-zinc-950 border border-zinc-800 rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none focus:border-indigo-500">
+                                            <button onclick="sendPrivateMsg('${p.name}')" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium">Отправить</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Критические действия -->
+                                    <div class="grid grid-cols-3 gap-1.5 pt-1">
+                                        <button onclick="quickAction('op ${p.name}')" class="bg-zinc-950 border border-emerald-900/50 text-emerald-400 text-[10px] font-medium py-1.5 rounded hover:bg-emerald-950/20">Выдать OP</button>
+                                        <button onclick="quickAction('deop ${p.name}')" class="bg-zinc-950 border border-amber-900/50 text-amber-400 text-[10px] font-medium py-1.5 rounded hover:bg-amber-950/20">Забрать OP</button>
+                                        <button onclick="kickPlayerPrompt('${p.name}')" class="bg-red-950/20 border border-red-900/40 text-red-400 text-[10px] font-medium py-1.5 rounded hover:bg-red-900/30">Кикнуть</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -238,79 +283,27 @@
             }
         }
 
-        // [ДОБАВЛЕНО] Логика работы с ТГ Плашкой
-        async function loadAnnouncement() {
-            if(!API_URL || !TOKEN) return;
-            try {
-                const res = await axios.get(`${API_URL}/api/announcement`);
-                document.getElementById('ann-input').value = res.data.announcement || '';
-            } catch(err) { console.error("Ошибка загрузки плашки", err); }
+        // Отправка личного сообщения игроку
+        async function sendPrivateMsg(playerName) {
+            const input = document.getElementById(`msg-${playerName}`);
+            const text = input.value.trim();
+            if(!text) return;
+            
+            // Выполняем классическую серверную команду /msg
+            await axios.post(`${API_URL}/api/command`, { command: `msg ${playerName} ${text}` });
+            input.value = '';
+            tg.HapticFeedback.notificationOccurred('success');
         }
 
-        async function saveAnnouncement() {
-            const text = document.getElementById('ann-input').value.trim();
-            try {
-                await axios.post(`${API_URL}/api/announcement`, { text: text });
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch(err) { alert("Ошибка сохранения плашки"); }
+        // Кик с кастомной причиной
+        function kickPlayerPrompt(playerName) {
+            const reason = prompt(`Укажите причину кика для ${playerName}:`, "Кикнут через администратора");
+            if (reason !== null) {
+                quickAction(`kick ${playerName} ${reason}`);
+            }
         }
 
-        async function clearAnnouncement() {
-            try {
-                await axios.post(`${API_URL}/api/announcement`, { text: "" });
-                document.getElementById('ann-input').value = "";
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch(err) { alert("Ошибка очистки плашки"); }
-        }
-
-        // [ДОБАВЛЕНО] Логика работы с Цитатами
-        async function loadQuotes() {
-            if(!API_URL || !TOKEN) return;
-            const listDiv = document.getElementById('quotes-list');
-            try {
-                const res = await axios.get(`${API_URL}/api/quotes`);
-                listDiv.innerHTML = '';
-                if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<p class="text-xs text-zinc-600 italic text-center py-4">Цитат пока нет</p>';
-                    return;
-                }
-                res.data.forEach((q, idx) => {
-                    listDiv.innerHTML += `
-                        <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex items-center justify-between gap-2">
-                            <div class="text-xs">
-                                <span class="text-zinc-300">"${q.text}"</span> 
-                                <span class="text-indigo-400 font-medium">— ${q.author}</span>
-                            </div>
-                            <button onclick="deleteQuote(${idx})" class="text-rose-400 hover:text-rose-300 text-[10px] font-medium bg-rose-950/20 border border-rose-900/30 px-2.5 py-1 rounded-md transition">Удалить</button>
-                        </div>
-                    `;
-                });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 italic">Ошибка загрузки цитат</p>'; }
-        }
-
-        async function addQuote() {
-            const author = document.getElementById('quote-author').value.trim();
-            const text = document.getElementById('quote-text').value.trim();
-            if(!author || !text) return alert("Заполните оба поля!");
-            try {
-                await axios.post(`${API_URL}/api/quotes`, { action: "add", author: author, text: text });
-                document.getElementById('quote-author').value = '';
-                document.getElementById('quote-text').value = '';
-                tg.HapticFeedback.notificationOccurred('success');
-                loadQuotes();
-            } catch(err) { alert("Ошибка добавления цитаты"); }
-        }
-
-        async function deleteQuote(index) {
-            if(!confirm("Удалить эту цитату?")) return;
-            try {
-                await axios.post(`${API_URL}/api/quotes`, { action: "delete", index: index });
-                tg.HapticFeedback.notificationOccurred('success');
-                loadQuotes();
-            } catch(err) { alert("Ошибка удаления циты"); }
-        }
-
-        // [ДОБАВЛЕНО] Логика загрузки Лидерборда (Доски почёта)
+        // Логика загрузки Доски почёта с переводом на русский язык
         async function loadLeaderboard() {
             if(!API_URL || !TOKEN) return;
             const tbody = document.getElementById('leaderboard-data');
@@ -322,23 +315,13 @@
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
+                        // Переводим или оставляем оригинал, если ключа нет в словаре
+                        const ruName = metricTranslations[key] || key;
                         tbody.innerHTML += `
                             <tr class="hover:bg-zinc-900/20 border-b border-zinc-800/30 transition">
-                                <td class="p-3 font-medium text-zinc-400">${key} <span class="text-[9px] text-zinc-600">(Топ)</span></td>
+                                <td class="p-3 font-medium text-zinc-400">${ruName}</td>
                                 <td class="p-3 text-zinc-200">${res.data.stats[key].player || '—'}</td>
                                 <td class="p-3 text-right font-mono text-indigo-400 font-semibold">${res.data.stats[key].value}</td>
-                            </tr>
-                        `;
-                    }
-                }
-                if(res.data.custom) {
-                    for(let key in res.data.custom) {
-                        hasData = true;
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-zinc-900/20 border-b border-zinc-800/30 transition">
-                                <td class="p-3 font-medium text-zinc-400">${key} <span class="text-[9px] text-zinc-600">(Кастом)</span></td>
-                                <td class="p-3 text-zinc-200">${res.data.custom[key].player || '—'}</td>
-                                <td class="p-3 text-right font-mono text-emerald-400 font-semibold">${res.data.custom[key].value}</td>
                             </tr>
                         `;
                     }
@@ -346,7 +329,7 @@
                 if(!hasData) {
                     tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-600 text-xs italic">Данные отсутствуют</td></tr>';
                 }
-            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400 text-xs italic">Ошибка топов</td></tr>'; }
+            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-400 text-xs italic">Ошибка загрузки топов</td></tr>'; }
         }
 
         async function sendConsoleCommand() {
@@ -364,6 +347,7 @@
             }
         }
 
+        // Метод отправки объявления на весь сервер (Оригинальный эндпоинт из твоего файла)
         async function sendBroadcast() {
             const input = document.getElementById('bc-input');
             const message = input.value.trim();
@@ -392,9 +376,7 @@
             }
         }
 
-        // Запуск при старте
         loadData();
-        loadAnnouncement();
         setInterval(loadData, 4000);
     </script>
 </body>
