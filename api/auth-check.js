@@ -1,6 +1,9 @@
+const Redis = require('ioredis');
 const crypto = require('crypto');
 
-export default async function handler(req, res) {
+const redis = new Redis(process.env.REDIS_URL);
+
+module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'X-TMA-Auth, Content-Type');
@@ -19,22 +22,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-            return res.status(500).json({ error: 'База данных не подключена к проекту' });
-        }
-
-        // Получаем данные через массив команд
-        const kvRes = await fetch(process.env.KV_REST_API_URL, {
-            method: 'POST',
-            headers: { 
-                Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(['GET', 'minecraft_stats'])
-        });
-        
-        const kvData = await kvRes.json();
-        const minecraftStats = kvData.result ? JSON.parse(kvData.result) : { message: "Данных пока нет" };
+        // Достаем данные из базы Redis
+        const cachedData = await redis.get('minecraft_stats');
+        const minecraftStats = cachedData ? JSON.parse(cachedData) : { message: "Данных пока нет" };
 
         return res.status(200).json({
             status: 'success',
@@ -42,9 +32,9 @@ export default async function handler(req, res) {
             serverData: minecraftStats
         });
     } catch (error) {
-        return res.status(500).json({ error: `Ошибка чтения KV: ${error.message}` });
+        return res.status(500).json({ error: `Ошибка чтения Redis: ${error.message}` });
     }
-}
+};
 
 function verifyTelegramAuth(authData, botToken) {
     try {
