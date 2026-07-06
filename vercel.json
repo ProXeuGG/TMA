@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/api/admin/execute",
-      "destination": "http://144.76.124.79:25694/api/admin/execute"
-    }
-  ]
-}
