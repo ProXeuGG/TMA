@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfCraft Admin Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: var(--tg-theme-bg-color, #18181b);
+            color: var(--tg-theme-text-color, #f4f4f5);
+        }
+    </style>
+</head>
+<body class="p-4 font-sans selection:bg-indigo-500 selection:text-white">
+
+    <!-- Заголовок -->
+    <div class="flex items-center justify-between mb-6 border-b border-zinc-800 pb-4">
+        <h1 class="text-xl font-bold text-indigo-400">Профкрафт TMA Панель</h1>
+        <span id="tps-badge" class="px-2 py-1 rounded text-xs font-mono bg-zinc-800 text-zinc-400">TPS: --</span>
+    </div>
+
+    <!-- Карточки Статистики -->
+    <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="bg-zinc-900/50 border border-zinc-800 p-3 rounded-xl">
+            <p class="text-xs text-zinc-500 uppercase">Онлайн</p>
+            <p id="stat-online" class="text-lg font-semibold mt-1">-- / --</p>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 p-3 rounded-xl">
+            <p class="text-xs text-zinc-500 uppercase">ОЗУ Сервера</p>
+            <p id="stat-ram" class="text-lg font-semibold mt-1">-- МБ</p>
+        </div>
+    </div>
+
+    <!-- Список Игроков -->
+    <div class="mb-6">
+        <h2 class="text-sm font-semibold text-zinc-400 mb-3 flex items-center gap-2">👥 Игроки онлайн</h2>
+        <div id="players-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+            <p class="text-xs text-zinc-600 italic">Загрузка списка игроков...</p>
+        </div>
+    </div>
+
+    <!-- Консоль / Терминал -->
+    <div class="border-t border-zinc-800 pt-4">
+        <h2 class="text-sm font-semibold text-zinc-400 mb-2">💻 Выполнить команду консоли</h2>
+        <div class="flex gap-2">
+            <input type="text" id="cmd-input" placeholder="say Привет, сервер!" 
+                   class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 font-mono text-zinc-300">
+            <button onclick="sendConsoleCommand()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Расширяем приложение на весь экран
+
+        // ПОЛУЧАЕМ НАСТРОЙКИ ИЗ URL СТРОКИ (Передадим их при создании кнопки в BotFather)
+        const urlParams = new URLSearchParams(window.location.search);
+        const API_URL = urlParams.get('api'); // Ссылка на ваш Cloudflare Worker
+        const TOKEN = urlParams.get('token'); // Пароль из admin-password в config.yml
+
+        // Настройка axios по умолчанию
+        axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
+
+        async function loadData() {
+            if(!API_URL || !TOKEN) {
+                alert("Ошибка конфигурации! Передайте параметры api и token в URL.");
+                return;
+            }
+            try {
+                // Запрос Статистики
+                const statsRes = await axios.get(`${API_URL}/api/stats`);
+                document.getElementById('tps-badge').innerText = `TPS: ${statsRes.data.tps}`;
+                document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
+                document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory} MB`;
+
+                // Запрос Игроков
+                const playersRes = await axios.get(`${API_URL}/api/players`);
+                const listDiv = document.getElementById('players-list');
+                listDiv.innerHTML = '';
+
+                if(playersRes.data.length === 0) {
+                    listDiv.innerHTML = '<p class="text-xs text-zinc-600 italic py-2">На сервере никого нет</p>';
+                } else {
+                    playersRes.data.forEach(p => {
+                        listDiv.innerHTML += `
+                            <div class="flex items-center justify-between bg-zinc-900 border border-zinc-800/60 p-2 rounded-lg text-sm">
+                                <div>
+                                    <span class="font-medium text-zinc-200">${p.name}</span>
+                                    <span class="text-xs text-zinc-500 ml-2">❤️ ${p.health} | 🌐 ${p.world}</span>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="quickAction('gamemode creative ${p.name}')" class="bg-zinc-800 text-zinc-400 text-xs px-2 py-1 rounded hover:bg-zinc-700">GM 1</button>
+                                    <button onclick="quickAction('kick ${p.name}')" class="bg-red-950/40 text-red-400 text-xs px-2 py-1 rounded hover:bg-red-900/40">Kick</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error("Ошибка обновления данных", err);
+            }
+        }
+
+        async function sendConsoleCommand() {
+            const input = document.getElementById('cmd-input');
+            const command = input.value.trim();
+            if(!command) return;
+
+            try {
+                await axios.post(`${API_URL}/api/command`, { command: command });
+                input.value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 500);
+            } catch(err) {
+                alert("Ошибка отправки команды");
+            }
+        }
+
+        function quickAction(cmd) {
+            document.getElementById('cmd-input').value = cmd;
+            sendConsoleCommand();
+        }
+
+        // Авто-обновление данных каждые 5 секунд
+        loadData();
+        setInterval(loadData, 5000);
+    </script>
+</body>
+</html>
