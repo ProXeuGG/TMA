@@ -3,146 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профкрафт Админ-Панель</title>
+    <title>Панель Управления Сервером</title>
+    <!-- Подключаем официальный скрипт Телеграма для Mini App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Настройка фона и шрифтов под тему Телеграма */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--tg-theme-bg-color, #181818);
-            color: var(--tg-theme-text-color, #ffffff);
-            margin: 0; padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .screen { display: none; text-align: center; margin-top: 50px; }
-        .screen.active { display: block; margin-top: 0; }
-        .error-card { background: #ff4d4d; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; }
-        .card {
-            background: var(--tg-theme-secondary-bg-color, #242424);
-            border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--tg-theme-hint-color, #aaaaaa);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        h3 { margin-top: 0; color: var(--tg-theme-link-color, #64b5f6); }
-        .btn {
-            background: var(--tg-theme-button-color, #248bcf);
+
+        /* Контейнер для кнопок, имитирующий сетку (Grid) инлайн-клавиатуры */
+        .keyboard-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Две кнопки в ряд, как в ботах */
+            gap: 8px; /* Расстояние между кнопками */
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Кнопка на всю ширину (если нужно сделать один важный ряд) */
+        .full-width {
+            grid-column: span 2;
+        }
+
+        /* Стилизация кнопок точь-в-точь как Telegram Inline Keyboards */
+        .tg-button {
+            background-color: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
-            border: none; padding: 10px 15px; border-radius: 8px;
-            font-weight: bold; cursor: pointer; margin: 5px; width: calc(50% - 14px);
-            display: inline-block; box-sizing: border-box;
+            border: none;
+            border-radius: 8px; /* Закругление как у стандартных кнопок */
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .btn-danger { background: #d32f2f; color: white; }
-        .btn-full { width: 100%; margin: 5px 0; }
-        input {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
-            background: #333; color: white; box-sizing: border-box; font-size: 16px;
+
+        /* Эффект при нажатии */
+        .tg-button:active {
+            opacity: 0.8;
+        }
+
+        /* Кнопки предупреждения (например, стоп или кик) */
+        .danger {
+            background-color: #e53935;
         }
     </style>
 </head>
 <body>
 
-    <!-- ЭКРАН 1: ЗАГРУЗКА И АВТОРИЗАЦИЯ -->
-    <div id="auth-screen" class="screen active">
-        <h2>Проверка прав доступа...</h2>
-        <div id="auth-error" style="display: none;" class="error-card"></div>
-    </div>
+    <h2 id="server-status">Загрузка статуса...</h2>
 
-    <!-- ЭКРАН 2: РАБОЧАЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
-    <div id="admin-screen" class="screen">
-        <h2 style="margin-bottom: 5px;">Профкрафт Панель</h2>
-        <p id="admin-welcome" style="margin-top:0; opacity: 0.7;"></p>
+    <!-- Сетка кнопок (наша Mini Keyboard) -->
+    <div class="keyboard-container">
+        
+        <button class="tg-button full-width" onclick="sendAction('status')">🔄 Обновить статус</button>
+        
+        <button class="tg-button" onclick="sendAction('whitelist_on')">🔐 Вкл. Вайтлист</button>
+        <button class="tg-button" onclick="sendAction('whitelist_off')">🔓 Выкл. Вайтлист</button>
+        
+        <button class="tg-button" onclick="sendAction('say_hello')">📢 Объявление в чат</button>
+        <button class="tg-button danger" onclick="sendAction('kick_all')">🛑 Кикнуть всех</button>
+        
+        <button class="tg-button danger full-width" onclick="sendAction('stop_server')">⚠️ Выключить сервер</button>
 
-        <!-- Быстрые действия с игроком -->
-        <div class="card">
-            <h3>Управление игроком</h3>
-            <input type="text" id="target-player" placeholder="Введите ник игрока">
-            <div style="margin-top: 10px;">
-                <button class="btn" onclick="sendAction('gm1')">🔮 Креатив</button>
-                <button class="btn" onclick="sendAction('gm0')">⚔️ Выживание</button>
-                <button class="btn" onclick="sendAction('op')">👑 Выдать OP</button>
-                <button class="btn" onclick="sendAction('deop')">🚷 Снять OP</button>
-                <button class="btn btn-danger btn-full" onclick="sendAction('kick')">💥 Кикнуть с сервера</button>
-            </div>
-        </div>
-
-        <!-- Консоль -->
-        <div class="card">
-            <h3>Выполнить команду в консоль</h3>
-            <input type="text" id="console-cmd" placeholder="Например: say Всем привет!">
-            <button class="btn btn-full" style="margin-top:10px;" onclick="sendConsoleCommand()">💻 Отправить в консоль</button>
-        </div>
     </div>
 
     <script>
+        // Инициализируем Telegram WebApp API
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Разворачиваем приложение на весь экран
+        tg.ready(); // Сообщаем ТГ, что приложение готово
+        tg.expand(); // Разворачиваем на максимум для удобства
 
-        // Запуск проверки авторизации при открытии приложения
-        async function checkAuth() {
+        // Функция отправки команды на наш бэкенд Vercel
+        async function sendAction(actionCommand) {
+            // Виброотклик при нажатии на кнопку (как в Телеграме!)
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            // Собираем данные авторизации Телеграма и саму команду
+            const payload = {
+                initData: tg.initData, // Передаем строку инициализации для проверки прав
+                actionData: actionCommand // Передаем саму команду (например, 'kick_all')
+            };
+
             try {
-                const response = await fetch('/api/auth-check', {
+                // Делаем запрос к нашему эндпоинту action.js, который мы создали на прошлом шаге
+                const response = await fetch('/api/admin/action', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
-                const data = await response.json();
 
-                if (data.authorized) {
-                    document.getElementById('auth-screen').classList.remove('active');
-                    document.getElementById('admin-screen').classList.add('active');
-                    document.getElementById('admin-welcome').innerText = `Администратор: ${data.user.first_name || 'Admin'}`;
+                const result = await response.json();
+
+                if (result.status === 'queued') {
+                    // Красивое всплывающее уведомление внутри Телеграма
+                    tg.showAlert(`Команда "${actionCommand}" успешно отправлена на сервер!`);
                 } else {
-                    showError(data.error || 'Доступ заблокирован.');
+                    tg.showPopup({ title: 'Ошибка', message: 'Не удалось поставить команду в очередь.' });
                 }
-            } catch (e) {
-                showError('Ошибка связи с бэкендом Vercel.');
+
+            } catch (error) {
+                tg.showPopup({ title: 'Ошибка сети', message: error.message });
             }
         }
 
-        function showError(msg) {
-            const errDiv = document.getElementById('auth-error');
-            errDiv.innerText = msg;
-            errDiv.style.display = 'block';
-            document.querySelector('#auth-screen h2').innerText = 'Вход заблокирован';
-        }
-
-        // Отправка структурированных экшенов (gm, op, kick)
-        async function sendAction(type) {
-            const player = document.getElementById('target-player').value.trim();
-            if (!player) return alert('Сначала введите ник игрока!');
-            
-            tg.HapticFeedback.impactOccurred('medium'); // Виброотклик телефона
-
-            const response = await fetch('/api/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    initData: tg.initData,
-                    action: `act:${type}:${player}`
-                })
-            });
-            if(response.ok) tg.showAlert(`Команда отправлена для ${player}!`);
-        }
-
-        // Отправка произвольной консольной команды
-        async function sendConsoleCommand() {
-            const cmd = document.getElementById('console-cmd').value.trim();
-            if (!cmd) return alert('Введите команду!');
-
-            tg.HapticFeedback.impactOccurred('heavy');
-
-            const response = await fetch('/api/action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    initData: tg.initData,
-                    action: `run_c_cmd_raw:${cmd}` // Передаем кастомный текст напрямую
-                })
-            });
-            if(response.ok) {
-                tg.showAlert(`Консоль выполнит: /${cmd}`);
-                document.getElementById('console-cmd').value = '';
-            }
-        }
-
-        // Небольшой апдейт для плагина, чтобы он умел переваривать сырые команды из консоли мини-аппа
-        checkAuth();
+        // В будущем здесь будет код, который берет данные из Redis и обновляет статус h2
+        document.getElementById('server-status').innerText = "K-TECH ПАНЕЛЬ УПРАВЛЕНИЯ";
     </script>
 </body>
 </html>
