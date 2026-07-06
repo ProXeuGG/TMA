@@ -3,224 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProfCraft Premium Admin Panel</title>
+    <title>TelegramSRVLite Admin Panel</title>
+    <!-- Подключаем Telegram Web App API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            background-color: var(--tg-theme-bg-color, #09090b);
-            color: var(--tg-theme-text-color, #f4f4f5);
+        :root {
+            --bg-color: #181818;
+            --container-bg: #242424;
+            --text-color: #ffffff;
+            --accent-color: #2481cc;
+            --danger-color: #e53935;
+            --success-color: #4caf50;
+            --border-color: #383838;
         }
-        .tab-content { display: none; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        h2, h3 { margin-top: 0; color: var(--accent-color); }
+
+        .config-box {
+            background: var(--container-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .input-group label { font-size: 12px; margin-bottom: 5px; color: #aaa; }
+
+        input, select, textarea {
+            background: #121212;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+        button.danger { background: var(--danger-color); }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+        .tab-btn {
+            background: var(--container-bg);
+            color: #aaa;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--container-bg);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
         .tab-content.active { display: block; }
-        .tg-btn-active { border-color: #818cf8; color: #818cf8; background: rgba(129, 140, 248, 0.1); }
+
+        /* Стили для списков и таблиц */
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: #121212;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-card div { font-size: 20px; font-weight: bold; margin-top: 5px; }
+
+        .player-item, .quote-item {
+            background: #121212;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
     </style>
 </head>
-<body class="p-4 font-sans antialiased selection:bg-indigo-500 selection:text-white pb-24">
+<body>
 
-    <!-- Верхушка панели -->
-    <div class="flex items-center justify-between mb-5 border-b border-zinc-800/80 pb-4">
-        <div>
-            <h1 class="text-lg font-bold text-white tracking-wide">ProfCraft Panel</h1>
-            <p id="server-v" class="text-[10px] text-zinc-500 font-mono">Версия: загрузка...</p>
+    <!-- Настройки подключения (Удобно для тестов, потом можно захардкодить) -->
+    <div class="config-box">
+        <h3>Подключение к серверу</h3>
+        <div class="input-group">
+            <label>API URL сервера</label>
+            <input type="text" id="serverUrl" value="http://localhost:8000">
         </div>
-        <div class="flex items-center gap-2">
-            <span id="tps-badge" class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50">TPS: --</span>
+        <div class="input-group">
+            <label>Пароль (admin-password из config.yml)</label>
+            <input type="password" id="adminPassword" value="мой_пароль_из_конфига">
         </div>
     </div>
 
-    <!-- ТАБЫ (ВКЛАДКИ) -->
-    <main>
-        <!-- Вкладка 1: Главная (Метрики) -->
-        <div id="tab-dash" class="tab-content active space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-                <div class="bg-zinc-900/40 border border-zinc-800 p-3 rounded-xl backdrop-blur-sm">
-                    <p class="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">Игроки онлайн</p>
-                    <p id="stat-online" class="text-xl font-bold mt-1 text-zinc-100">-- / --</p>
-                </div>
-                <div class="bg-zinc-900/40 border border-zinc-800 p-3 rounded-xl backdrop-blur-sm">
-                    <p class="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">ОЗУ Сервера</p>
-                    <p id="stat-ram" class="text-xl font-bold mt-1 text-zinc-100">-- МБ</p>
-                </div>
-            </div>
+    <!-- Навигация по вкладкам -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-stats')">Статус</button>
+        <button class="tab-btn" onclick="switchTab('tab-players'); loadPlayers();">Игроки</button>
+        <button class="tab-btn" onclick="switchTab('tab-announcement'); loadAnnouncement();">Плашка</button>
+        <button class="tab-btn" onclick="switchTab('tab-quotes'); loadQuotes();">Цитаты</button>
+        <button class="tab-btn" onclick="switchTab('tab-leaderboard'); loadLeaderboard();">Доска почета</button>
+    </div>
 
-            <!-- Быстрое объявление -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">📢 Объявление на весь сервер</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="bc-input" placeholder="Текст объявления..." 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 text-zinc-300">
-                    <button onclick="sendBroadcast()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Оповестить</button>
-                </div>
-            </div>
+    <!-- Вкладка: Статус -->
+    <div id="tab-stats" class="tab-content active">
+        <h2>Мониторинг</h2>
+        <div class="grid-stats">
+            <div class="stat-card">TPS <div id="stat-tps">-</div></div>
+            <div class="stat-card">Онлайн <div id="stat-online">-</div></div>
+            <div class="stat-card">ОЗУ (Использовано) <div id="stat-ram">-</div></div>
+            <div class="stat-card">Вайтлист <div id="stat-wl">-</div></div>
         </div>
+        <button style="margin-top: 15px; width: 100%;" onclick="loadStats()">Обновить данные</button>
+    </div>
 
-        <!-- Вкладка 2: Игроки -->
-        <div id="tab-players" class="tab-content space-y-3">
-            <h2 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">👥 Управление игроками</h2>
-            <div id="players-list" class="space-y-2.5">
-                <p class="text-xs text-zinc-500 italic">Загрузка игроков...</p>
-            </div>
+    <!-- Вкладка: Игроки -->
+    <div id="tab-players" class="tab-content">
+        <h2>Игроки Онлайн</h2>
+        <div id="players-list">Загрузка...</div>
+    </div>
+
+    <!-- Вкладка: Плашка -->
+    <div id="tab-announcement" class="tab-content">
+        <h2>Объявление в ТГ плашке</h2>
+        <div class="input-group">
+            <label>Текущий текст объявления</label>
+            <textarea id="announcementText" rows="4" placeholder="Введите текст объявления..."></textarea>
         </div>
+        <button onclick="saveAnnouncement()" style="width: 100%;">Обновить плашку</button>
+        <button onclick="clearAnnouncement()" class="danger" style="width: 100%; margin-top: 5px;">Стереть объявление</button>
+    </div>
 
-        <!-- Вкладка 3: Консоль и Система -->
-        <div id="tab-sys" class="tab-content space-y-4">
-            <!-- Быстрые команды -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">🛠️ Быстрые действия</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="quickAction('whitelist on')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Вкл Whitelist</button>
-                    <button onclick="quickAction('whitelist off')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Выкл Whitelist</button>
-                    <button onclick="quickAction('save-all')" class="bg-zinc-900 border border-zinc-800 text-zinc-300 py-2 rounded-lg text-xs font-medium hover:bg-zinc-800 transition">Сохранить мир</button>
-                    <button onclick="askRestart()" class="bg-red-950/30 border border-red-900/50 text-red-400 py-2 rounded-lg text-xs font-medium hover:bg-red-900/30 transition">Рестарт сервера</button>
-                </div>
+    <!-- Вкладка: Цитаты -->
+    <div id="tab-quotes" class="tab-content">
+        <h2>Управление Цитатами</h2>
+        <div style="margin-bottom: 15px; padding: 10px; background: #121212; border-radius: 6px;">
+            <h4>Добавить новую</h4>
+            <div class="input-group">
+                <input type="text" id="quoteAuthor" placeholder="Автор (Ник)">
             </div>
-
-            <!-- Полноценный терминал -->
-            <div class="bg-zinc-900/30 border border-zinc-800/80 p-4 rounded-xl">
-                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">💻 Прямая Консоль</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="cmd-input" placeholder="Команда без /" 
-                           class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 font-mono text-zinc-300">
-                    <button onclick="sendConsoleCommand()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition active:scale-95">Выполнить</button>
-                </div>
+            <div class="input-group">
+                <input type="text" id="quoteText" placeholder="Текст цитаты">
             </div>
+            <button onclick="addQuote()">Добавить</button>
         </div>
-    </main>
+        <div id="quotes-list">Загрузка...</div>
+    </div>
 
-    <!-- НИЖНЕЕ МЕНЮ НАВИГАЦИИ (ФУТЕР) -->
-    <div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/80 p-2 flex justify-around items-center backdrop-blur-md">
-        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium tg-btn-active">
-            <span>📊</span>Главная
-        </button>
-        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium">
-            <span>👥</span>Игроки
-        </button>
-        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-4 py-1.5 rounded-xl transition text-[11px] font-medium">
-            <span>⚙️</span>Система
-        </button>
+    <!-- Вкладка: Лидерборд -->
+    <div id="tab-leaderboard" class="tab-content">
+        <h2>Доска почёта</h2>
+        <table class="leaderboard-table">
+            <thead>
+                <tr><th>Метрика</th><th>Игрок</th><th>Значение</th></tr>
+            </thead>
+            <tbody id="leaderboard-data">
+                <!-- Сюда вставятся топы из yml -->
+            </tbody>
+        </table>
     </div>
 
     <script>
+        // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        tg.ready();
+        tg.expand(); // Расширяем на весь экран телефона
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const API_URL = urlParams.get('api');
-        const TOKEN = urlParams.get('token');
-
-        axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-
-        function switchTab(tabId, btn) {
+        // Переключение вкладок
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.fixed button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Общая функция для отправки запросов к Java API
+        async function sendRequest(endpoint, method = 'GET', data = null) {
+            const baseUrl = document.getElementById('serverUrl').value;
+            const password = document.getElementById('adminPassword').value;
+
+            const options = {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${password}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            // Если передаем данные, превращаем JavaScript-объект в JSON строку
+            if (data && (method === 'POST')) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}${endpoint}`, options);
+                if (response.status === 401) {
+                    alert('Ошибка: Неверный пароль авторизации!');
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Ошибка запроса:', error);
+                alert('Не удалось связаться с сервером Minecraft.');
+                return null;
+            }
+        }
+
+        // 1. ЗАГРУЗКА СТАТИСТИКИ
+        async function loadStats() {
+            const data = await sendRequest('/api/stats');
+            if (data) {
+                document.getElementById('stat-tps').innerText = data.tps;
+                document.getElementById('stat-online').innerText = `${data.online}/${data.maxPlayers}`;
+                document.getElementById('stat-ram').innerText = `${data.usedMemory} MB / ${data.totalMemory} MB`;
+                document.getElementById('stat-wl').innerText = data.whitelist ? "Включен" : "Выключен";
+            }
+        }
+        // Загружаем статистику сразу при старте страницы
+        loadStats();
+
+        // 2. ЗАГРУЗКА ИГРОКОВ И УПРАВЛЕНИЕ ИМИ
+        async function loadPlayers() {
+            const listEl = document.getElementById('players-list');
+            listEl.innerHTML = "Загрузка...";
+            const players = await sendRequest('/api/players');
             
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            btn.classList.add('tg-btn-active');
-            tg.HapticFeedback.impactOccurred('light');
+            if (!players || players.length === 0) {
+                listEl.innerHTML = "Нет игроков онлайн.";
+                return;
+            }
+
+            listEl.innerHTML = "";
+            players.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'player-item';
+                item.innerHTML = `
+                    <strong>${p.name}</strong>
+                    <span style="font-size:12px; color:#aaa;">Мир: ${p.world} | Режим: ${p.gamemode} | ХП: ${p.health}❤️</span>
+                    <div class="player-controls">
+                        <button onclick="setGamemode('${p.name}', 'creative')">GM 1</button>
+                        <button onclick="setGamemode('${p.name}', 'survival')">GM 0</button>
+                        <button onclick="teleportToCoords('${p.name}')">ТП на 0 64 0</button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
         }
 
-        async function loadData() {
-            if(!API_URL || !TOKEN) return;
-            try {
-                // Метрики сервера
-                const statsRes = await axios.get(`${API_URL}/api/stats`);
-                const tps = statsRes.data.tps;
-                const tpsBadge = document.getElementById('tps-badge');
-                tpsBadge.innerText = `TPS: ${tps}`;
-                
-                if(tps < 15) {
-                    tpsBadge.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-red-950/50 text-red-400 border border-red-800/50";
-                } else {
-                    tpsBadge.className = "px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-800/50";
+        async function setGamemode(playerName, gm) {
+            // Пример отправки JSON POST запроса
+            await sendRequest('/api/player/gamemode', 'POST', { player: playerName, gamemode: gm });
+            alert(`Режим игрока ${playerName} изменен на ${gm}`);
+            loadPlayers();
+        }
+
+        async function teleportToCoords(playerName) {
+            // Передаем координаты в формате JSON
+            await sendRequest('/api/player/teleport', 'POST', { player: playerName, x: 0, y: 64, z: 0 });
+            alert(`Игрок ${playerName} телепортирован на спавн (0 64 0)`);
+        }
+
+        // 3. УПРАВЛЕНИЕ ОБЪЯВЛЕНИЕМ В ПЛАШКЕ
+        async function loadAnnouncement() {
+            const data = await sendRequest('/api/announcement');
+            if (data) {
+                document.getElementById('announcementText').value = data.announcement;
+            }
+        }
+
+        async function saveAnnouncement() {
+            const text = document.getElementById('announcementText').value;
+            await sendRequest('/api/announcement', 'POST', { text: text });
+            alert('Объявление обновлено и отправлено в Telegram!');
+        }
+
+        async function clearAnnouncement() {
+            await sendRequest('/api/announcement', 'POST', { text: "" });
+            document.getElementById('announcementText').value = "";
+            alert('Объявление удалено с плашки!');
+        }
+
+        // 4. УПРАВЛЕНИЕ ЦИТАТАМИ
+        async function loadQuotes() {
+            const listEl = document.getElementById('quotes-list');
+            listEl.innerHTML = "Загрузка...";
+            const quotes = await sendRequest('/api/quotes');
+            
+            if (!quotes || quotes.length === 0) {
+                listEl.innerHTML = "Цитат пока нет.";
+                return;
+            }
+
+            listEl.innerHTML = "";
+            quotes.forEach((q, index) => {
+                const item = document.createElement('div');
+                item.className = 'quote-item';
+                item.innerHTML = `
+                    <div>"<em>${q.text}</em>" — <strong>${q.author}</strong></div>
+                    <button class="danger" style="align-self: flex-start; padding: 5px 10px; font-size:12px;" onclick="deleteQuote(${index})">Удалить</button>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        async function addQuote() {
+            const author = document.getElementById('quoteAuthor').value;
+            const text = document.getElementById('quoteText').value;
+            if(!author || !text) return alert("Заполните поля!");
+
+            await sendRequest('/api/quotes', 'POST', { action: "add", author: author, text: text });
+            document.getElementById('quoteAuthor').value = "";
+            document.getElementById('quoteText').value = "";
+            loadQuotes();
+        }
+
+        async function deleteQuote(index) {
+            if(!confirm("Удалить эту цитату?")) return;
+            await sendRequest('/api/quotes', 'POST', { action: "delete", index: index });
+            loadQuotes();
+        }
+
+        // 5. ЗАГРУЗКА ЛИДЕРБОРДА
+        async function loadLeaderboard() {
+            const tbody = document.getElementById('leaderboard-data');
+            tbody.innerHTML = "<tr><td colspan='3'>Загрузка...</td></tr>";
+            const data = await sendRequest('/api/leaderboard');
+            
+            if (!data) return;
+            tbody.innerHTML = "";
+
+            // Отрисовываем стандартную статистику
+            if (data.stats) {
+                for (let metric in data.stats) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${metric} (Топ)</strong></td>
+                            <td>${data.stats[metric].player || 'Нет'}</td>
+                            <td>${data.stats[metric].value}</td>
+                        </tr>`;
                 }
+            }
 
-                document.getElementById('server-v').innerText = `Ядро: ${statsRes.data.version} | WL: ${statsRes.data.whitelist ? 'Вкл' : 'Выкл'}`;
-                document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
-                document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
-
-                // Игроки
-                const playersRes = await axios.get(`${API_URL}/api/players`);
-                const listDiv = document.getElementById('players-list');
-                listDiv.innerHTML = '';
-
-                if(playersRes.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-8 text-zinc-600 text-xs italic">На сервере сейчас никого нет</div>';
-                } else {
-                    playersRes.data.forEach(p => {
-                        listDiv.innerHTML += `
-                            <div class="bg-zinc-900/40 border border-zinc-800/60 p-3 rounded-xl flex flex-col gap-3">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2.5">
-                                        <img src="https://crafatar.com/avatars/${p.uuid}?size=32&overlay" class="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700/50">
-                                        <div>
-                                            <p class="font-bold text-sm text-zinc-100">${p.name}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono">${p.world} | MS: ${p.ping} | GM: ${p.gamemode}</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs font-semibold text-rose-400">❤️ ${p.health}</span>
-                                </div>
-                                <div class="grid grid-cols-4 gap-1.5 border-t border-zinc-800/40 pt-2.5">
-                                    <button onclick="quickAction('gamemode creative ${p.name}')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">Креатив</button>
-                                    <button onclick="quickAction('gamemode survival ${p.name}')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">Выжив.</button>
-                                    <button onclick="quickAction('tp ${p.name} ~ ~ ~')" class="bg-zinc-950 border border-zinc-800 text-[10px] font-medium py-1 rounded-md text-zinc-400 hover:text-white">К себе</button>
-                                    <button onclick="quickAction('kick ${p.name} Кикнут через TMA')" class="bg-red-950/20 border border-red-900/30 text-[10px] font-medium py-1 rounded-md text-red-400 hover:bg-red-900/20">Кик</button>
-                                </div>
-                            </div>
-                        `;
-                    });
+            // Отрисовываем кастомную статистику
+            if (data.custom) {
+                for (let metric in data.custom) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${metric} (Кастом)</td>
+                            <td>${data.custom[metric].player || 'Нет'}</td>
+                            <td>${data.custom[metric].value}</td>
+                        </tr>`;
                 }
-            } catch (err) {
-                console.error("Ошибка обновления данных панели", err);
             }
         }
-
-        async function sendConsoleCommand() {
-            const input = document.getElementById('cmd-input');
-            const command = input.value.trim();
-            if(!command) return;
-
-            try {
-                await axios.post(`${API_URL}/api/command`, { command: command });
-                input.value = '';
-                tg.HapticFeedback.notificationOccurred('success');
-                setTimeout(loadData, 300);
-            } catch(err) {
-                alert("Не удалось отправить команду");
-            }
-        }
-
-        async function sendBroadcast() {
-            const input = document.getElementById('bc-input');
-            const message = input.value.trim();
-            if(!message) return;
-
-            try {
-                await axios.post(`${API_URL}/api/broadcast`, { message: message });
-                input.value = '';
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch(err) {
-                alert("Ошибка отправки объявления");
-            }
-        }
-
-        function quickAction(cmd) {
-            axios.post(`${API_URL}/api/command`, { command: cmd })
-                .then(() => {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    setTimeout(loadData, 400);
-                });
-        }
-
-        function askRestart() {
-            if(confirm("Вы уверены, что хотите перезапустить сервер прямо сейчас?")) {
-                quickAction("restart");
-            }
-        }
-
-        loadData();
-        setInterval(loadData, 4000);
     </script>
 </body>
 </html>
