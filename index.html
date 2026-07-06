@@ -3,348 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель Профкрафт</title>
+    <title>Профкрафт Админ-Панель</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #0f1115;
-            --container-bg: #161920;
-            --text-color: #f5f6f9;
-            --text-muted: #8a90a2;
-            --accent-color: #4f46e5;
-            --accent-hover: #6366f1;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --button-bg: #1f242f;
-            --button-hover: #282e3d;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: var(--tg-theme-bg-color, #181818);
+            color: var(--tg-theme-text-color, #ffffff);
+            margin: 0; padding: 15px;
         }
-
-        .panel-container {
-            width: 100%;
-            max-width: 420px;
-            background: var(--container-bg);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            box-sizing: border-box;
+        .screen { display: none; text-align: center; margin-top: 50px; }
+        .screen.active { display: block; margin-top: 0; }
+        .error-card { background: #ff4d4d; color: white; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #242424);
+            border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 16px;
+        h3 { margin-top: 0; color: var(--tg-theme-link-color, #64b5f6); }
+        .btn {
+            background: var(--tg-theme-button-color, #248bcf);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none; padding: 10px 15px; border-radius: 8px;
+            font-weight: bold; cursor: pointer; margin: 5px; width: calc(50% - 14px);
+            display: inline-block; box-sizing: border-box;
         }
-
-        .header h1 {
-            font-size: 22px;
-            margin: 0 0 8px 0;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, #a5b4fc, #6366f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .welcome-text {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .stats-widget {
-            background: rgba(16, 185, 129, 0.05);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-radius: 12px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--success-color);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-            box-shadow: 0 0 8px var(--success-color);
-        }
-
-        .stats-label {
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .stats-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text-color);
-        }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-
-        .inline-btn {
-            background-color: var(--button-bg);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            color: var(--text-color);
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.2s ease;
-            text-align: left;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .inline-btn:hover {
-            background-color: var(--button-hover);
-            transform: translateY(-1px);
-            border-color: rgba(255, 255, 255, 0.08);
-        }
-
-        .btn-arrow {
-            color: var(--text-muted);
-            font-size: 14px;
-            transition: transform 0.2s;
-        }
-
-        .inline-btn:hover .btn-arrow {
-            color: var(--text-color);
-            transform: translateX(2px);
-        }
-
-        /* Стили для админ-панели */
-        .admin-section {
-            border: 1px dashed rgba(99, 102, 241, 0.4);
-            padding: 14px;
-            border-radius: 14px;
-            background: rgba(99, 102, 241, 0.02);
-            margin-top: 8px;
-        }
-        
-        .admin-title {
-            font-size: 13px;
-            color: #a5b4fc;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 10px 4px;
-            font-weight: 600;
-        }
-
-        .inline-btn.danger {
-            border-color: rgba(239, 68, 68, 0.2);
-        }
-        .inline-btn.danger:hover {
-            background-color: rgba(239, 68, 68, 0.1);
-            border-color: var(--danger-color);
-        }
-
-        .loading {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-            padding: 40px 0;
+        .btn-danger { background: #d32f2f; color: white; }
+        .btn-full { width: 100%; margin: 5px 0; }
+        input {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444;
+            background: #333; color: white; box-sizing: border-box; font-size: 16px;
         }
     </style>
 </head>
 <body>
 
-<div class="panel-container">
-    <div class="header">
-        <h1 id="server-name">Профкрафт Panel</h1>
-        <p class="welcome-text" id="username">Загрузка авторизации...</p>
+    <!-- ЭКРАН 1: ЗАГРУЗКА И АВТОРИЗАЦИЯ -->
+    <div id="auth-screen" class="screen active">
+        <h2>Проверка прав доступа...</h2>
+        <div id="auth-error" style="display: none;" class="error-card"></div>
     </div>
 
-    <!-- Основной контент -->
-    <div id="content" style="display: none;">
-        
-        <div class="stats-widget">
-            <div>
-                <span class="status-dot"></span>
-                <span class="stats-label">Статус сервера</span>
+    <!-- ЭКРАН 2: РАБОЧАЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
+    <div id="admin-screen" class="screen">
+        <h2 style="margin-bottom: 5px;">Профкрафт Панель</h2>
+        <p id="admin-welcome" style="margin-top:0; opacity: 0.7;"></p>
+
+        <!-- Быстрые действия с игроком -->
+        <div class="card">
+            <h3>Управление игроком</h3>
+            <input type="text" id="target-player" placeholder="Введите ник игрока">
+            <div style="margin-top: 10px;">
+                <button class="btn" onclick="sendAction('gm1')">🔮 Креатив</button>
+                <button class="btn" onclick="sendAction('gm0')">⚔️ Выживание</button>
+                <button class="btn" onclick="sendAction('op')">👑 Выдать OP</button>
+                <button class="btn" onclick="sendAction('deop')">🚷 Снять OP</button>
+                <button class="btn btn-danger btn-full" onclick="sendAction('kick')">💥 Кикнуть с сервера</button>
             </div>
-            <div class="stats-value" id="online-counter">0 / 0</div>
         </div>
 
-        <div class="menu-grid">
-            <button class="inline-btn" onclick="showAlert('Раздел профиля в разработке')">
-                <span>👤 Мой персонаж</span>
-                <span class="btn-arrow">→</span>
-            </button>
-            
-            <button class="inline-btn" onclick="showAlert('Магазин откроется скоро!')">
-                <span>🛒 Донат-магазин</span>
-                <span class="btn-arrow">→</span>
-            </button>
-
-            <button class="inline-btn" onclick="showAlert('Тут будет топ игроков из leaderboard.yml')">
-                <span>🏆 Топ игроков</span>
-                <span class="btn-arrow">→</span>
-            </button>
-
-            <!-- БЛОК АДМИНА: По умолчанию скрыт (display: none) -->
-            <div id="admin-panel" class="admin-section" style="display: none;">
-                <div class="admin-title">⚙️ Управление Профкрафт (Админ)</div>
-                <div class="menu-grid">
-                    <button class="inline-btn" onclick="sendAdminAction('reload_plugin', 'Перезагрузка плагина...')">
-                        <span>🔄 Перезагрузить плагин</span>
-                        <span class="btn-arrow">⚡</span>
-                    </button>
-                    <button class="inline-btn" onclick="sendAdminAction('toggle_whitelist', 'Переключение Вайтлиста...')">
-                        <span>🔒 Белый список (Вкл/Выкл)</span>
-                        <span class="btn-arrow">⚡</span>
-                    </button>
-                    <button class="inline-btn" onclick="promptBroadcast()">
-                        <span>📢 Объявление на сервер</span>
-                        <span class="btn-arrow">⚡</span>
-                    </button>
-                    <button class="inline-btn danger" onclick="confirmRestart()">
-                        <span style="color: var(--danger-color);">🚀 Рестарт сервера</span>
-                        <span class="btn-arrow">⚠️</span>
-                    </button>
-                </div>
-            </div>
-
+        <!-- Консоль -->
+        <div class="card">
+            <h3>Выполнить команду в консоль</h3>
+            <input type="text" id="console-cmd" placeholder="Например: say Всем привет!">
+            <button class="btn btn-full" style="margin-top:10px;" onclick="sendConsoleCommand()">💻 Отправить в консоль</button>
         </div>
     </div>
 
-    <div id="loader" class="loading">Синхронизация с сервером...</div>
-</div>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем приложение на весь экран
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+        // Запуск проверки авторизации при открытии приложения
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: tg.initData })
+                });
+                const data = await response.json();
 
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        document.getElementById('username').innerText = `Привет, ${user.first_name || 'Игрок'}!`;
-    } else {
-        document.getElementById('username').innerText = `Привет, Тестировщик!`;
-    }
-
-    async function loadServerData() {
-        try {
-            const response = await fetch('/api/auth-check', {
-                method: 'POST',
-                headers: {
-                    'X-TMA-Auth': tg.initData,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-
-                // Выводим онлайн
-                const stats = result.serverData;
-                if(stats && stats.current_online !== undefined) {
-                    document.getElementById('online-counter').innerText = `${stats.current_online} / ${stats.max_players}`;
+                if (data.authorized) {
+                    document.getElementById('auth-screen').classList.remove('active');
+                    document.getElementById('admin-screen').classList.add('active');
+                    document.getElementById('admin-welcome').innerText = `Администратор: ${data.user.first_name || 'Admin'}`;
                 } else {
-                    document.getElementById('online-counter').innerText = "Сервер оффлайн";
+                    showError(data.error || 'Доступ заблокирован.');
                 }
-
-                // ИЗМЕНЕНИЕ: Включаем отображение админки только если бэкэнд подтвердил флаг isAdmin
-                if (result.isAdmin === true) {
-                    document.getElementById('admin-panel').style.display = 'block';
-                }
-            } else {
-                document.getElementById('loader').innerText = "Ошибка авторизации бэкэнда.";
+            } catch (e) {
+                showError('Ошибка связи с бэкендом Vercel.');
             }
-        } catch (error) {
-            document.getElementById('loader').innerText = "Не удалось связаться с базой данных.";
-            console.error(error);
         }
-    }
 
-    // Универсальная функция отправки админских команд в плагин Майнкрафта
-    async function sendAdminAction(actionType, loadingMessage, extraData = {}) {
-        tg.MainButton.setText(loadingMessage);
-        tg.MainButton.show();
-        tg.MainButton.disable();
+        function showError(msg) {
+            const errDiv = document.getElementById('auth-error');
+            errDiv.innerText = msg;
+            errDiv.style.display = 'block';
+            document.querySelector('#auth-screen h2').innerText = 'Вход заблокирован';
+        }
 
-        try {
-            const response = await fetch('/api/admin/execute', {
+        // Отправка структурированных экшенов (gm, op, kick)
+        async function sendAction(type) {
+            const player = document.getElementById('target-player').value.trim();
+            if (!player) return alert('Сначала введите ник игрока!');
+            
+            tg.HapticFeedback.impactOccurred('medium'); // Виброотклик телефона
+
+            const response = await fetch('/api/action', {
                 method: 'POST',
-                headers: {
-                    'X-TMA-Auth': tg.initData, // Передаем данные сессии для валидации на стороне плагина
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: actionType,
-                    ...extraData
+                    initData: tg.initData,
+                    action: `act:${type}:${player}`
                 })
             });
-
-            if (response.ok) {
-                tg.showAlert('Действие успешно выполнено сервером!');
-            } else {
-                tg.showAlert(`Ошибка сервера: ${response.status}`);
-            }
-        } catch (err) {
-            tg.showAlert(`Не удалось отправить команду: ${err.message}`);
-        } finally {
-            tg.MainButton.hide();
+            if(response.ok) tg.showAlert(`Команда отправлена для ${player}!`);
         }
-    }
 
-    // Кастомный попап для подтверждения рестарта
-    function confirmRestart() {
-        tg.showPopup({
-            title: 'Опасное действие',
-            message: 'Вы уверены, что хотите принудительно перезагрузить игровой сервер?',
-            buttons: [
-                {id: 'restart', type: 'destructive', text: 'Да, рестарт'},
-                {id: 'cancel', type: 'cancel', text: 'Отмена'}
-            ]
-        }, (buttonId) => {
-            if (buttonId === 'restart') {
-                sendAdminAction('server_restart', 'Отправка команды рестарта...');
+        // Отправка произвольной консольной команды
+        async function sendConsoleCommand() {
+            const cmd = document.getElementById('console-cmd').value.trim();
+            if (!cmd) return alert('Введите команду!');
+
+            tg.HapticFeedback.impactOccurred('heavy');
+
+            const response = await fetch('/api/action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    initData: tg.initData,
+                    action: `run_c_cmd_raw:${cmd}` // Передаем кастомный текст напрямую
+                })
+            });
+            if(response.ok) {
+                tg.showAlert(`Консоль выполнит: /${cmd}`);
+                document.getElementById('console-cmd').value = '';
             }
-        });
-    }
-
-    // Ввод текста объявления через стандартный интерфейс ТГ
-    function promptBroadcast() {
-        // Из-за ограничений WebApp prompt вызываем нативно или через стандартную логику ввода,
-        // для простоты используем нативный промис ввода, если ТГ поддерживает, либо обычный prompt
-        const text = prompt("Введите текст объявления для отправки в общий чат:");
-        if (text && text.trim() !== "") {
-            sendAdminAction('broadcast', 'Отправка объявления...', { message: text });
         }
-    }
 
-    function showAlert(message) {
-        tg.showAlert(message);
-    }
-
-    window.onload = loadServerData;
-</script>
-
+        // Небольшой апдейт для плагина, чтобы он умел переваривать сырые команды из консоли мини-аппа
+        checkAuth();
+    </script>
 </body>
 </html>
