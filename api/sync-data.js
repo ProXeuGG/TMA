@@ -1,6 +1,4 @@
 const Redis = require('ioredis');
-
-// Подключаемся к базе напрямую через готовую переменную REDIS_URL
 const redis = new Redis(process.env.REDIS_URL);
 
 module.exports = async (req, res) => {
@@ -15,9 +13,8 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // Сохраняем данные в Redis как строку
+        // Просто обновляем онлайн в Redis раз в 2 минуты
         await redis.set('minecraft_stats', JSON.stringify(data));
-
         return res.status(200).json({ status: 'success', message: 'Данные успешно синхронизированы!' });
     } catch (error) {
         return res.status(500).json({ error: `Ошибка базы Redis: ${error.message}` });
