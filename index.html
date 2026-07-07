@@ -260,7 +260,14 @@
         const TOKEN = urlParams.get('token');
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-
+        // НАЧАЛО ВСТАВКИ: Автоматическая передача имени пользователя Telegram
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username) {
+            axios.defaults.headers.common['X-TG-Username'] = '@' + tg.initDataUnsafe.user.username;
+        } else {
+    // Дефолтное значение для тестов в обычном браузере (вне Телеграма)
+            axios.defaults.headers.common['X-TG-Username'] = '@and1tt'; 
+        }
+// КОНЕЦ ВСТАВКИ
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
             "mob_kills": "🦁 Истреблено мобов", "deaths": "💀 Количество смертей",
