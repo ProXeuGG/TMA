@@ -65,18 +65,16 @@
 </head>
 <body class="p-4 antialiased pb-28 min-h-screen relative">
 
-    <!-- ФОНОВЫЕ ПЕРЕЛИВАЮЩИЕСЯ ЭФФЕКТЫ -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div class="absolute top-[-15%] left-[-15%] w-[550px] h-[550px] rounded-full bg-indigo-600/15 space-bg-1"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] rounded-full bg-purple-600/15 space-bg-2"></div>
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <!-- ВЕРХНЯЯ ПАНЕЛЬ СТАТУСА -->
     <header class="mb-5 border-b border-white/5 pb-4 sticky top-0 bg(#030307)/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
-                ProfCraft Console
+                ProfCraft Console v2
             </h1>
             <p id="server-v" class="text-[10px] text-zinc-500 font-mono mt-0.5 tracking-wide">Версия: загрузка...</p>
         </div>
@@ -85,12 +83,9 @@
         </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main class="max-w-md mx-auto space-y-4">
         
-        <!-- ВКЛАДКА 1: ГЛАВНАЯ -->
         <div id="tab-dash" class="tab-content active space-y-4">
-            <!-- Сетка мониторинга ресурсов -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="premium-card p-4 rounded-2xl relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-24 h-[1px] bg-indigo-500/50"></div>
@@ -104,7 +99,6 @@
                 </div>
             </div>
 
-            <!-- Блок быстрого вещания в чат -->
             <div class="premium-card p-4 rounded-2xl space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Объявление в игровой чат</h3>
@@ -117,7 +111,6 @@
                 </div>
             </div>
 
-            <!-- Блок интеграции с Telegram -->
             <div class="premium-card p-4 rounded-2xl space-y-3.5">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Информационная панель Telegram</h3>
                 <textarea id="ann-input" rows="2" placeholder="Текст закрепленной плашки в Telegram канале..." 
@@ -133,7 +126,6 @@
             </div>
         </div>
 
-        <!-- ВКЛАДКА 2: ИГРОКИ -->
         <div id="tab-players" class="tab-content space-y-3">
             <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Управление активными сессиями</h2>
             <div id="players-list" class="space-y-2.5">
@@ -141,7 +133,6 @@
             </div>
         </div>
 
-        <!-- ВКЛАДКА 3: ЦИТАТЫ -->
         <div id="tab-quotes" class="tab-content space-y-3">
             <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">База данных цитат сервера</h2>
             <div class="premium-card p-4 rounded-2xl space-y-3">
@@ -157,7 +148,6 @@
             </div>
         </div>
 
-        <!-- ВКЛАДКА 4: ТОПЫ -->
         <div id="tab-leader" class="tab-content space-y-3">
             <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Сводная таблица рекордов</h2>
             <div class="premium-card rounded-2xl overflow-hidden shadow-xl">
@@ -176,9 +166,7 @@
             </div>
         </div>
 
-        <!-- ВКЛАДКА 5: СИСТЕМА И КОНСОЛЬ -->
         <div id="tab-sys" class="tab-content space-y-4">
-            <!-- Быстрые действия -->
             <div class="premium-card p-4 rounded-2xl">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider mb-3">Системные макросы ядра</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -189,7 +177,6 @@
                 </div>
             </div>
 
-            <!-- Прямая консоль RCON -->
             <div class="premium-card p-4 rounded-2xl space-y-2.5">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Интерфейс командной строки (RCON)</h3>
                 <div class="flex gap-2">
@@ -199,7 +186,6 @@
                 </div>
             </div>
 
-            <!-- Окно отладки -->
             <div class="premium-card p-4 rounded-2xl">
                 <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
                 <pre id="debug-json" class="text-[10px] bg-black/70 p-3.5 rounded-xl border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36 shadow-inner">Ожидание входящих пакетов...</pre>
@@ -207,7 +193,6 @@
         </div>
     </main>
 
-    <!-- НАВИГАЦИОННЫЙ ДОК (FLOATING PILL PAD) -->
     <div class="fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
         <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full tg-btn-active">
             <span class="text-base leading-none">📊</span>Главная
@@ -243,6 +228,9 @@
             "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
 
+        // Хранилище состояний открытых карточек (абсолютная независимость от DOM)
+        const openedPlayerCards = new Set();
+
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.fixed button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
@@ -257,7 +245,15 @@
 
         function togglePlayerCard(name) {
             const card = document.getElementById(`details-${name}`);
-            card.classList.toggle('hidden');
+            if(!card) return;
+            
+            if(card.classList.contains('hidden')) {
+                card.classList.remove('hidden');
+                openedPlayerCards.add(name);
+            } else {
+                card.classList.add('hidden');
+                openedPlayerCards.delete(name);
+            }
             tg.HapticFeedback.impactOccurred('light');
         }
 
@@ -279,18 +275,16 @@
                 document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
 
                 const listDiv = document.getElementById('players-list');
-                const openedCards = [];
-                document.querySelectorAll('[id^="details-"]').forEach(el => {
-                    if(!el.classList.contains('hidden')) openedCards.push(el.id);
-                });
-
                 listDiv.innerHTML = '';
 
                 if(playersRes.data.length === 0) {
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
                 } else {
                     playersRes.data.forEach(p => {
-                        const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
+                        const pName = (p.name || "Steve").replace('/', '_');
+                        
+                        // Безопасная проверка состояния из JS-памяти вместо парсинга DOM дерева
+                        const isHidden = openedPlayerCards.has(pName) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
                         if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
@@ -303,7 +297,6 @@
                         else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
-                        const pName = (p.name || "Steve").replace('/', '_');
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
                         listDiv.innerHTML += `
