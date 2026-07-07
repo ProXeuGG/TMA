@@ -303,6 +303,7 @@
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
                 } else {
                     playersRes.data.forEach(p => {
+                        const nickname = item.name || item.player || item.sender || "Игрок";
                         const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
