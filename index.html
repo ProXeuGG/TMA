@@ -62,6 +62,7 @@
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
+        /* Премиальный тонкий скроллбар для окна чата */
         #chat-container::-webkit-scrollbar {
             width: 4px;
         }
@@ -148,7 +149,7 @@
         </div>
 
         <div id="tab-players" class="tab-content space-y-3">
-            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Управление active сессиями</h2>
+            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Управление активными сессиями</h2>
             <div id="players-list" class="space-y-2.5">
                 <p class="text-xs text-zinc-600 italic p-6 text-center">Получение списка игроков...</p>
             </div>
@@ -187,22 +188,6 @@
             </div>
         </div>
 
-        <!-- НОВАЯ ВКЛАДКА: УПРАВЛЕНИЕ ДОСТУПОМ -->
-        <div id="tab-access" class="tab-content space-y-3">
-            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Контроль доступа к Mini App</h2>
-            <div class="premium-card p-4 rounded-2xl space-y-3">
-                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Разрешить доступ по Telegram Username</h3>
-                <div class="flex gap-2">
-                    <input type="text" id="access-username" placeholder="@username" 
-                           class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none text-zinc-100 transition-all placeholder:text-zinc-700 font-medium">
-                    <button onclick="addAccess()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.95] shrink-0">Добавить</button>
-                </div>
-            </div>
-            <div id="access-list" class="space-y-2">
-                <p class="text-xs text-zinc-600 italic p-6 text-center">Загрузка списка пользователей...</p>
-            </div>
-        </div>
-
         <div id="tab-sys" class="tab-content space-y-4">
             <div class="premium-card p-4 rounded-2xl">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider mb-3">Системные макросы ядра</h3>
@@ -224,7 +209,7 @@
             </div>
 
             <div class="premium-card p-4 rounded-2xl">
-                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
+                <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
                 <pre id="debug-json" class="text-[10px] bg-black/70 p-3.5 rounded-xl border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36 shadow-inner">Ожидание входящих пакетов...</pre>
             </div>
         </div>
@@ -243,9 +228,6 @@
         <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
             <span class="text-base leading-none">🏆</span>Топ
         </button>
-        <button onclick="switchTab('access', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
-            <span class="text-base leading-none">🔑</span>Доступ
-        </button>
         <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
             <span class="text-base leading-none">⚙️</span>Система
         </button>
@@ -260,14 +242,7 @@
         const TOKEN = urlParams.get('token');
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-        // НАЧАЛО ВСТАВКИ: Автоматическая передача имени пользователя Telegram
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username) {
-            axios.defaults.headers.common['X-TG-Username'] = '@' + tg.initDataUnsafe.user.username;
-        } else {
-    // Дефолтное значение для тестов в обычном браузере (вне Телеграма)
-            axios.defaults.headers.common['X-TG-Username'] = '@and1tt'; 
-        }
-// КОНЕЦ ВСТАВКИ
+
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
             "mob_kills": "🦁 Истреблено мобов", "deaths": "💀 Количество смертей",
@@ -275,6 +250,7 @@
             "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
 
+        // Переменная отслеживания последнего сообщения
         let lastChatTimestamp = 0;
 
         function switchTab(tabId, btn) {
@@ -286,7 +262,6 @@
 
             if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
-            if(tabId === 'access') loadAccess();
             if(tabId === 'dash') {
                 loadAnnouncement();
                 loadChat();
@@ -328,7 +303,10 @@
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
                 }  else {
                     playersRes.data.forEach(p => {
+                        // 1. Первым делом объявляем правильное имя с заменённым слэшем
                         const pName = (p.name || "Steve").replace('/', '_');
+                        
+                        // 2. Теперь проверка открытой карточки сработает идеально!
                         const isHidden = openedCards.includes(`details-${pName}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
@@ -398,8 +376,10 @@
             } catch (err) { console.error("Ошибка обновления данных панели", err); }
         }
 
+        // Загрузка сообщений живого чата с сервера
         async function loadChat() {
             if(!API_URL || !TOKEN) return;
+            // Обновляем чат только если активна вкладка Главная
             if(!document.getElementById('tab-dash').classList.contains('active')) return;
             
             try {
@@ -416,11 +396,13 @@
                     const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                     const pName = (msg.sender || "Server").replace('/', '_');
                     
+                    // Установка аватара (если пишет Панель/Консоль, ставим стандартный скин)
                     let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
                     if(msg.sender === 'Панель' || msg.sender === 'Server' || msg.sender === 'Console') {
                         avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
                     }
 
+                    // Окраска ника отправителя
                     let senderColor = 'text-indigo-400';
                     if(msg.sender === 'Панель') senderColor = 'text-fuchsia-400';
 
@@ -436,9 +418,12 @@
                     `;
                 });
 
+                // Проверяем, находится ли пользователь на дне чата (чтобы не скроллить принудительно, если он читает историю)
                 const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 45;
+                
                 chatContainer.innerHTML = chatHtml;
                 
+                // Автоскролл вниз при загрузке новых сообщений или если пользователь уже внизу
                 if (res.data.length > 0) {
                     const latestMsg = res.data[res.data.length - 1];
                     if (latestMsg.timestamp > lastChatTimestamp || isAtBottom) {
@@ -561,56 +546,6 @@
             } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; }
         }
 
-        // --- ЛОГИКА ДЛЯ НОВОЙ ВКЛАДКИ ДОСТУПА ---
-        async function loadAccess() {
-            if(!API_URL || !TOKEN) return;
-            const listDiv = document.getElementById('access-list');
-            try {
-                const res = await axios.get(`${API_URL}/api/access`);
-                listDiv.innerHTML = '';
-                if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-6 premium-card rounded-2xl text-zinc-500 text-xs italic">Список разрешенных Telegram аккаунтов пуст</div>';
-                    return;
-                }
-                res.data.forEach((user) => {
-                    const username = typeof user === 'string' ? user : user.username;
-                    listDiv.innerHTML += `
-                        <div class="premium-card p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm relative overflow-hidden">
-                            <div class="text-sm font-semibold text-zinc-100 font-mono">${username}</div>
-                            <button onclick="deleteAccess('${username}')" class="text-rose-400 text-[10px] font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl transition-all hover:bg-rose-500/20 active:scale-[0.95]">Удалить</button>
-                        </div>
-                    `;
-                });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 p-4 text-center">Ошибка загрузки списка доступа</p>'; }
-        }
-
-        async function addAccess() {
-            const input = document.getElementById('access-username');
-            let username = input.value.trim();
-            if(!username) return alert("Введите имя пользователя!");
-            
-            // Автоматически форматируем строку, если юзер забыл поставить @
-            if(!username.startsWith('@')) {
-                username = '@' + username;
-            }
-            
-            try {
-                await axios.post(`${API_URL}/api/access`, { action: "add", username: username });
-                input.value = '';
-                tg.HapticFeedback.notificationOccurred('success');
-                loadAccess();
-            } catch(err) { alert("Ошибка изменения списка доступа"); }
-        }
-
-        async function deleteAccess(username) {
-            if(!confirm(`Удалить доступ для ${username}?`)) return;
-            try {
-                await axios.post(`${API_URL}/api/access`, { action: "delete", username: username });
-                tg.HapticFeedback.notificationOccurred('success');
-                loadAccess();
-            } catch(err) { alert("Ошибка при удалении"); }
-        }
-
         async function sendConsoleCommand() {
             const input = document.getElementById('cmd-input');
             const command = input.value.trim();
@@ -631,6 +566,7 @@
                 await axios.post(`${API_URL}/api/broadcast`, { message: message });
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
+                // Мгновенно запрашиваем обновление чата после отправки
                 setTimeout(loadChat, 200);
             } catch(err) { alert("Ошибка"); }
         }
@@ -646,12 +582,14 @@
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
 
+        // Инициализация при загрузке страницы
         loadData();
         loadAnnouncement();
         loadChat();
 
-        setInterval(loadData, 4000);
-        setInterval(loadChat, 2000);
+        // Интервалы периодического опроса
+        setInterval(loadData, 4000);   // Общая статистика — раз в 4 секунды
+        setInterval(loadChat, 2000);   // Живой чат — раз в 2 секунды для мгновенного отклика
     </script>
 </body>
 </html>
