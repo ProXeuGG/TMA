@@ -62,7 +62,6 @@
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
-        /* Премиальный тонкий скроллбар для окна чата */
         #chat-container::-webkit-scrollbar {
             width: 4px;
         }
@@ -199,6 +198,20 @@
                 </div>
             </div>
 
+            <div class="premium-card p-4 rounded-2xl space-y-3">
+                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Управление доступом (Администраторы)
+                </h3>
+                <div class="flex gap-2">
+                    <input type="number" id="admin-tgid-input" placeholder="Введите Telegram ID пользователя..." 
+                           class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none font-mono text-zinc-100 transition-all placeholder:text-zinc-700">
+                    <button onclick="addAdmin()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.95] shrink-0">Добавить</button>
+                </div>
+                <div id="admins-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    <p class="text-xs text-zinc-600 italic text-center py-2">Загрузка списка доступа...</p>
+                </div>
+            </div>
+
             <div class="premium-card p-4 rounded-2xl space-y-2.5">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Интерфейс командной строки (RCON)</h3>
                 <div class="flex gap-2">
@@ -244,14 +257,18 @@
         axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
 
         const metricTranslations = {
-            "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
-            "mob_kills": "🦁 Истреблено мобов", "deaths": "💀 Количество смертей",
-            "time_played": "⏱️ Время на сервере", "jumps": "🦘 Совершено прыжков",
-            "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
+            "blocks_broken": "⛏️ Разрушено блоков",
+            "player_kills": "⚔️ Убито игроков",
+            "mob_kills": "🦁 Истреблено мобов",
+            "deaths": "💀 Количество смертей",
+            "time_played": "⏱️ Время на сервере",
+            "jumps": "🦘 Совершено прыжков",
+            "damage_dealt": "💥 Нанесено урона",
+            "fish_caught": "🎣 Поймано рыбы"
         };
 
-        // Переменная отслеживания последнего сообщения
         let lastChatTimestamp = 0;
+        let openedCards = []; // Массив открытых карточек игроков
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -262,51 +279,57 @@
 
             if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
+            if(tabId === 'sys') loadAdmins();
             if(tabId === 'dash') {
                 loadAnnouncement();
                 loadChat();
             }
         }
 
-        function togglePlayerCard(name) {
-            const card = document.getElementById(`details-${name}`);
-            card.classList.toggle('hidden');
-            tg.HapticFeedback.impactOccurred('light');
+        // Переключение видимости меню управления игроком
+        function toggleDetails(cardId) {
+            const el = document.getElementById(cardId);
+            if(!el) return;
+            
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                if(!openedCards.includes(cardId)) openedCards.push(cardId);
+            } else {
+                el.classList.add('hidden');
+                openedCards = openedCards.filter(id => id !== cardId);
+            }
         }
 
         async function loadData() {
             if(!API_URL || !TOKEN) return;
             try {
-                const statsRes = await axios.get(`${API_URL}/api/stats`);
-                const tps = statsRes.data.tps;
-                const tpsBadge = document.getElementById('tps-badge');
-                tpsBadge.innerText = `TPS: ${tps}`;
-                tpsBadge.className = tps < 15 ? "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]";
-
-                document.getElementById('server-v').innerText = `Ядро: ${statsRes.data.version} | Whitelist: ${statsRes.data.whitelist ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}`;
-                document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
-                document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
-
-                const playersRes = await axios.get(`${API_URL}/api/players`);
+                const [statsRes, playersRes] = await Promise.all([
+                    axios.get(`${API_URL}/api/stats`),
+                    axios.get(`${API_URL}/api/players`)
+                ]);
                 
-                document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
+                document.getElementById('debug-json').textContent = JSON.stringify({ stats: statsRes.data, players: playersRes.data }, null, 2);
+
+                if(statsRes.data) {
+                    document.getElementById('server-v').textContent = `Версия: ${statsRes.data.version || 'Не определена'}`;
+                    document.getElementById('stat-online').textContent = `${statsRes.data.online || 0} / ${statsRes.data.maxPlayers || 20}`;
+                    document.getElementById('stat-ram').textContent = statsRes.data.ram ? `${statsRes.data.ram} МБ` : '-- МБ';
+                    
+                    const tps = statsRes.data.tps || 20.0;
+                    const badge = document.getElementById('tps-badge');
+                    badge.textContent = `TPS: ${tps.toFixed(1)}`;
+                    badge.className = "px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all duration-300 border backdrop-blur-md " + 
+                        (tps >= 18 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : 
+                         tps >= 15 ? "bg-amber-500/10 border-amber-500/20 text-amber-400" : "bg-rose-500/10 border-rose-500/20 text-rose-400");
+                }
 
                 const listDiv = document.getElementById('players-list');
-                const openedCards = [];
-                document.querySelectorAll('[id^="details-"]').forEach(el => {
-                    if(!el.classList.contains('hidden')) openedCards.push(el.id);
-                });
-
-                listDiv.innerHTML = '';
-
-                if(playersRes.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
-                }  else {
+                if(!playersRes.data || playersRes.data.length === 0) {
+                    listDiv.innerHTML = '<p class="text-xs text-zinc-500 italic p-6 text-center bg-black/30 rounded-2xl border border-white/5">В данный момент на сервере нет игроков</p>';
+                } else {
+                    let html = '';
                     playersRes.data.forEach(p => {
-                        // 1. Первым делом объявляем правильное имя с заменённым слэшем
                         const pName = (p.name || "Steve").replace('/', '_');
-                        
-                        // 2. Теперь проверка открытой карточки сработает идеально!
                         const isHidden = openedCards.includes(`details-${pName}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
@@ -319,168 +342,165 @@
                         else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
                         else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
-                        const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
-                        listDiv.innerHTML += `
-                            <div class="premium-card rounded-2xl overflow-hidden shadow-md">
-                                <div onclick="togglePlayerCard('${pName}')" class="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-all cursor-pointer">
+                        html += `
+                            <div class="premium-card rounded-2xl overflow-hidden transition-all duration-300 border border-white/5">
+                                <div onclick="toggleDetails('details-${pName}')" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04] transition-all">
                                     <div class="flex items-center gap-3">
-                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-xl bg-black/40 border border-white/10 p-0.5 shadow-sm">
+                                        <img src="https://minotar.net/avatar/${pName}/28" class="w-7 h-7 rounded-lg shadow-md border border-white/10 bg-zinc-800" onerror="this.src='https://minotar.net/avatar/Steve/28'">
                                         <div>
-                                            <p class="font-bold text-sm text-zinc-100 tracking-tight">${pName}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-800">|</span> <span class="text-indigo-400 font-medium">${p.ping || 0}ms</span></p>
+                                            <h4 class="text-sm font-bold text-zinc-200 tracking-tight">${p.name || 'Steve'}</h4>
+                                            <p class="text-[10px] text-zinc-500 font-medium mt-0.5 font-mono">📍 ${coordsStr}</p>
                                         </div>
                                     </div>
-                                    <div class="text-right flex flex-col items-end gap-1">
-                                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
-                                        <p class="text-[9px] text-zinc-600 font-medium tracking-wide">Управление ▾</p>
-                                    </div>
+                                    <span class="text-zinc-600 text-xs transform transition-transform duration-200 ${isHidden === '' ? 'rotate-180' : ''}">▼</span>
                                 </div>
-
-                                <div id="details-${pName}" class="${isHidden} p-4 border-t border-white/5 bg-black/30 space-y-4">
-                                    <div class="grid grid-cols-1 gap-1.5 text-xs bg-black/50 p-3 rounded-xl border border-white/5 font-mono">
-                                        <p class="text-zinc-500 flex justify-between"><span>Координаты XYZ:</span> <span class="text-zinc-200 font-medium text-[10px]">${coordsStr}</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span class="text-amber-400 font-medium">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Уровень опыта:</span> <span class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
-                                    </div>
-
-                                    <div class="space-y-1.5">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Изменить режим сессии:</p>
-                                        <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 rounded-xl border border-white/5">
-                                            <button onclick="quickAction('gamemode creative ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Креатив</button>
-                                            <button onclick="quickAction('gamemode survival ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Выжив.</button>
-                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Прикл.</button>
-                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Наблюд.</button>
+                                
+                                <div id="details-${pName}" class="border-t border-white/5 bg-black/40 p-4 space-y-3 ${isHidden}">
+                                    <div class="grid grid-cols-2 gap-2 text-[11px] font-medium text-zinc-400">
+                                        <div class="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                                            <span class="text-zinc-500 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Режим игры</span>
+                                            <span class="text-indigo-300 font-semibold">${p.gameMode || 'SURVIVAL'}</span>
+                                        </div>
+                                        <div class="bg-white/[0.02] p-2.5 rounded-xl border border-white/5">
+                                            <span class="text-zinc-500 block text-[9px] uppercase font-bold tracking-wider mb-0.5">Опыт / Уровень</span>
+                                            <span class="text-emerald-400 font-bold font-mono">${playerXp} LVL</span>
+                                        </div>
+                                        <div class="bg-white/[0.02] p-2.5 rounded-xl border border-white/5 col-span-2">
+                                            <span class="text-zinc-500 block text-[9px] uppercase font-bold tracking-wider mb-0.5">IP-Адрес клиента</span>
+                                            <span class="text-zinc-300 font-mono font-semibold">${p.ip || '127.0.0.1'}</span>
                                         </div>
                                     </div>
-
-                                    <div class="space-y-1.5">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Отправить личное сообщение (ЛС):</p>
-                                        <div class="flex gap-2">
-                                            <input type="text" id="msg-${pName}" placeholder="Текст приватного сообщения..." class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all">
-                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-xl text-xs font-semibold active:scale-[0.95] transition-all">Послать</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-3 gap-2 pt-1">
-                                        <button onclick="quickAction('op ${pName}')" class="bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Выдать OP</button>
-                                        <button onclick="quickAction('deop ${pName}')" class="bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Снять OP</button>
-                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-red-500/5 border border-red-500/15 hover:bg-red-500/20 text-red-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Кикнуть</button>
+                                    
+                                    <div class="grid grid-cols-2 gap-2 pt-1">
+                                        <button onclick="quickAction('kick ${p.name}')" class="bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 text-amber-400 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Кикнуть</button>
+                                        <button onclick="quickAction('ban ${p.name}')" class="bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Забанить</button>
+                                        <button onclick="quickAction('kill ${p.name}')" class="bg-red-500/5 border border-white/5 hover:bg-red-500/10 text-zinc-300 py-2 rounded-xl text-xs font-semibold transition-all active:scale-[0.95]">Ликвидировать</button>
+                                        <button onclick="openTpModal('${p.name}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-xl text-xs font-bold transition-all active:scale-[0.95] shadow-md shadow-indigo-600/10">Телепортация</button>
                                     </div>
                                 </div>
                             </div>
                         `;
                     });
+                    listDiv.innerHTML = html;
                 }
-            } catch (err) { console.error("Ошибка обновления данных панели", err); }
+            } catch(err) { console.error(err); }
         }
 
-        // Загрузка сообщений живого чата с сервера
-        async function loadChat() {
-            if(!API_URL || !TOKEN) return;
-            // Обновляем чат только если активна вкладка Главная
-            if(!document.getElementById('tab-dash').classList.contains('active')) return;
-            
-            try {
-                const res = await axios.get(`${API_URL}/api/chat`);
-                const chatContainer = document.getElementById('chat-container');
-                
-                if(!res.data || res.data.length === 0) {
-                    chatContainer.innerHTML = '<div class="text-center py-10 text-zinc-600 italic text-[11px]">В игровом чате пока нет сообщений</div>';
-                    return;
-                }
-
-                let chatHtml = '';
-                res.data.forEach(msg => {
-                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-                    const pName = (msg.sender || "Server").replace('/', '_');
-                    
-                    // Установка аватара (если пишет Панель/Консоль, ставим стандартный скин)
-                    let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
-                    if(msg.sender === 'Панель' || msg.sender === 'Server' || msg.sender === 'Console') {
-                        avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
-                    }
-
-                    // Окраска ника отправителя
-                    let senderColor = 'text-indigo-400';
-                    if(msg.sender === 'Панель') senderColor = 'text-fuchsia-400';
-
-                    chatHtml += `
-                        <div class="flex items-start gap-2 text-zinc-300 border-b border-white/[0.02] pb-1.5 last:border-none">
-                            <span class="text-[9px] text-zinc-600 font-mono pt-0.5 shrink-0">${timeStr}</span>
-                            <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/24'" class="w-5 h-5 rounded-md bg-black/40 border border-white/10 p-0.5 shrink-0 shadow-sm">
-                            <div class="break-all leading-normal text-[11px]">
-                                <span class="font-bold ${senderColor} mr-1">${msg.sender}:</span>
-                                <span class="text-zinc-200 font-medium">${msg.message}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                // Проверяем, находится ли пользователь на дне чата (чтобы не скроллить принудительно, если он читает историю)
-                const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 45;
-                
-                chatContainer.innerHTML = chatHtml;
-                
-                // Автоскролл вниз при загрузке новых сообщений или если пользователь уже внизу
-                if (res.data.length > 0) {
-                    const latestMsg = res.data[res.data.length - 1];
-                    if (latestMsg.timestamp > lastChatTimestamp || isAtBottom) {
-                        lastChatTimestamp = latestMsg.timestamp;
-                        chatContainer.scrollTop = chatContainer.scrollHeight;
-                    }
-                }
-            } catch (err) { console.error("Ошибка обновления чата", err); }
-        }
-
-        async function sendPrivateMsg(playerName) {
-            const input = document.getElementById(`msg-${playerName}`);
-            const text = input.value.trim();
-            if(!text) return;
-            await axios.post(`${API_URL}/api/command`, { command: `msg ${playerName} ${text}` });
-            input.value = '';
+        function openTpModal(playerName) {
+            const target = prompt(`Введите ник назначения или координаты (X Y Z), куда телепортировать ${playerName}:`);
+            if(!target) return;
+            const parts = target.trim().split(/\s+/);
+            if(parts.length === 3) {
+                axios.post(`${API_URL}/api/command`, { command: `tp ${playerName} ${parts[0]} ${parts[1]} ${parts[2]}` });
+            } else {
+                axios.post(`${API_URL}/api/command`, { command: `tp ${playerName} ${target}` });
+            }
             tg.HapticFeedback.notificationOccurred('success');
         }
 
-        function kickPlayerPrompt(playerName) {
-            const reason = prompt(`Причина кика для ${playerName}:`, "Кикнут через Mini App");
-            if (reason !== null) quickAction(`kick ${playerName} ${reason}`);
-        }
-
+        // Функции объявлений
         async function loadAnnouncement() {
             if(!API_URL || !TOKEN) return;
             try {
                 const res = await axios.get(`${API_URL}/api/announcement`);
-                document.getElementById('ann-input').value = res.data.announcement || '';
-            } catch(err) { console.error(err); }
+                if(res.data && res.data.message) document.getElementById('ann-input').value = res.data.message;
+            } catch(err){}
         }
-
         async function saveAnnouncement() {
-            const text = document.getElementById('ann-input').value.trim();
+            const msg = document.getElementById('ann-input').value;
             try {
-                await axios.post(`${API_URL}/api/announcement`, { text: text });
+                await axios.post(`${API_URL}/api/announcement`, { message: msg });
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Успешно сохранено!");
-            } catch(err) { alert("Ошибка сохранения"); }
+            } catch(err) { alert("Ошибка"); }
         }
-
         async function clearAnnouncement() {
             try {
-                await axios.post(`${API_URL}/api/announcement`, { text: "" });
+                await axios.post(`${API_URL}/api/announcement`, { message: "" });
                 document.getElementById('ann-input').value = "";
                 tg.HapticFeedback.notificationOccurred('success');
             } catch(err) { alert("Ошибка"); }
         }
-
         async function forceRefreshAnnouncement() {
             try {
-                await axios.post(`${API_URL}/api/announcement/refresh`);
+                await axios.post(`${API_URL}/api/announcement/refresh`, {});
                 tg.HapticFeedback.notificationOccurred('success');
-                alert("Запрос отправлен!");
-            } catch(err) { alert("Ошибка запроса"); }
+            } catch(err) { alert("Ошибка"); }
         }
 
+        // Функции Живого чата
+        async function loadChat() {
+            if(!API_URL || !TOKEN) return;
+            try {
+                const res = await axios.get(`${API_URL}/api/chat?since=${lastChatTimestamp}`);
+                const container = document.getElementById('chat-container');
+                if(lastChatTimestamp === 0) container.innerHTML = '';
+                
+                if(res.data && res.data.messages && res.data.messages.length > 0) {
+                    res.data.messages.forEach(msg => {
+                        const timeStr = msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        container.innerHTML += `
+                            <div class="bg-white/[0.01] border border-white/[0.03] p-2 rounded-lg flex items-start gap-2">
+                                <span class="text-zinc-500 font-mono text-[10px] shrink-0 mt-0.5">${timeStr}</span>
+                                <div class="break-all">
+                                    <span class="text-indigo-400 font-bold">${msg.sender || 'System'}:</span>
+                                    <span class="text-zinc-300 ml-1">${msg.text || msg.message || ''}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.scrollTop = container.scrollHeight;
+                    lastChatTimestamp = res.data.timestamp || Date.now();
+                } else if (container.innerHTML.includes('Синхронизация игрового чата...')) {
+                    container.innerHTML = '<div class="text-center py-10 text-zinc-600 italic">В чате пока нет сообщений</div>';
+                }
+            } catch(err) {}
+        }
+
+        // Функции управления Администраторами (Белый список TG ID)
+        async function loadAdmins() {
+            if(!API_URL || !TOKEN) return;
+            const listDiv = document.getElementById('admins-list');
+            try {
+                const res = await axios.get(`${API_URL}/api/admins`);
+                listDiv.innerHTML = '';
+                if(!res.data || res.data.length === 0) {
+                    listDiv.innerHTML = '<div class="text-center py-4 text-zinc-500 text-xs italic">Список пуст. Доступ имеет только создатель.</div>';
+                    return;
+                }
+                res.data.forEach((id) => {
+                    listDiv.innerHTML += `
+                        <div class="flex items-center justify-between bg-black/40 border border-white/5 px-3 py-2 rounded-xl text-xs font-mono">
+                            <span class="text-zinc-300">🔹 ID: ${id}</span>
+                            <button onclick="deleteAdmin('${id}')" class="text-rose-400 text-[10px] font-bold bg-rose-500/5 border border-rose-500/10 px-2.5 py-1.5 rounded-lg transition-all hover:bg-rose-500/15 active:scale-[0.95]">Удалить</button>
+                        </div>
+                    `;
+                });
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 text-center py-2">Ошибка загрузки списка прав доступа</p>'; }
+        }
+
+        async function addAdmin() {
+            const input = document.getElementById('admin-tgid-input');
+            const tgId = input.value.trim();
+            if(!tgId) return alert("Введите корректный Telegram ID!");
+            try {
+                await axios.post(`${API_URL}/api/admins`, { action: "add", id: tgId });
+                input.value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                loadAdmins();
+            } catch(err) { alert("Ошибка при добавлении ID"); }
+        }
+
+        async function deleteAdmin(tgId) {
+            if(!confirm(`Аннулировать доступ для Telegram ID: ${tgId}?`)) return;
+            try {
+                await axios.post(`${API_URL}/api/admins`, { action: "delete", id: tgId });
+                tg.HapticFeedback.notificationOccurred('success');
+                loadAdmins();
+            } catch(err) { alert("Ошибка при удалении ID"); }
+        }
+
+        // Функции Цитат
         async function loadQuotes() {
             if(!API_URL || !TOKEN) return;
             const listDiv = document.getElementById('quotes-list');
@@ -488,26 +508,29 @@
                 const res = await axios.get(`${API_URL}/api/quotes`);
                 listDiv.innerHTML = '';
                 if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-6 premium-card rounded-2xl text-zinc-500 text-xs italic">Список сохраненных цитат пуст</div>';
+                    listDiv.innerHTML = '<p class="text-xs text-zinc-500 italic p-6 text-center">Цитаты отсутствуют</p>';
                     return;
                 }
-                res.data.forEach((q, idx) => {
+                res.data.forEach(q => {
                     listDiv.innerHTML += `
-                        <div class="premium-card p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm relative overflow-hidden">
-                            <div class="text-xs leading-relaxed"><span class="text-zinc-100 font-medium italic">"${q.text}"</span> <span class="text-purple-400 font-bold ml-1">— ${q.author}</span></div>
-                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl transition-all hover:bg-rose-500/20 active:scale-[0.95]">Удалить</button>
+                        <div class="premium-card p-3.5 rounded-xl flex items-center justify-between border border-white/5 text-xs">
+                            <div class="pr-3">
+                                <span class="text-purple-400 font-bold block mb-0.5">✍️ ${q.author || 'Неизвестный'}</span>
+                                <span class="text-zinc-300 italic">"${q.text || ''}"</span>
+                            </div>
+                            <button onclick="deleteQuote('${q.id}')" class="text-rose-400 text-[10px] font-bold bg-rose-500/5 border border-rose-500/10 px-2.5 py-1.5 rounded-lg shrink-0 transition-all active:scale-[0.95]">Удалить</button>
                         </div>
                     `;
                 });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 p-4 text-center">Ошибка загрузки конфигурации цитат</p>'; }
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 text-center">Ошибка загрузки цитат</p>'; }
         }
 
         async function addQuote() {
             const author = document.getElementById('quote-author').value.trim();
             const text = document.getElementById('quote-text').value.trim();
-            if(!author || !text) return alert("Заполните поля!");
+            if(!author || !text) return alert("Заполните оба поля!");
             try {
-                await axios.post(`${API_URL}/api/quotes`, { action: "add", author: author, text: text });
+                await axios.post(`${API_URL}/api/quotes`, { action: "add", author, text });
                 document.getElementById('quote-author').value = '';
                 document.getElementById('quote-text').value = '';
                 tg.HapticFeedback.notificationOccurred('success');
@@ -515,37 +538,40 @@
             } catch(err) { alert("Ошибка"); }
         }
 
-        async function deleteQuote(index) {
-            if(!confirm("Удалить?")) return;
+        async function deleteQuote(id) {
+            if(!confirm("Удалить эту цитату?")) return;
             try {
-                await axios.post(`${API_URL}/api/quotes`, { action: "delete", index: index });
+                await axios.post(`${API_URL}/api/quotes`, { action: "delete", id: id });
                 tg.HapticFeedback.notificationOccurred('success');
                 loadQuotes();
             } catch(err) { alert("Ошибка"); }
         }
 
+        // Функции Топ-листа
         async function loadLeaderboard() {
             if(!API_URL || !TOKEN) return;
             const tbody = document.getElementById('leaderboard-data');
             try {
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
                 tbody.innerHTML = '';
-                let hasData = false;
-                if(res.data.stats) {
-                    for(let key in res.data.stats) {
-                        hasData = true;
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.02]">
-                                <td class="p-4 pl-5 text-zinc-400 font-medium">${metricTranslations[key] || key}</td>
-                                <td class="p-4 text-zinc-100 font-bold text-xs tracking-wide">${res.data.stats[key].player || '—'}</td>
-                                <td class="p-4 text-right pr-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold font-mono text-sm">${res.data.stats[key].value}</td>
-                            </tr>`;
-                    }
+                if(!res.data || Object.keys(res.data).length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-zinc-500 italic">Нет данных</td></tr>';
+                    return;
                 }
-                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-zinc-500 text-xs italic">Метрики отсутствуют.</td></tr>';
-            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; }
+                for(const [metric, data] of Object.entries(res.data)) {
+                    const label = metricTranslations[metric] || metric;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/[0.01] transition-all">
+                            <td class="p-4 pl-5 font-semibold text-zinc-400">${label}</td>
+                            <td class="p-4 font-bold text-zinc-200">${data.player || '⏳'}</td>
+                            <td class="p-4 text-right pr-5 font-mono text-indigo-400 font-bold">${data.value || 0}</td>
+                        </tr>
+                    `;
+                }
+            } catch(err) { tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-rose-400">Ошибка парсинга</td></tr>'; }
         }
 
+        // Вспомогательные консольные действия
         async function sendConsoleCommand() {
             const input = document.getElementById('cmd-input');
             const command = input.value.trim();
@@ -566,7 +592,6 @@
                 await axios.post(`${API_URL}/api/broadcast`, { message: message });
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
-                // Мгновенно запрашиваем обновление чата после отправки
                 setTimeout(loadChat, 200);
             } catch(err) { alert("Ошибка"); }
         }
@@ -582,14 +607,13 @@
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
 
-        // Инициализация при загрузке страницы
+        // Запуск
         loadData();
         loadAnnouncement();
         loadChat();
 
-        // Интервалы периодического опроса
-        setInterval(loadData, 4000);   // Общая статистика — раз в 4 секунды
-        setInterval(loadChat, 2000);   // Живой чат — раз в 2 секунды для мгновенного отклика
+        setInterval(loadData, 4000);
+        setInterval(loadChat, 2000);
     </script>
 </body>
 </html>
