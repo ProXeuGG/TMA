@@ -301,10 +301,13 @@
 
                 if(playersRes.data.length === 0) {
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
-                } else {
+                }  else {
                     playersRes.data.forEach(p => {
-                        const nickname = item.name || item.player || item.sender || "Игрок";
-                        const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
+                        // 1. Первым делом объявляем правильное имя с заменённым слэшем
+                        const pName = (p.name || "Steve").replace('/', '_');
+                        
+                        // 2. Теперь проверка открытой карточки сработает идеально!
+                        const isHidden = openedCards.includes(`details-${pName}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
                         if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
@@ -316,8 +319,6 @@
                         else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
                         else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
-
-                        const pName = (p.name || "Steve").replace('/', '_');
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
                         listDiv.innerHTML += `
