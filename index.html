@@ -61,6 +61,21 @@
             border-color: rgba(139, 92, 246, 0.5);
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.6);
         }
+
+        /* Премиальный тонкий скроллбар для окна чата */
+        #chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        #chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.3);
+        }
     </style>
 </head>
 <body class="p-4 antialiased pb-28 min-h-screen relative">
@@ -71,10 +86,10 @@
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <header class="mb-5 border-b border-white/5 pb-4 sticky top-0 bg(#030307)/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
+    <header class="mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
-                ProfCraft Console v2
+                ProfCraft Console
             </h1>
             <p id="server-v" class="text-[10px] text-zinc-500 font-mono mt-0.5 tracking-wide">Версия: загрузка...</p>
         </div>
@@ -101,11 +116,18 @@
 
             <div class="premium-card p-4 rounded-2xl space-y-3">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Объявление в игровой чат</h3>
-                    <span class="text-[10px] text-indigo-400 font-mono">LIVE</span>
+                    <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>Игровой чат (LIVE)
+                    </h3>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-widest">REALTIME</span>
                 </div>
-                <div class="flex gap-2">
-                    <input type="text" id="bc-input" placeholder="Введите текст сообщения..." 
+                
+                <div id="chat-container" class="space-y-2.5 max-h-52 overflow-y-auto pr-1 font-sans text-xs bg-black/50 p-3 rounded-xl border border-white/5 min-h-[120px] shadow-inner">
+                    <p class="text-zinc-600 italic text-center py-10">Синхронизация игрового чата...</p>
+                </div>
+
+                <div class="flex gap-2 pt-0.5">
+                    <input type="text" id="bc-input" onkeydown="if(event.key === 'Enter') sendBroadcast()" placeholder="Написать в чат от имени Панели..." 
                            class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none text-zinc-100 transition-all placeholder:text-zinc-700 font-medium">
                     <button onclick="sendBroadcast()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.95] shadow-md shadow-indigo-600/10 shrink-0">Отправить</button>
                 </div>
@@ -228,8 +250,8 @@
             "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
 
-        // Хранилище состояний открытых карточек (абсолютная независимость от DOM)
-        const openedPlayerCards = new Set();
+        // Переменная отслеживания последнего сообщения
+        let lastChatTimestamp = 0;
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -240,20 +262,15 @@
 
             if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
-            if(tabId === 'dash') loadAnnouncement();
+            if(tabId === 'dash') {
+                loadAnnouncement();
+                loadChat();
+            }
         }
 
         function togglePlayerCard(name) {
             const card = document.getElementById(`details-${name}`);
-            if(!card) return;
-            
-            if(card.classList.contains('hidden')) {
-                card.classList.remove('hidden');
-                openedPlayerCards.add(name);
-            } else {
-                card.classList.add('hidden');
-                openedPlayerCards.delete(name);
-            }
+            card.classList.toggle('hidden');
             tg.HapticFeedback.impactOccurred('light');
         }
 
@@ -275,16 +292,18 @@
                 document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
 
                 const listDiv = document.getElementById('players-list');
+                const openedCards = [];
+                document.querySelectorAll('[id^="details-"]').forEach(el => {
+                    if(!el.classList.contains('hidden')) openedCards.push(el.id);
+                });
+
                 listDiv.innerHTML = '';
 
                 if(playersRes.data.length === 0) {
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
                 } else {
                     playersRes.data.forEach(p => {
-                        const pName = (p.name || "Steve").replace('/', '_');
-                        
-                        // Безопасная проверка состояния из JS-памяти вместо парсинга DOM дерева
-                        const isHidden = openedPlayerCards.has(pName) ? '' : 'hidden';
+                        const isHidden = openedCards.includes(`details-${p.name}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
                         if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
@@ -297,6 +316,7 @@
                         else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
+                        const pName = (p.name || "Steve").replace('/', '_');
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
                         listDiv.innerHTML += `
@@ -352,6 +372,64 @@
                     });
                 }
             } catch (err) { console.error("Ошибка обновления данных панели", err); }
+        }
+
+        // Загрузка сообщений живого чата с сервера
+        async function loadChat() {
+            if(!API_URL || !TOKEN) return;
+            // Обновляем чат только если активна вкладка Главная
+            if(!document.getElementById('tab-dash').classList.contains('active')) return;
+            
+            try {
+                const res = await axios.get(`${API_URL}/api/chat`);
+                const chatContainer = document.getElementById('chat-container');
+                
+                if(!res.data || res.data.length === 0) {
+                    chatContainer.innerHTML = '<div class="text-center py-10 text-zinc-600 italic text-[11px]">В игровом чате пока нет сообщений</div>';
+                    return;
+                }
+
+                let chatHtml = '';
+                res.data.forEach(msg => {
+                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                    const pName = (msg.sender || "Server").replace('/', '_');
+                    
+                    // Установка аватара (если пишет Панель/Консоль, ставим стандартный скин)
+                    let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
+                    if(msg.sender === 'Панель' || msg.sender === 'Server' || msg.sender === 'Console') {
+                        avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
+                    }
+
+                    // Окраска ника отправителя
+                    let senderColor = 'text-indigo-400';
+                    if(msg.sender === 'Панель') senderColor = 'text-fuchsia-400';
+
+                    chatHtml += `
+                        <div class="flex items-start gap-2 text-zinc-300 border-b border-white/[0.02] pb-1.5 last:border-none">
+                            <span class="text-[9px] text-zinc-600 font-mono pt-0.5 shrink-0">${timeStr}</span>
+                            <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/24'" class="w-5 h-5 rounded-md bg-black/40 border border-white/10 p-0.5 shrink-0 shadow-sm">
+                            <div class="break-all leading-normal text-[11px]">
+                                <span class="font-bold ${senderColor} mr-1">${msg.sender}:</span>
+                                <span class="text-zinc-200 font-medium">${msg.message}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Проверяем, находится ли пользователь на дне чата (чтобы не скроллить принудительно, если он читает историю)
+                const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 45;
+                
+                chatContainer.innerHTML = chatHtml;
+                
+                // Автоскролл вниз при загрузке новых сообщений или если пользователь уже внизу
+                if (res.data.length > 0) {
+                    const latestMsg = res.data[res.data.length - 1];
+                    if (latestMsg.timestamp > lastChatTimestamp || isAtBottom) {
+                        lastChatTimestamp = latestMsg.timestamp;
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
+            } catch (err) { console.error("Ошибка обновления чата", err); }
         }
 
         async function sendPrivateMsg(playerName) {
@@ -486,6 +564,8 @@
                 await axios.post(`${API_URL}/api/broadcast`, { message: message });
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
+                // Мгновенно запрашиваем обновление чата после отправки
+                setTimeout(loadChat, 200);
             } catch(err) { alert("Ошибка"); }
         }
 
@@ -500,9 +580,14 @@
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
 
+        // Инициализация при загрузке страницы
         loadData();
         loadAnnouncement();
-        setInterval(loadData, 4000);
+        loadChat();
+
+        // Интервалы периодического опроса
+        setInterval(loadData, 4000);   // Общая статистика — раз в 4 секунды
+        setInterval(loadChat, 2000);   // Живой чат — раз в 2 секунды для мгновенного отклика
     </script>
 </body>
 </html>
