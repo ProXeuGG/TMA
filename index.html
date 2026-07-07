@@ -78,7 +78,7 @@
         }
     </style>
 </head>
-<body class="p-4 antialiased pb-28 min-h-screen relative">
+<body class="p-4 antialiased pb-28 min-h-screen relative flex flex-col justify-start">
 
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div class="absolute top-[-15%] left-[-15%] w-[550px] h-[550px] rounded-full bg-indigo-600/15 space-bg-1"></div>
@@ -86,7 +86,29 @@
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <header class="mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
+    <!-- ЭКРАН АВТОРИЗАЦИИ (ОТОБРАЖАЕТСЯ ПО УМОЛЧАНИЮ) -->
+    <div id="auth-screen" class="w-full max-w-md mx-auto my-auto pt-12 flex flex-col justify-center items-center z-50">
+        <div class="premium-card p-6 rounded-3xl w-full space-y-5 border border-white/10 relative overflow-hidden shadow-2xl">
+            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+            <div class="text-center space-y-1.5">
+                <h2 class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
+                    ProfCraft Console
+                </h2>
+                <p class="text-xs text-zinc-500 font-medium">Для доступа к управлению введите мастер-пароль</p>
+            </div>
+            <div class="space-y-2">
+                <input type="password" id="auth-password" onkeydown="if(event.key === 'Enter') verifyPassword()" placeholder="••••••••" 
+                       class="w-full premium-input rounded-xl px-4 py-3.5 text-center text-sm font-mono focus:outline-none text-zinc-100 tracking-widest placeholder:text-zinc-700 placeholder:tracking-normal transition-all">
+                <p id="auth-error" class="text-rose-400 text-[11px] text-center font-bold hidden animate-pulse">❌ Неверный пароль доступа!</p>
+            </div>
+            <button onclick="verifyPassword()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-600/20">
+                Авторизоваться
+            </button>
+        </div>
+    </div>
+
+    <!-- ШАПКА ПАНЕЛИ (СКРЫТА ДО ЛОГИНА) -->
+    <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
                 ProfCraft Console
@@ -98,7 +120,8 @@
         </div>
     </header>
 
-    <main class="max-w-md mx-auto space-y-4">
+    <!-- ОСНОВНОЙ КОНТЕНТ (СКРЫТ ДО ЛОГИНА) -->
+    <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4">
         
         <div id="tab-dash" class="tab-content active space-y-4">
             <div class="grid grid-cols-2 gap-3">
@@ -215,7 +238,8 @@
         </div>
     </main>
 
-    <div class="fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
+    <!-- НИЖНЕЕ МЕНЮ (СКРЫТО ДО ЛОГИНА) -->
+    <div id="app-nav" class="hidden fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
         <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full tg-btn-active">
             <span class="text-base leading-none">📊</span>Главная
         </button>
@@ -239,9 +263,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const API_URL = urlParams.get('api');
-        const TOKEN = urlParams.get('token');
-
-        axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
+        let TOKEN = ''; // Токен заполняется только после успешного ввода пароля
 
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
@@ -250,12 +272,65 @@
             "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
 
-        // Переменная отслеживания последнего сообщения
         let lastChatTimestamp = 0;
+        let isAuthorized = false;
+
+        // ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ ПРИ ВХОДЕ
+        async function verifyPassword() {
+            const passwordInput = document.getElementById('auth-password');
+            const errorText = document.getElementById('auth-error');
+            const password = passwordInput.value.trim();
+
+            if (!password) return;
+            if (!API_URL) {
+                alert("Ошибка: отсутствует параметр 'api' в URL!");
+                return;
+            }
+
+            try {
+                // Временно подставляем токен для проверки эндпоинта статистики
+                const testConfig = {
+                    headers: { 'Authorization': `Bearer ${password}` }
+                };
+                
+                const response = await axios.get(`${API_URL}/api/stats`, testConfig);
+
+                if (response.status === 200) {
+                    // Пароль верный! Сохраняем его глобально для axios
+                    TOKEN = password;
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
+                    isAuthorized = true;
+
+                    // Прячем экран авторизации, показываем весь остальной интерфейс
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    document.getElementById('app-header').classList.remove('hidden');
+                    document.getElementById('app-main').classList.remove('hidden');
+                    document.getElementById('app-nav').classList.remove('hidden');
+
+                    tg.HapticFeedback.notificationOccurred('success');
+
+                    // Инициализация загрузки игровых данных
+                    loadData();
+                    loadAnnouncement();
+                    loadChat();
+
+                    // Запуск интервалов обновления данных
+                    setInterval(loadData, 4000);   
+                    setInterval(loadChat, 2000);   
+                }
+            } catch (err) {
+                // Если бэкенд ответил ошибкой авторизации 401/403 или сервер недоступен
+                errorText.classList.remove('hidden');
+                passwordInput.value = '';
+                tg.HapticFeedback.notificationOccurred('error');
+                console.error("Авторизация не удалась", err);
+            }
+        }
 
         function switchTab(tabId, btn) {
+            if (!isAuthorized) return;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.fixed button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
+            document.querySelectorAll('#app-nav button').forEach(el => el.classList.remove('all', 'tg-btn-active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             btn.classList.add('tg-btn-active');
             tg.HapticFeedback.impactOccurred('light');
@@ -269,13 +344,14 @@
         }
 
         function togglePlayerCard(name) {
+            if (!isAuthorized) return;
             const card = document.getElementById(`details-${name}`);
             card.classList.toggle('hidden');
             tg.HapticFeedback.impactOccurred('light');
         }
 
         async function loadData() {
-            if(!API_URL || !TOKEN) return;
+            if(!API_URL || !TOKEN || !isAuthorized) return;
             try {
                 const statsRes = await axios.get(`${API_URL}/api/stats`);
                 const tps = statsRes.data.tps;
@@ -288,7 +364,6 @@
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
                 const playersRes = await axios.get(`${API_URL}/api/players`);
-                
                 document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
 
                 const listDiv = document.getElementById('players-list');
@@ -303,10 +378,7 @@
                     listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
                 }  else {
                     playersRes.data.forEach(p => {
-                        // 1. Первым делом объявляем правильное имя с заменённым слэшем
                         const pName = (p.name || "Steve").replace('/', '_');
-                        
-                        // 2. Теперь проверка открытой карточки сработает идеально!
                         const isHidden = openedCards.includes(`details-${pName}`) ? '' : 'hidden';
                         
                         let coordsStr = 'Не определено';
@@ -376,10 +448,8 @@
             } catch (err) { console.error("Ошибка обновления данных панели", err); }
         }
 
-        // Загрузка сообщений живого чата с сервера
         async function loadChat() {
-            if(!API_URL || !TOKEN) return;
-            // Обновляем чат только если активна вкладка Главная
+            if(!API_URL || !TOKEN || !isAuthorized) return;
             if(!document.getElementById('tab-dash').classList.contains('active')) return;
             
             try {
@@ -396,13 +466,11 @@
                     const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
                     const pName = (msg.sender || "Server").replace('/', '_');
                     
-                    // Установка аватара (если пишет Панель/Консоль, ставим стандартный скин)
                     let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
                     if(msg.sender === 'Панель' || msg.sender === 'Server' || msg.sender === 'Console') {
                         avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
                     }
 
-                    // Окраска ника отправителя
                     let senderColor = 'text-indigo-400';
                     if(msg.sender === 'Панель') senderColor = 'text-fuchsia-400';
 
@@ -418,12 +486,9 @@
                     `;
                 });
 
-                // Проверяем, находится ли пользователь на дне чата (чтобы не скроллить принудительно, если он читает историю)
                 const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 45;
-                
                 chatContainer.innerHTML = chatHtml;
                 
-                // Автоскролл вниз при загрузке новых сообщений или если пользователь уже внизу
                 if (res.data.length > 0) {
                     const latestMsg = res.data[res.data.length - 1];
                     if (latestMsg.timestamp > lastChatTimestamp || isAtBottom) {
@@ -449,7 +514,7 @@
         }
 
         async function loadAnnouncement() {
-            if(!API_URL || !TOKEN) return;
+            if(!API_URL || !TOKEN || !isAuthorized) return;
             try {
                 const res = await axios.get(`${API_URL}/api/announcement`);
                 document.getElementById('ann-input').value = res.data.announcement || '';
@@ -482,7 +547,7 @@
         }
 
         async function loadQuotes() {
-            if(!API_URL || !TOKEN) return;
+            if(!API_URL || !TOKEN || !isAuthorized) return;
             const listDiv = document.getElementById('quotes-list');
             try {
                 const res = await axios.get(`${API_URL}/api/quotes`);
@@ -525,7 +590,7 @@
         }
 
         async function loadLeaderboard() {
-            if(!API_URL || !TOKEN) return;
+            if(!API_URL || !TOKEN || !isAuthorized) return;
             const tbody = document.getElementById('leaderboard-data');
             try {
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
@@ -566,12 +631,12 @@
                 await axios.post(`${API_URL}/api/broadcast`, { message: message });
                 input.value = '';
                 tg.HapticFeedback.notificationOccurred('success');
-                // Мгновенно запрашиваем обновление чата после отправки
                 setTimeout(loadChat, 200);
             } catch(err) { alert("Ошибка"); }
         }
 
         function quickAction(cmd) {
+            if (!isAuthorized) return;
             axios.post(`${API_URL}/api/command`, { command: cmd }).then(() => {
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 400);
@@ -581,15 +646,6 @@
         function askRestart() {
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
-
-        // Инициализация при загрузке страницы
-        loadData();
-        loadAnnouncement();
-        loadChat();
-
-        // Интервалы периодического опроса
-        setInterval(loadData, 4000);   // Общая статистика — раз в 4 секунды
-        setInterval(loadChat, 2000);   // Живой чат — раз в 2 секунды для мгновенного отклика
     </script>
 </body>
 </html>
