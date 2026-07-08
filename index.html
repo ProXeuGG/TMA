@@ -166,7 +166,7 @@
                           class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none text-zinc-100 transition-all placeholder:text-zinc-700 resize-none font-medium"></textarea>
                 
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="saveAnnouncement()" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Сохранить текст</button>
+                    <button onclick="saveAnnouncement()" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Сохранить text</button>
                     <button onclick="clearAnnouncement()" class="bg-red-500/5 hover:bg-red-500/15 text-red-400 border border-red-500/10 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Очистить плашку</button>
                 </div>
                 <button onclick="forceRefreshAnnouncement()" class="w-full bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 text-indigo-300 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.97]">
@@ -419,6 +419,15 @@
                         else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
 
+                        // ГЕНЕРАЦИЯ СПИСКА ОСТАЛЬНЫХ ИГРОКОВ ДЛЯ ТЕЛЕПОРТАЦИИ
+                        let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите игрока для ТП...</option>';
+                        playersRes.data.forEach(otherP => {
+                            const otherName = (otherP.name || "Steve").replace('/', '_');
+                            if (otherName !== pName) {
+                                otherPlayersOptions += `<option value="${otherName}" class="bg-[#0e0e18] text-zinc-200">${otherName}</option>`;
+                            }
+                        });
+
                         listDiv.innerHTML += `
                             <div class="premium-card rounded-2xl overflow-hidden shadow-md">
                                 <div onclick="togglePlayerCard('${pName}')" class="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-all cursor-pointer">
@@ -453,7 +462,28 @@
                                         </div>
                                     </div>
 
-                                    <div class="space-y-1.5">
+                                    <!-- ДОБАВЛЕННЫЙ БЛОК ТЕЛЕПОРТАЦИИ -->
+                                    <div class="space-y-2 border-t border-white/5 pt-3">
+                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Телепортация игрока:</p>
+                                        
+                                        <!-- К другому игроку -->
+                                        <div class="flex gap-2">
+                                            <select id="tp-dest-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
+                                                ${otherPlayersOptions}
+                                            </select>
+                                            <button onclick="teleportToPlayer('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">К игроку</button>
+                                        </div>
+
+                                        <!-- По координатам -->
+                                        <div class="flex gap-1.5 items-center">
+                                            <input type="number" id="tp-x-${pName}" placeholder="X" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
+                                            <input type="number" id="tp-y-${pName}" placeholder="Y" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
+                                            <input type="number" id="tp-z-${pName}" placeholder="Z" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
+                                            <button onclick="teleportToCoords('${pName}')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">По XYZ</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5 border-t border-white/5 pt-3">
                                         <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Отправить личное сообщение (ЛС):</p>
                                         <div class="flex gap-2">
                                             <input type="text" id="msg-${pName}" placeholder="Текст приватного сообщения..." class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all">
@@ -692,6 +722,63 @@
 
         function askRestart() {
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
+        }
+
+        // НОВЫЕ ФУНКЦИИ ДЛЯ ОБРАБОТКИ ТЕЛЕПОРТАЦИИ НА ФРОНТЕНДЕ
+
+        async function teleportToPlayer(targetName) {
+            const selectEl = document.getElementById(`tp-dest-${targetName}`);
+            const destinationName = selectEl.value;
+
+            if (!destinationName) {
+                alert("Пожалуйста, выберите целевого игрока!");
+                return;
+            }
+
+            try {
+                const response = await axios.post(`${API_URL}/api/teleport`, {
+                    target: targetName,
+                    type: "player",
+                    destination: destinationName
+                });
+                if (response.data.success) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                }
+            } catch (err) {
+                console.error("Ошибка ТП к игроку:", err);
+                alert("Не удалось телепортировать игрока");
+            }
+        }
+
+        async function teleportToCoords(targetName) {
+            const xVal = document.getElementById(`tp-x-${targetName}`).value;
+            const yVal = document.getElementById(`tp-y-${targetName}`).value;
+            const zVal = document.getElementById(`tp-z-${targetName}`).value;
+
+            if (xVal === "" || yVal === "" || zVal === "") {
+                alert("Заполните все три координаты: X, Y и Z!");
+                return;
+            }
+
+            try {
+                const response = await axios.post(`${API_URL}/api/teleport`, {
+                    target: targetName,
+                    type: "coords",
+                    x: parseFloat(xVal),
+                    y: parseFloat(yVal),
+                    z: parseFloat(zVal)
+                });
+                if (response.data.success) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    // Очищаем поля после успешного ТП
+                    document.getElementById(`tp-x-${targetName}`).value = '';
+                    document.getElementById(`tp-y-${targetName}`).value = '';
+                    document.getElementById(`tp-z-${targetName}`).value = '';
+                }
+            } catch (err) {
+                console.error("Ошибка ТП по координатам:", err);
+                alert("Не удалось телепортировать по координатам");
+            }
         }
     </script>
 </body>
