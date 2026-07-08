@@ -616,47 +616,47 @@
         }
 
         async function loadLeaderboard() {
-    if(!API_URL || !isAuthorized) return;
-    const tbody = document.getElementById('leaderboard-data');
-    try {
-        const res = await axios.get(`${API_URL}/api/leaderboard`);
-        tbody.innerHTML = '';
-        let hasData = false;
+            if(!API_URL || !isAuthorized) return;
+            const tbody = document.getElementById('leaderboard-data');
+            try {
+                const res = await axios.get(`${API_URL}/api/leaderboard`);
+                tbody.innerHTML = '';
+                let hasData = false;
 
-        // Вспомогательная функция для сборки красивой строки таблицы
-        const createRowHtml = (key, item) => {
-            return `
-                <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.02]">
-                    <!-- Используем перевод title с бэкенда -->
-                    <td class="p-4 pl-5 text-zinc-400 font-medium">${item.title || key}</td>
-                    <td class="p-4 text-zinc-100 font-bold text-xs tracking-wide">${item.player || '—'}</td>
-                    <!-- Используем отформатированное display_value (например, "12 шт." или "1.5 км") -->
-                    <td class="p-4 text-right pr-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold font-mono text-sm">${item.display_value !== undefined ? item.display_value : item.value}</td>
-                </tr>`;
-        };
+                // Вспомогательная функция для сборки красивой строки таблицы
+                const createRowHtml = (key, item) => {
+                    return `
+                        <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.02]">
+                            <!-- Используем перевод title с бэкенда -->
+                            <td class="p-4 pl-5 text-zinc-400 font-medium">${item.title || key}</td>
+                            <td class="p-4 text-zinc-100 font-bold text-xs tracking-wide">${item.player || '—'}</td>
+                            <!-- Используем отформатированное display_value (например, "12 шт." или "1.5 км") -->
+                            <td class="p-4 text-right pr-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold font-mono text-sm">${item.display_value !== undefined ? item.display_value : item.value}</td>
+                        </tr>`;
+                };
 
-        // 1. Рендерим секцию стандартной статистики (stats)
-        if(res.data.stats) {
-            for(let key in res.data.stats) {
-                hasData = true;
-                tbody.innerHTML += createRowHtml(key, res.data.stats[key]);
+                // 1. Рендерим секцию стандартной статистики (stats)
+                if(res.data.stats) {
+                    for(let key in res.data.stats) {
+                        hasData = true;
+                        tbody.innerHTML += createRowHtml(key, res.data.stats[key]);
+                    }
+                }
+
+                // 2. Рендерим секцию кастомной статистики (custom)
+                if(res.data.custom) {
+                    for(let key in res.data.custom) {
+                        hasData = true;
+                        tbody.innerHTML += createRowHtml(key, res.data.custom[key]);
+                    }
+                }
+
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-zinc-500 text-xs italic">Метрики отсутствуют.</td></tr>';
+            } catch(err) { 
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; 
             }
         }
-
-        // 2. Рендерим секцию кастомной статистики (custom)
-        if(res.data.custom) {
-            for(let key in res.data.custom) {
-                hasData = true;
-                tbody.innerHTML += createRowHtml(key, res.data.custom[key]);
-            }
-        }
-
-        if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-zinc-500 text-xs italic">Метрики отсутствуют.</td></tr>';
-    } catch(err) { 
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; 
-    }
-}
 
         async function sendConsoleCommand() {
             const input = document.getElementById('cmd-input');
