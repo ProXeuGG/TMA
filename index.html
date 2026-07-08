@@ -115,7 +115,7 @@
     <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
-                ProfCraft Console
+                ProfCraft Console v2
             </h1>
             <p id="server-v" class="text-[10px] text-zinc-500 font-mono mt-0.5 tracking-wide">Версия: загрузка...</p>
         </div>
@@ -178,7 +178,6 @@
         <div id="tab-players" class="tab-content space-y-3">
             <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Управление активными сессиями</h2>
             <div id="players-list" class="space-y-2.5">
-                <!-- ДОБАВЛЕН ID: no-players-msg, ЧТОБЫ ЭТА СТРОКА КОРРЕКТНО УДАЛЯЛАСЬ ПРИ ПОЯВЛЕНИИ ИГРОКОВ -->
                 <p id="no-players-msg" class="text-xs text-zinc-600 italic p-6 text-center">Получение списка игроков...</p>
             </div>
         </div>
@@ -217,6 +216,31 @@
         </div>
 
         <div id="tab-sys" class="tab-content space-y-4">
+            <!-- ДОБАВЛЕНО: УПРАВЛЕНИЕ ВРЕМЕНЕМ И ПОГОДОЙ -->
+            <div class="premium-card p-4 rounded-2xl space-y-3">
+                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Управление миром (Время и Погода)</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickAction('time set day')" class="bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/15 text-amber-400 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">☀️ День</button>
+                    <button onclick="quickAction('time set night')" class="bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/15 text-indigo-300 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌙 Ночь</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-0.5">
+                    <button onclick="quickAction('weather clear')" class="bg-sky-500/5 border border-sky-500/10 hover:bg-sky-500/15 text-sky-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌤️ Ясно</button>
+                    <button onclick="quickAction('weather rain')" class="bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/15 text-blue-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌧️ Дождь</button>
+                    <button onclick="quickAction('weather thunder')" class="bg-purple-500/5 border border-purple-500/10 hover:bg-purple-500/15 text-purple-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">⚡ Гроза</button>
+                </div>
+            </div>
+
+            <!-- ДОБАВЛЕНО: МОНИТОРИНГ И УПРАВЛЕНИЕ ПЛАГИНАМИ -->
+            <div class="premium-card p-4 rounded-2xl space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Менеджер плагинов</h3>
+                    <button onclick="loadPlugins()" class="text-[9px] text-indigo-400 hover:text-indigo-300 font-mono tracking-wider">🔄 ОБНОВИТЬ</button>
+                </div>
+                <div id="plugins-list" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1 text-[11px] font-mono">
+                    <p class="text-zinc-600 italic text-center col-span-2 py-4">Считывание плагинов ядра...</p>
+                </div>
+            </div>
+
             <div class="premium-card p-4 rounded-2xl">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider mb-3">Системные макросы ядра</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -271,7 +295,7 @@
 
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
-            "mob_kills": "🦁 Истреблено мобов", "deaths": "💀 Количество смертей",
+            "mob_kills": "🦁 Истрелено мобов", "deaths": "💀 Количество смертей",
             "time_played": "⏱️ Время на сервере", "jumps": "🦘 Совершено прыжков",
             "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
         };
@@ -358,6 +382,7 @@
 
             if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
+            if(tabId === 'sys') loadPlugins();
             if(tabId === 'dash') {
                 loadAnnouncement();
                 loadChat();
@@ -476,6 +501,15 @@
                                         <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span id="food-${pName}" class="text-amber-400 font-medium">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
                                         <p class="text-zinc-500 flex justify-between"><span>Уровень опыта:</span> <span id="xp-${pName}" class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
                                         <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span id="gm-${pName}" class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
+                                    </div>
+
+                                    <!-- ДОБАВЛЕНО: КНОПКИ ЖИЗНЕДЕЯТЕЛЬНОСТИ ИГРОКА -->
+                                    <div class="space-y-1.5">
+                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Состояние организма:</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95] flex items-center justify-center gap-1">💖 Вылечить & Накормить</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'harm')" class="bg-rose-500/5 border border-rose-500/15 hover:bg-rose-500/15 text-rose-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95] flex items-center justify-center gap-1">💀 Убить & Истощить</button>
+                                        </div>
                                     </div>
 
                                     <div class="space-y-1.5">
@@ -616,7 +650,7 @@
 
         async function clearAnnouncement() {
             try {
-                await axios.post(`${API_URL}/api/announcement`, { text: "" });
+                await axios.post(`${API_URL}/api/announcement, { text: "" });
                 document.getElementById('ann-input').value = "";
                 tg.HapticFeedback.notificationOccurred('success');
             } catch(err) { alert("Ошибка"); }
@@ -708,6 +742,65 @@
             } catch(err) { 
                 console.error(err);
                 tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; 
+            }
+        }
+
+        // ДОБАВЛЕНО: АСИНХРОННЫЙ МОДЕМ ДЛЯ ИЗМЕНЕНИЯ СТАТУСА ОРГАНИЗМА ИГРОКА
+        async function modifyPlayerStatus(playerName, action) {
+            if (!isAuthorized) return;
+            try {
+                if (action === 'heal') {
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:instant_health 1 255` });
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:saturation 1 255` });
+                } else if (action === 'harm') {
+                    await axios.post(`${API_URL}/api/command`, { command: `kill ${playerName}` });
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:hunger 10 255` });
+                }
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 500);
+            } catch (err) {
+                console.error("Ошибка изменения статуса игрока:", err);
+            }
+        }
+
+        // ДОБАВЛЕНО: ПОЛУЧЕНИЕ И ОБРАБОТКА ДАННЫХ ПЛАГИНОВ (Гибкий парсинг)
+        async function loadPlugins() {
+            if(!API_URL || !isAuthorized) return;
+            const pluginsDiv = document.getElementById('plugins-list');
+            try {
+                const res = await axios.get(`${API_URL}/api/plugins`);
+                pluginsDiv.innerHTML = '';
+                
+                if (!res.data || res.data.length === 0) {
+                    pluginsDiv.innerHTML = '<p class="text-zinc-600 italic text-center col-span-2 py-4">Активные плагины не обнаружены</p>';
+                    return;
+                }
+
+                res.data.forEach(plugin => {
+                    let name = '';
+                    let enabled = true;
+
+                    if (typeof plugin === 'string') {
+                        name = plugin;
+                    } else if (typeof plugin === 'object' && plugin !== null) {
+                        name = plugin.name || 'Unknown';
+                        enabled = plugin.enabled !== undefined ? plugin.enabled : true;
+                    }
+
+                    const badgeClass = enabled 
+                        ? "bg-emerald-500/5 border border-emerald-500/10 text-emerald-400" 
+                        : "bg-red-500/5 border border-red-500/10 text-red-400";
+
+                    pluginsDiv.innerHTML += `
+                        <div class="p-2 rounded-xl flex items-center justify-between truncate ${badgeClass}">
+                            <span class="truncate font-semibold tracking-wide">${name}</span>
+                            <span class="w-1.5 h-1.5 rounded-full ${enabled ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'} shrink-0 ml-1"></span>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error("Ошибка загрузки плагинов:", err);
+                pluginsDiv.innerHTML = '<p class="text-zinc-600 italic text-center col-span-2 py-4 text-zinc-500 text-xs">Плагины считываются стандартным RCON методом</p>';
             }
         }
 
