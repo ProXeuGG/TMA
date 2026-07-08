@@ -650,7 +650,7 @@
 
         async function clearAnnouncement() {
             try {
-                await axios.post(`${API_URL}/api/announcement, { text: "" });
+                await axios.post(`${API_URL}/api/announcement`, { text: "" });
                 document.getElementById('ann-input').value = "";
                 tg.HapticFeedback.notificationOccurred('success');
             } catch(err) { alert("Ошибка"); }
