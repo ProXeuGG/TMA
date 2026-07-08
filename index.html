@@ -76,7 +76,6 @@
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <!-- ЭКРАН ЗАГРУЗКИ И АВТО-АВТОРИЗАЦИИ -->
     <div id="auth-screen" class="w-full max-w-md mx-auto my-auto pt-12 flex flex-col justify-center items-center z-50">
         <div class="premium-card p-6 rounded-3xl w-full space-y-6 border border-white/10 relative overflow-hidden shadow-2xl text-center">
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
@@ -88,7 +87,6 @@
                 <p id="auth-status-text" class="text-xs text-zinc-500 font-medium">Инициализация защищенной сессии...</p>
             </div>
 
-            <!-- Стилизованный профиль текущего администратора -->
             <div id="auth-user-card" class="flex flex-col items-center justify-center space-y-3 bg-black/30 border border-white/5 p-4 rounded-2xl hidden">
                 <img id="auth-user-avatar" src="" class="w-16 h-16 rounded-2xl border-2 border-indigo-500/30 p-0.5 bg-black/50 shadow-md">
                 <div>
@@ -97,12 +95,10 @@
                 </div>
             </div>
 
-            <!-- Спиннер загрузки -->
             <div id="auth-spinner" class="flex justify-center py-2">
                 <div class="w-6 h-6 border-2 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
             </div>
 
-            <!-- Сообщение об ошибке (если ID нет в списке) -->
             <div id="auth-error-block" class="space-y-3 hidden">
                 <p class="text-rose-400 text-xs font-bold bg-rose-500/5 border border-rose-500/10 p-3 rounded-xl leading-relaxed">
                     🛑 Доступ заблокирован. <br><span class="text-[11px] font-medium text-zinc-400">Вашего Telegram ID нет в реестре администраторов проекта.</span>
@@ -111,7 +107,6 @@
         </div>
     </div>
 
-    <!-- ШАПКА ПАНЕЛИ -->
     <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
@@ -124,7 +119,6 @@
         </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4">
         
         <div id="tab-dash" class="tab-content active space-y-4">
@@ -216,7 +210,6 @@
         </div>
 
         <div id="tab-sys" class="tab-content space-y-4">
-            <!-- ДОБАВЛЕНО: УПРАВЛЕНИЕ ВРЕМЕНЕМ И ПОГОДОЙ -->
             <div class="premium-card p-4 rounded-2xl space-y-3">
                 <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Управление миром (Время и Погода)</h3>
                 <div class="grid grid-cols-2 gap-2">
@@ -227,17 +220,6 @@
                     <button onclick="quickAction('weather clear')" class="bg-sky-500/5 border border-sky-500/10 hover:bg-sky-500/15 text-sky-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌤️ Ясно</button>
                     <button onclick="quickAction('weather rain')" class="bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/15 text-blue-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌧️ Дождь</button>
                     <button onclick="quickAction('weather thunder')" class="bg-purple-500/5 border border-purple-500/10 hover:bg-purple-500/15 text-purple-400 py-2 rounded-xl text-[11px] font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">⚡ Гроза</button>
-                </div>
-            </div>
-
-            <!-- ДОБАВЛЕНО: МОНИТОРИНГ И УПРАВЛЕНИЕ ПЛАГИНАМИ -->
-            <div class="premium-card p-4 rounded-2xl space-y-2.5">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Менеджер плагинов</h3>
-                    <button onclick="loadPlugins()" class="text-[9px] text-indigo-400 hover:text-indigo-300 font-mono tracking-wider">🔄 ОБНОВИТЬ</button>
-                </div>
-                <div id="plugins-list" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1 text-[11px] font-mono">
-                    <p class="text-zinc-600 italic text-center col-span-2 py-4">Считывание плагинов ядра...</p>
                 </div>
             </div>
 
@@ -267,7 +249,6 @@
         </div>
     </main>
 
-    <!-- НИЖНЕЕ МЕНЮ -->
     <div id="app-nav" class="hidden fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
         <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full tg-btn-active">
             <span class="text-base leading-none">📊</span>Главная
@@ -303,7 +284,6 @@
         let lastChatTimestamp = 0;
         let isAuthorized = false;
 
-        // ЗАПУСК АВТОМАТИЧЕСКОЙ ВЕРИФИКАЦИИ ПО TELEGRAM DATA
         window.addEventListener('DOMContentLoaded', () => {
             verifyTelegramAccess();
         });
@@ -382,7 +362,6 @@
 
             if(tabId === 'quotes') loadQuotes();
             if(tabId === 'leader') loadLeaderboard();
-            if(tabId === 'sys') loadPlugins();
             if(tabId === 'dash') {
                 loadAnnouncement();
                 loadChat();
@@ -399,7 +378,6 @@
         async function loadData() {
             if(!API_URL || !isAuthorized) return;
             try {
-                // 1. Обновляем глобальную статистику
                 const statsRes = await axios.get(`${API_URL}/api/stats`);
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
@@ -410,7 +388,6 @@
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
-                // 2. Получаем список игроков
                 const playersRes = await axios.get(`${API_URL}/api/players`);
                 document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
 
@@ -421,27 +398,23 @@
                     return;
                 }
 
-                // Убираем заглушку пустого сервера или лоадер, если игроки есть
                 const noPlayersMsg = document.getElementById('no-players-msg');
                 if (noPlayersMsg) noPlayersMsg.remove();
 
-                // 3. Составляем массив тех, кто сейчас онлайн, чтобы удалить вышедших
                 const currentOnlineNames = playersRes.data.map(p => (p.name || "Steve").replace('/', '_'));
 
                 Array.from(listDiv.children).forEach(child => {
                     if (child.dataset.playerCard && !currentOnlineNames.includes(child.dataset.playerCard)) {
-                        child.remove(); // Удаляем карточку, если игрок покинул сервер
+                        child.remove();
                     }
                 });
 
-                // Формируем список опций для выпадающего меню телепортации
                 let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите игрока для ТП...</option>';
                 playersRes.data.forEach(otherP => {
                     const otherName = (otherP.name || "Steve").replace('/', '_');
                     otherPlayersOptions += `<option value="${otherName}" class="bg-[#0e0e18] text-zinc-200">${otherName}</option>`;
                 });
 
-                // 4. Добавляем новых или обновляем текущих
                 playersRes.data.forEach(p => {
                     const pName = (p.name || "Steve").replace('/', '_');
                     const existingCard = document.getElementById(`player-wrapper-${pName}`);
@@ -458,7 +431,6 @@
                     else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
 
                     if (existingCard) {
-                        // ТОЧЕЧНОЕ ОБНОВЛЕНИЕ БЕЗ ПЕРЕЗАПИСИ HTML (поля ввода не теряют фокус!)
                         document.getElementById(`ping-${pName}`).innerText = `${p.ping || 0}ms`;
                         document.getElementById(`health-${pName}`).innerText = `❤️ ${Math.round(p.health || 20)}`;
                         document.getElementById(`coords-${pName}`).innerText = coordsStr;
@@ -466,7 +438,6 @@
                         document.getElementById(`xp-${pName}`).innerText = `${playerXp} LVL`;
                         document.getElementById(`gm-${pName}`).innerText = p.gamemode || 'SURVIVAL';
 
-                        // Обновляем список селекта ТП, только если юзер сейчас в него НЕ нажал
                         const tpSelect = document.getElementById(`tp-dest-${pName}`);
                         if (tpSelect && document.activeElement !== tpSelect) {
                             const currentVal = tpSelect.value;
@@ -475,7 +446,6 @@
                             if (currentVal) tpSelect.value = currentVal;
                         }
                     } else {
-                        // СОЗДАЕМ КАРТОЧКУ, ЕСЛИ ИГРОК ТОЛЬКО ЧТО ЗАШЕЛ
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
                         const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0e0e18] text-zinc-200">${pName}</option>`, '');
                         
@@ -503,12 +473,15 @@
                                         <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span id="gm-${pName}" class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
                                     </div>
 
-                                    <!-- ДОБАВЛЕНО: КНОПКИ ЖИЗНЕДЕЯТЕЛЬНОСТИ ИГРОКА -->
-                                    <div class="space-y-1.5">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Состояние организма:</p>
+                                    <div class="space-y-2">
+                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Организм и Здоровье:</p>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95] flex items-center justify-center gap-1">💖 Вылечить & Накормить</button>
-                                            <button onclick="modifyPlayerStatus('${pName}', 'harm')" class="bg-rose-500/5 border border-rose-500/15 hover:bg-rose-500/15 text-rose-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95] flex items-center justify-center gap-1">💀 Убить & Истощить</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💖 Вылечить</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'feed')" class="bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🍖 Накормить</button>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button onclick="modifyPlayerStatus('${pName}', 'kill')" class="bg-rose-500/5 border border-rose-500/15 hover:bg-rose-500/15 text-rose-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💀 Ликвидировать</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'starve')" class="bg-orange-500/5 border border-orange-500/15 hover:bg-orange-500/15 text-orange-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🍂 Истощить голодом</button>
                                         </div>
                                     </div>
 
@@ -528,7 +501,7 @@
                                             <select id="tp-dest-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
                                                 ${specificOptions}
                                             </select>
-                                            <button onclick="teleportToPlayer('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">К игроку</button>
+                                            <button onclick="teleportToPlayer('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">К проекту</button>
                                         </div>
 
                                         <div class="flex gap-1.5 items-center">
@@ -745,62 +718,22 @@
             }
         }
 
-        // ДОБАВЛЕНО: АСИНХРОННЫЙ МОДЕМ ДЛЯ ИЗМЕНЕНИЯ СТАТУСА ОРГАНИЗМА ИГРОКА
         async function modifyPlayerStatus(playerName, action) {
             if (!isAuthorized) return;
             try {
                 if (action === 'heal') {
                     await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:instant_health 1 255` });
+                } else if (action === 'feed') {
                     await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:saturation 1 255` });
-                } else if (action === 'harm') {
+                } else if (action === 'kill') {
                     await axios.post(`${API_URL}/api/command`, { command: `kill ${playerName}` });
-                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:hunger 10 255` });
+                } else if (action === 'starve') {
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:hunger 15 255` });
                 }
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 500);
             } catch (err) {
                 console.error("Ошибка изменения статуса игрока:", err);
-            }
-        }
-
-        // ДОБАВЛЕНО: ПОЛУЧЕНИЕ И ОБРАБОТКА ДАННЫХ ПЛАГИНОВ (Гибкий парсинг)
-        async function loadPlugins() {
-            if(!API_URL || !isAuthorized) return;
-            const pluginsDiv = document.getElementById('plugins-list');
-            try {
-                const res = await axios.get(`${API_URL}/api/plugins`);
-                pluginsDiv.innerHTML = '';
-                
-                if (!res.data || res.data.length === 0) {
-                    pluginsDiv.innerHTML = '<p class="text-zinc-600 italic text-center col-span-2 py-4">Активные плагины не обнаружены</p>';
-                    return;
-                }
-
-                res.data.forEach(plugin => {
-                    let name = '';
-                    let enabled = true;
-
-                    if (typeof plugin === 'string') {
-                        name = plugin;
-                    } else if (typeof plugin === 'object' && plugin !== null) {
-                        name = plugin.name || 'Unknown';
-                        enabled = plugin.enabled !== undefined ? plugin.enabled : true;
-                    }
-
-                    const badgeClass = enabled 
-                        ? "bg-emerald-500/5 border border-emerald-500/10 text-emerald-400" 
-                        : "bg-red-500/5 border border-red-500/10 text-red-400";
-
-                    pluginsDiv.innerHTML += `
-                        <div class="p-2 rounded-xl flex items-center justify-between truncate ${badgeClass}">
-                            <span class="truncate font-semibold tracking-wide">${name}</span>
-                            <span class="w-1.5 h-1.5 rounded-full ${enabled ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'} shrink-0 ml-1"></span>
-                        </div>
-                    `;
-                });
-            } catch (err) {
-                console.error("Ошибка загрузки плагинов:", err);
-                pluginsDiv.innerHTML = '<p class="text-zinc-600 italic text-center col-span-2 py-4 text-zinc-500 text-xs">Плагины считываются стандартным RCON методом</p>';
             }
         }
 
