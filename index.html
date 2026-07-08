@@ -62,20 +62,10 @@
             box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
-        /* Премиальный тонкий скроллбар для окна чата */
-        #chat-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        #chat-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #chat-container::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-        }
-        #chat-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(139, 92, 246, 0.3);
-        }
+        #chat-container::-webkit-scrollbar { width: 4px; }
+        #chat-container::-webkit-scrollbar-track { background: transparent; }
+        #chat-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
+        #chat-container::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.3); }
     </style>
 </head>
 <body class="p-4 antialiased pb-28 min-h-screen relative flex flex-col justify-start">
@@ -86,28 +76,28 @@
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <!-- ЭКРАН АВТОРИЗАЦИИ (ОТОБРАЖАЕТСЯ ПО УМОЛЧАНИЮ) -->
+    <!-- ЭКРАН АВТОРИЗАЦИИ -->
     <div id="auth-screen" class="w-full max-w-md mx-auto my-auto pt-12 flex flex-col justify-center items-center z-50">
         <div class="premium-card p-6 rounded-3xl w-full space-y-5 border border-white/10 relative overflow-hidden shadow-2xl">
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
             <div class="text-center space-y-1.5">
-                <h2 class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
+                <h2 id="auth-title" class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
                     ProfCraft Console
                 </h2>
-                <p class="text-xs text-zinc-500 font-medium">Для доступа к управлению введите мастер-пароль</p>
+                <p id="auth-subtitle" class="text-xs text-zinc-500 font-medium">Для доступа к управлению введите мастер-пароль</p>
             </div>
             <div class="space-y-2">
                 <input type="password" id="auth-password" onkeydown="if(event.key === 'Enter') verifyPassword()" placeholder="••••••••" 
                        class="w-full premium-input rounded-xl px-4 py-3.5 text-center text-sm font-mono focus:outline-none text-zinc-100 tracking-widest placeholder:text-zinc-700 placeholder:tracking-normal transition-all">
                 <p id="auth-error" class="text-rose-400 text-[11px] text-center font-bold hidden animate-pulse">❌ Неверный пароль доступа!</p>
             </div>
-            <button onclick="verifyPassword()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-600/20">
+            <button id="auth-btn" onclick="verifyPassword()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-600/20">
                 Авторизоваться
             </button>
         </div>
     </div>
 
-    <!-- ШАПКА ПАНЕЛИ (СКРЫТА ДО ЛОГИНА) -->
+    <!-- ШАПКА ПАНЕЛИ -->
     <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
         <div>
             <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
@@ -120,7 +110,7 @@
         </div>
     </header>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ (СКРЫТ ДО ЛОГИНА) -->
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4">
         
         <div id="tab-dash" class="tab-content active space-y-4">
@@ -232,13 +222,16 @@
             </div>
 
             <div class="premium-card p-4 rounded-2xl">
-                <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Лог телеметрии JSON данных</h3>
+                    <button onclick="logout()" class="text-[9px] text-zinc-500 hover:text-red-400 transition-all underline font-medium">Выйти из сессии</button>
+                </div>
                 <pre id="debug-json" class="text-[10px] bg-black/70 p-3.5 rounded-xl border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36 shadow-inner">Ожидание входящих пакетов...</pre>
             </div>
         </div>
     </main>
 
-    <!-- НИЖНЕЕ МЕНЮ (СКРЫТО ДО ЛОГИНА) -->
+    <!-- НИЖНЕЕ МЕНЮ -->
     <div id="app-nav" class="hidden fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
         <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full tg-btn-active">
             <span class="text-base leading-none">📊</span>Главная
@@ -263,7 +256,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const API_URL = urlParams.get('api');
-        let TOKEN = ''; // Токен заполняется только после успешного ввода пароля
+        let TOKEN = ''; 
 
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
@@ -275,11 +268,26 @@
         let lastChatTimestamp = 0;
         let isAuthorized = false;
 
-        // ФУНКЦИЯ ПРОВЕРКИ ПАРОЛЯ ПРИ ВХОДЕ
-        async function verifyPassword() {
+        // ПРОВЕРКА СОХРАНЕННОГО ТОКЕНА ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('profcraft_session_token');
+            if (savedToken) {
+                // Визуальный фидбек, пока идет авто-проверка пакетов
+                document.getElementById('auth-password').disabled = true;
+                document.getElementById('auth-password').placeholder = "Авторизация сессии...";
+                document.getElementById('auth-btn').disabled = true;
+                document.getElementById('auth-btn').innerText = "Синхронизация...";
+                verifyPassword(savedToken);
+            }
+        });
+
+        // ОБНОВЛЕННАЯ ФУНКЦИЯ АВТОРИЗАЦИИ С ПОДДЕРЖКОЙ КЭША
+        async function verifyPassword(autoToken = null) {
             const passwordInput = document.getElementById('auth-password');
             const errorText = document.getElementById('auth-error');
-            const password = passwordInput.value.trim();
+            
+            // Если передан autoToken — берем его, иначе считываем из инпута
+            const password = autoToken ? autoToken : passwordInput.value.trim();
 
             if (!password) return;
             if (!API_URL) {
@@ -288,7 +296,6 @@
             }
 
             try {
-                // Временно подставляем токен для проверки эндпоинта статистики
                 const testConfig = {
                     headers: { 'Authorization': `Bearer ${password}` }
                 };
@@ -296,12 +303,13 @@
                 const response = await axios.get(`${API_URL}/api/stats`, testConfig);
 
                 if (response.status === 200) {
-                    // Пароль верный! Сохраняем его глобально для axios
                     TOKEN = password;
                     axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
+                    
+                    // Сохраняем пароль в localStorage для будущих входов
+                    localStorage.setItem('profcraft_session_token', password);
                     isAuthorized = true;
 
-                    // Прячем экран авторизации, показываем весь остальной интерфейс
                     document.getElementById('auth-screen').classList.add('hidden');
                     document.getElementById('app-header').classList.remove('hidden');
                     document.getElementById('app-main').classList.remove('hidden');
@@ -309,21 +317,37 @@
 
                     tg.HapticFeedback.notificationOccurred('success');
 
-                    // Инициализация загрузки игровых данных
                     loadData();
                     loadAnnouncement();
                     loadChat();
 
-                    // Запуск интервалов обновления данных
                     setInterval(loadData, 4000);   
                     setInterval(loadChat, 2000);   
                 }
             } catch (err) {
-                // Если бэкенд ответил ошибкой авторизации 401/403 или сервер недоступен
-                errorText.classList.remove('hidden');
-                passwordInput.value = '';
+                // Если сохраненный токен протух (сменился пароль в config.yml)
+                if (autoToken) {
+                    localStorage.removeItem('profcraft_session_token');
+                    // Возвращаем форму в исходное состояние для ручного ввода
+                    passwordInput.disabled = false;
+                    passwordInput.placeholder = "••••••••";
+                    passwordInput.value = '';
+                    document.getElementById('auth-btn').disabled = false;
+                    document.getElementById('auth-btn').innerText = "Авторизоваться";
+                } else {
+                    errorText.classList.remove('hidden');
+                    passwordInput.value = '';
+                }
                 tg.HapticFeedback.notificationOccurred('error');
                 console.error("Авторизация не удалась", err);
+            }
+        }
+
+        // РАЗЛОГИН (если нужно зайти под другим токеном)
+        function logout() {
+            if(confirm("Вы действительно хотите сбросить сохраненный пароль и выйти?")) {
+                localStorage.removeItem('profcraft_session_token');
+                window.location.reload();
             }
         }
 
