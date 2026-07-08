@@ -288,7 +288,6 @@
             const errorBlock = document.getElementById('auth-error-block');
             const spinner = document.getElementById('auth-spinner');
             
-            // Получаем зашифрованную строку авторизации от Telegram клиента
             const initDataRaw = tg.initData; 
             const user = tg.initDataUnsafe?.user;
 
@@ -297,7 +296,6 @@
                 return;
             }
 
-            // Красиво отображаем профиль админа на сплэш-скрине во время проверки
             if (user) {
                 document.getElementById('auth-user-card').classList.remove('hidden');
                 document.getElementById('auth-user-id').innerText = `ID: ${user.id}`;
@@ -319,16 +317,13 @@
             try {
                 statusText.innerText = "Проверка цифровой подписи...";
                 
-                // Передаем сырую строку initData в заголовке Bearer
                 axios.defaults.headers.common['Authorization'] = `Bearer ${initDataRaw}`;
                 
-                // Делаем проверочный запрос к любому эндпоинту бэкенда
                 const response = await axios.get(`${API_URL}/api/stats`);
 
                 if (response.status === 200) {
                     isAuthorized = true;
 
-                    // Убираем сплэш-скрин, открываем админку
                     document.getElementById('auth-screen').classList.add('hidden');
                     document.getElementById('app-header').classList.remove('hidden');
                     document.getElementById('app-main').classList.remove('hidden');
@@ -336,7 +331,6 @@
 
                     tg.HapticFeedback.notificationOccurred('success');
 
-                    // Загрузка компонентов
                     loadData();
                     loadAnnouncement();
                     loadChat();
@@ -379,6 +373,7 @@
         async function loadData() {
             if(!API_URL || !isAuthorized) return;
             try {
+                // 1. Обновляем глобальную статистику
                 const statsRes = await axios.get(`${API_URL}/api/stats`);
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
@@ -389,67 +384,97 @@
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
+                // 2. Получаем список игроков
                 const playersRes = await axios.get(`${API_URL}/api/players`);
                 document.getElementById('debug-json').innerText = JSON.stringify(playersRes.data, null, 2);
 
                 const listDiv = document.getElementById('players-list');
-                const openedCards = [];
-                document.querySelectorAll('[id^="details-"]').forEach(el => {
-                    if(!el.classList.contains('hidden')) openedCards.push(el.id);
+                
+                if (playersRes.data.length === 0) {
+                    listDiv.innerHTML = '<div id="no-players-msg" class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
+                    return;
+                }
+
+                // Убираем заглушку пустого сервера, если игроки есть
+                const noPlayersMsg = document.getElementById('no-players-msg');
+                if (noPlayersMsg) noPlayersMsg.remove();
+
+                // 3. Составляем массив тех, кто сейчас онлайн, чтобы удалить вышедших
+                const currentOnlineNames = playersRes.data.map(p => (p.name || "Steve").replace('/', '_'));
+
+                Array.from(listDiv.children).forEach(child => {
+                    if (child.dataset.playerCard && !currentOnlineNames.includes(child.dataset.playerCard)) {
+                        child.remove(); // Удаляем карточку, если игрок покинул сервер
+                    }
                 });
 
-                listDiv.innerHTML = '';
+                // Формируем список опций для выпадающего меню телепортации
+                let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите игрока для ТП...</option>';
+                playersRes.data.forEach(otherP => {
+                    const otherName = (otherP.name || "Steve").replace('/', '_');
+                    otherPlayersOptions += `<option value="${otherName}" class="bg-[#0e0e18] text-zinc-200">${otherName}</option>`;
+                });
 
-                if(playersRes.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
-                }  else {
-                    playersRes.data.forEach(p => {
-                        const pName = (p.name || "Steve").replace('/', '_');
-                        const isHidden = openedCards.includes(`details-${pName}`) ? '' : 'hidden';
-                        
-                        let coordsStr = 'Не определено';
-                        if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
-                        else if (p.location && typeof p.location.x !== 'undefined') coordsStr = `${Math.round(p.location.x)} / ${Math.round(p.location.y)} / ${Math.round(p.location.z)}`;
-                        else if (p.coords && typeof p.coords.x !== 'undefined') coordsStr = `${Math.round(p.coords.x)} / ${Math.round(p.coords.y)} / ${Math.round(p.coords.z)}`;
+                // 4. Добавляем новых или обновляем текущих
+                playersRes.data.forEach(p => {
+                    const pName = (p.name || "Steve").replace('/', '_');
+                    const existingCard = document.getElementById(`player-wrapper-${pName}`);
+                    
+                    let coordsStr = 'Не определено';
+                    if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
+                    else if (p.location && typeof p.location.x !== 'undefined') coordsStr = `${Math.round(p.location.x)} / ${Math.round(p.location.y)} / ${Math.round(p.location.z)}`;
+                    else if (p.coords && typeof p.coords.x !== 'undefined') coordsStr = `${Math.round(p.coords.x)} / ${Math.round(p.coords.y)} / ${Math.round(p.coords.z)}`;
 
-                        let playerXp = 0;
-                        if (typeof p.xp !== 'undefined' && p.xp !== null) playerXp = p.xp;
-                        else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
-                        else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
-                        else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
+                    let playerXp = 0;
+                    if (typeof p.xp !== 'undefined' && p.xp !== null) playerXp = p.xp;
+                    else if (typeof p.level !== 'undefined' && p.level !== null) playerXp = p.level;
+                    else if (typeof p.exp !== 'undefined' && p.exp !== null) playerXp = p.exp;
+                    else if (typeof p.experience !== 'undefined' && p.experience !== null) playerXp = p.experience;
+
+                    if (existingCard) {
+                        // ТОЧЕЧНОЕ ОБНОВЛЕНИЕ БЕЗ ПЕРЕЗАПИСИ HTML (поля ввода не теряют фокус!)
+                        document.getElementById(`ping-${pName}`).innerText = `${p.ping || 0}ms`;
+                        document.getElementById(`health-${pName}`).innerText = `❤️ ${Math.round(p.health || 20)}`;
+                        document.getElementById(`coords-${pName}`).innerText = coordsStr;
+                        document.getElementById(`food-${pName}`).innerText = `${p.food !== undefined ? p.food : '20'} / 20 🍖`;
+                        document.getElementById(`xp-${pName}`).innerText = `${playerXp} LVL`;
+                        document.getElementById(`gm-${pName}`).innerText = p.gamemode || 'SURVIVAL';
+
+                        // Обновляем список селекта ТП, только если юзер сейчас в него НЕ нажал
+                        const tpSelect = document.getElementById(`tp-dest-${pName}`);
+                        if (tpSelect && document.activeElement !== tpSelect) {
+                            const currentVal = tpSelect.value;
+                            const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0e0e18] text-zinc-200">${pName}</option>`, '');
+                            tpSelect.innerHTML = specificOptions;
+                            if (currentVal) tpSelect.value = currentVal;
+                        }
+                    } else {
+                        // СОЗДАЕМ КАРТОЧКУ, ЕСЛИ ИГРОК ТОЛЬКО ЧТО ЗАШЕЛ
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
-
-                        // ГЕНЕРАЦИЯ СПИСКА ОСТАЛЬНЫХ ИГРОКОВ ДЛЯ ТЕЛЕПОРТАЦИИ
-                        let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите игрока для ТП...</option>';
-                        playersRes.data.forEach(otherP => {
-                            const otherName = (otherP.name || "Steve").replace('/', '_');
-                            if (otherName !== pName) {
-                                otherPlayersOptions += `<option value="${otherName}" class="bg-[#0e0e18] text-zinc-200">${otherName}</option>`;
-                            }
-                        });
-
-                        listDiv.innerHTML += `
-                            <div class="premium-card rounded-2xl overflow-hidden shadow-md">
+                        const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0e0e18] text-zinc-200">${pName}</option>`, '');
+                        
+                        const cardHtml = `
+                            <div class="premium-card rounded-2xl overflow-hidden shadow-md mb-2.5">
                                 <div onclick="togglePlayerCard('${pName}')" class="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-all cursor-pointer">
                                     <div class="flex items-center gap-3">
                                         <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-xl bg-black/40 border border-white/10 p-0.5 shadow-sm">
                                         <div>
                                             <p class="font-bold text-sm text-zinc-100 tracking-tight">${pName}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-800">|</span> <span class="text-indigo-400 font-medium">${p.ping || 0}ms</span></p>
+                                            <p class="text-[10px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-800">|</span> <span id="ping-${pName}" class="text-indigo-400 font-medium">${p.ping || 0}ms</span></p>
                                         </div>
                                     </div>
                                     <div class="text-right flex flex-col items-end gap-1">
-                                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
+                                        <span id="health-${pName}" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
                                         <p class="text-[9px] text-zinc-600 font-medium tracking-wide">Управление ▾</p>
                                     </div>
                                 </div>
 
-                                <div id="details-${pName}" class="${isHidden} p-4 border-t border-white/5 bg-black/30 space-y-4">
+                                <div id="details-${pName}" class="hidden p-4 border-t border-white/5 bg-black/30 space-y-4">
                                     <div class="grid grid-cols-1 gap-1.5 text-xs bg-black/50 p-3 rounded-xl border border-white/5 font-mono">
-                                        <p class="text-zinc-500 flex justify-between"><span>Координаты XYZ:</span> <span class="text-zinc-200 font-medium text-[10px]">${coordsStr}</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span class="text-amber-400 font-medium">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Уровень опыта:</span> <span class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Координаты XYZ:</span> <span id="coords-${pName}" class="text-zinc-200 font-medium text-[10px]">${coordsStr}</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span id="food-${pName}" class="text-amber-400 font-medium">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Уровень опыта:</span> <span id="xp-${pName}" class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span id="gm-${pName}" class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
                                     </div>
 
                                     <div class="space-y-1.5">
@@ -462,19 +487,15 @@
                                         </div>
                                     </div>
 
-                                    <!-- ДОБАВЛЕННЫЙ БЛОК ТЕЛЕПОРТАЦИИ -->
                                     <div class="space-y-2 border-t border-white/5 pt-3">
                                         <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Телепортация игрока:</p>
-                                        
-                                        <!-- К другому игроку -->
                                         <div class="flex gap-2">
                                             <select id="tp-dest-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
-                                                ${otherPlayersOptions}
+                                                ${specificOptions}
                                             </select>
                                             <button onclick="teleportToPlayer('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">К игроку</button>
                                         </div>
 
-                                        <!-- По координатам -->
                                         <div class="flex gap-1.5 items-center">
                                             <input type="number" id="tp-x-${pName}" placeholder="X" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
                                             <input type="number" id="tp-y-${pName}" placeholder="Y" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
@@ -499,8 +520,14 @@
                                 </div>
                             </div>
                         `;
-                    });
-                }
+                        
+                        const wrapper = document.createElement('div');
+                        wrapper.id = `player-wrapper-${pName}`;
+                        wrapper.dataset.playerCard = pName; 
+                        wrapper.innerHTML = cardHtml;
+                        listDiv.appendChild(wrapper);
+                    }
+                });
             } catch (err) { console.error("Ошибка обновления данных панели", err); }
         }
 
@@ -653,19 +680,15 @@
                 tbody.innerHTML = '';
                 let hasData = false;
 
-                // Вспомогательная функция для сборки красивой строки таблицы
                 const createRowHtml = (key, item) => {
                     return `
                         <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.02]">
-                            <!-- Используем перевод title с бэкенда -->
                             <td class="p-4 pl-5 text-zinc-400 font-medium">${item.title || key}</td>
                             <td class="p-4 text-zinc-100 font-bold text-xs tracking-wide">${item.player || '—'}</td>
-                            <!-- Используем отформатированное display_value (например, "12 шт." или "1.5 км") -->
                             <td class="p-4 text-right pr-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold font-mono text-sm">${item.display_value !== undefined ? item.display_value : item.value}</td>
                         </tr>`;
                 };
 
-                // 1. Рендерим секцию стандартной статистики (stats)
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
@@ -673,7 +696,6 @@
                     }
                 }
 
-                // 2. Рендерим секцию кастомной статистики (custom)
                 if(res.data.custom) {
                     for(let key in res.data.custom) {
                         hasData = true;
@@ -724,8 +746,6 @@
             if(confirm("Рестартнуть сервер?")) quickAction("restart");
         }
 
-        // НОВЫЕ ФУНКЦИИ ДЛЯ ОБРАБОТКИ ТЕЛЕПОРТАЦИИ НА ФРОНТЕНДЕ
-
         async function teleportToPlayer(targetName) {
             const selectEl = document.getElementById(`tp-dest-${targetName}`);
             const destinationName = selectEl.value;
@@ -746,7 +766,7 @@
                 }
             } catch (err) {
                 console.error("Ошибка ТП к игроку:", err);
-                alert("Не удалось телепортировать игрока");
+                alert("Не удалось телепортировать года");
             }
         }
 
@@ -770,7 +790,6 @@
                 });
                 if (response.data.success) {
                     tg.HapticFeedback.notificationOccurred('success');
-                    // Очищаем поля после успешного ТП
                     document.getElementById(`tp-x-${targetName}`).value = '';
                     document.getElementById(`tp-y-${targetName}`).value = '';
                     document.getElementById(`tp-z-${targetName}`).value = '';
