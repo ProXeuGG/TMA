@@ -76,24 +76,38 @@
         <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
     </div>
 
-    <!-- ЭКРАН АВТОРИЗАЦИИ -->
+    <!-- ЭКРАН ЗАГРУЗКИ И АВТО-АВТОРИЗАЦИИ -->
     <div id="auth-screen" class="w-full max-w-md mx-auto my-auto pt-12 flex flex-col justify-center items-center z-50">
-        <div class="premium-card p-6 rounded-3xl w-full space-y-5 border border-white/10 relative overflow-hidden shadow-2xl">
+        <div class="premium-card p-6 rounded-3xl w-full space-y-6 border border-white/10 relative overflow-hidden shadow-2xl text-center">
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
-            <div class="text-center space-y-1.5">
-                <h2 id="auth-title" class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
+            
+            <div class="space-y-2">
+                <h2 class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
                     ProfCraft Console
                 </h2>
-                <p id="auth-subtitle" class="text-xs text-zinc-500 font-medium">Для доступа к управлению введите мастер-пароль</p>
+                <p id="auth-status-text" class="text-xs text-zinc-500 font-medium">Инициализация защищенной сессии...</p>
             </div>
-            <div class="space-y-2">
-                <input type="password" id="auth-password" onkeydown="if(event.key === 'Enter') verifyPassword()" placeholder="••••••••" 
-                       class="w-full premium-input rounded-xl px-4 py-3.5 text-center text-sm font-mono focus:outline-none text-zinc-100 tracking-widest placeholder:text-zinc-700 placeholder:tracking-normal transition-all">
-                <p id="auth-error" class="text-rose-400 text-[11px] text-center font-bold hidden animate-pulse">❌ Неверный пароль доступа!</p>
+
+            <!-- Стилизованный профиль текущего администратора -->
+            <div id="auth-user-card" class="flex flex-col items-center justify-center space-y-3 bg-black/30 border border-white/5 p-4 rounded-2xl hidden">
+                <img id="auth-user-avatar" src="" class="w-16 h-16 rounded-2xl border-2 border-indigo-500/30 p-0.5 bg-black/50 shadow-md">
+                <div>
+                    <p id="auth-user-name" class="font-bold text-zinc-200 text-sm tracking-tight">Администратор</p>
+                    <p id="auth-user-id" class="text-[10px] text-zinc-600 font-mono mt-0.5">ID: --</p>
+                </div>
             </div>
-            <button id="auth-btn" onclick="verifyPassword()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3 rounded-xl text-xs font-bold transition-all duration-200 active:scale-[0.97] shadow-lg shadow-indigo-600/20">
-                Авторизоваться
-            </button>
+
+            <!-- Спиннер загрузки -->
+            <div id="auth-spinner" class="flex justify-center py-2">
+                <div class="w-6 h-6 border-2 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
+            </div>
+
+            <!-- Сообщение об ошибке (если ID нет в списке) -->
+            <div id="auth-error-block" class="space-y-3 hidden">
+                <p class="text-rose-400 text-xs font-bold bg-rose-500/5 border border-rose-500/10 p-3 rounded-xl leading-relaxed">
+                    🛑 Доступ заблокирован. <br><span class="text-[11px] font-medium text-zinc-400">Вашего Telegram ID нет в реестре администраторов проекта.</span>
+                </p>
+            </div>
         </div>
     </div>
 
@@ -222,10 +236,7 @@
             </div>
 
             <div class="premium-card p-4 rounded-2xl">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider">Лог телеметрии JSON данных</h3>
-                    <button onclick="logout()" class="text-[9px] text-zinc-500 hover:text-red-400 transition-all underline font-medium">Выйти из сессии</button>
-                </div>
+                <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
                 <pre id="debug-json" class="text-[10px] bg-black/70 p-3.5 rounded-xl border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36 shadow-inner">Ожидание входящих пакетов...</pre>
             </div>
         </div>
@@ -256,7 +267,6 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const API_URL = urlParams.get('api');
-        let TOKEN = ''; 
 
         const metricTranslations = {
             "blocks_broken": "⛏️ Разрушено блоков", "player_kills": "⚔️ Убито игроков",
@@ -268,48 +278,57 @@
         let lastChatTimestamp = 0;
         let isAuthorized = false;
 
-        // ПРОВЕРКА СОХРАНЕННОГО ТОКЕНА ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ
+        // ЗАПУСК АВТОМАТИЧЕСКОЙ ВЕРИФИКАЦИИ ПО TELEGRAM DATA
         window.addEventListener('DOMContentLoaded', () => {
-            const savedToken = localStorage.getItem('profcraft_session_token');
-            if (savedToken) {
-                // Визуальный фидбек, пока идет авто-проверка пакетов
-                document.getElementById('auth-password').disabled = true;
-                document.getElementById('auth-password').placeholder = "Авторизация сессии...";
-                document.getElementById('auth-btn').disabled = true;
-                document.getElementById('auth-btn').innerText = "Синхронизация...";
-                verifyPassword(savedToken);
-            }
+            verifyTelegramAccess();
         });
 
-        // ОБНОВЛЕННАЯ ФУНКЦИЯ АВТОРИЗАЦИИ С ПОДДЕРЖКОЙ КЭША
-        async function verifyPassword(autoToken = null) {
-            const passwordInput = document.getElementById('auth-password');
-            const errorText = document.getElementById('auth-error');
+        async function verifyTelegramAccess() {
+            const statusText = document.getElementById('auth-status-text');
+            const errorBlock = document.getElementById('auth-error-block');
+            const spinner = document.getElementById('auth-spinner');
             
-            // Если передан autoToken — берем его, иначе считываем из инпута
-            const password = autoToken ? autoToken : passwordInput.value.trim();
+            // Получаем зашифрованную строку авторизации от Telegram клиента
+            const initDataRaw = tg.initData; 
+            const user = tg.initDataUnsafe?.user;
 
-            if (!password) return;
             if (!API_URL) {
                 alert("Ошибка: отсутствует параметр 'api' в URL!");
                 return;
             }
 
+            // Красиво отображаем профиль админа на сплэш-скрине во время проверки
+            if (user) {
+                document.getElementById('auth-user-card').classList.remove('hidden');
+                document.getElementById('auth-user-id').innerText = `ID: ${user.id}`;
+                document.getElementById('auth-user-name').innerText = user.username ? `@${user.username}` : `${user.first_name}`;
+                if (user.photo_url) {
+                    document.getElementById('auth-user-avatar').src = user.photo_url;
+                } else {
+                    document.getElementById('auth-user-avatar').src = `https://mc-heads.net/avatar/Steve/64`;
+                }
+            }
+
+            if (!initDataRaw) {
+                statusText.innerText = "Ошибка среды выполнения";
+                spinner.classList.add('hidden');
+                errorBlock.innerHTML = `<p class="text-rose-400 text-xs font-bold">⚠️ Приложение должно быть запущено строго внутри Telegram!</p>`;
+                return;
+            }
+
             try {
-                const testConfig = {
-                    headers: { 'Authorization': `Bearer ${password}` }
-                };
+                statusText.innerText = "Проверка цифровой подписи...";
                 
-                const response = await axios.get(`${API_URL}/api/stats`, testConfig);
+                // Передаем сырую строку initData в заголовке Bearer
+                axios.defaults.headers.common['Authorization'] = `Bearer ${initDataRaw}`;
+                
+                // Делаем проверочный запрос к любому эндпоинту бэкенда
+                const response = await axios.get(`${API_URL}/api/stats`);
 
                 if (response.status === 200) {
-                    TOKEN = password;
-                    axios.defaults.headers.common['Authorization'] = `Bearer ${TOKEN}`;
-                    
-                    // Сохраняем пароль в localStorage для будущих входов
-                    localStorage.setItem('profcraft_session_token', password);
                     isAuthorized = true;
 
+                    // Убираем сплэш-скрин, открываем админку
                     document.getElementById('auth-screen').classList.add('hidden');
                     document.getElementById('app-header').classList.remove('hidden');
                     document.getElementById('app-main').classList.remove('hidden');
@@ -317,6 +336,7 @@
 
                     tg.HapticFeedback.notificationOccurred('success');
 
+                    // Загрузка компонентов
                     loadData();
                     loadAnnouncement();
                     loadChat();
@@ -325,29 +345,11 @@
                     setInterval(loadChat, 2000);   
                 }
             } catch (err) {
-                // Если сохраненный токен протух (сменился пароль в config.yml)
-                if (autoToken) {
-                    localStorage.removeItem('profcraft_session_token');
-                    // Возвращаем форму в исходное состояние для ручного ввода
-                    passwordInput.disabled = false;
-                    passwordInput.placeholder = "••••••••";
-                    passwordInput.value = '';
-                    document.getElementById('auth-btn').disabled = false;
-                    document.getElementById('auth-btn').innerText = "Авторизоваться";
-                } else {
-                    errorText.classList.remove('hidden');
-                    passwordInput.value = '';
-                }
+                spinner.classList.add('hidden');
+                errorBlock.classList.remove('hidden');
+                statusText.innerText = "В доступе отказано";
                 tg.HapticFeedback.notificationOccurred('error');
-                console.error("Авторизация не удалась", err);
-            }
-        }
-
-        // РАЗЛОГИН (если нужно зайти под другим токеном)
-        function logout() {
-            if(confirm("Вы действительно хотите сбросить сохраненный пароль и выйти?")) {
-                localStorage.removeItem('profcraft_session_token');
-                window.location.reload();
+                console.error("Ошибка авторизации по Telegram ID:", err);
             }
         }
 
@@ -375,7 +377,7 @@
         }
 
         async function loadData() {
-            if(!API_URL || !TOKEN || !isAuthorized) return;
+            if(!API_URL || !isAuthorized) return;
             try {
                 const statsRes = await axios.get(`${API_URL}/api/stats`);
                 const tps = statsRes.data.tps;
@@ -473,7 +475,7 @@
         }
 
         async function loadChat() {
-            if(!API_URL || !TOKEN || !isAuthorized) return;
+            if(!API_URL || !isAuthorized) return;
             if(!document.getElementById('tab-dash').classList.contains('active')) return;
             
             try {
@@ -538,7 +540,7 @@
         }
 
         async function loadAnnouncement() {
-            if(!API_URL || !TOKEN || !isAuthorized) return;
+            if(!API_URL || !isAuthorized) return;
             try {
                 const res = await axios.get(`${API_URL}/api/announcement`);
                 document.getElementById('ann-input').value = res.data.announcement || '';
@@ -571,7 +573,7 @@
         }
 
         async function loadQuotes() {
-            if(!API_URL || !TOKEN || !isAuthorized) return;
+            if(!API_URL || !isAuthorized) return;
             const listDiv = document.getElementById('quotes-list');
             try {
                 const res = await axios.get(`${API_URL}/api/quotes`);
@@ -614,7 +616,7 @@
         }
 
         async function loadLeaderboard() {
-            if(!API_URL || !TOKEN || !isAuthorized) return;
+            if(!API_URL || !isAuthorized) return;
             const tbody = document.getElementById('leaderboard-data');
             try {
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
