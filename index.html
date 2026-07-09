@@ -891,7 +891,7 @@
                     // Безопасно клонируем шлем игрока на созданную стойку
                     await axios.post(`${API_URL}/api/command`, { command: `execute as ${playerName} run item copy entity @s armor.head to entity @e[tag=prank_${playerName},limit=1] armor.head` });
                     // Надеваем тыкву
-                    await axios.post(`${API_URL}/api/command`, { command: `item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
+                    await axios.post(`${API_URL}/api/command`, { command: `execute at item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
                 } else {
                     // Возвращаем сохраненный шлем обратно на игрока
                     await axios.post(`${API_URL}/api/command`, { command: `execute as ${playerName} run item copy entity @e[tag=prank_${playerName},limit=1] armor.head to entity @s armor.head` });
