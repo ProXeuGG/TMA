@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Панель Управления Проектом ProfCraft</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+        
+        body {
+            background-color: #0b0d17;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .view-content { display: none; }
+        .view-content.active { display: block; animation: viewSlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        @keyframes viewSlide {
+            from { opacity: 0; transform: scale(0.97) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .glass-panel {
+            background: rgba(20, 24, 43, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+        }
+        
+        .glass-card {
+            background: rgba(30, 37, 65, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-active {
+            background: #10b981;
+            color: #052e16 !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Анимация шторки управления игроком */
+        #player-drawer {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #player-drawer.open {
+            transform: translateY(0);
+        }
+
+        #chat-container::-webkit-scrollbar { width: 4px; }
+        #chat-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 antialiased min-h-screen flex flex-col justify-start relative">
+
+    <!-- ЭКРАН ЗАГРУЗКИ И АВТОРИЗАЦИИ -->
+    <div id="auth-screen" class="fixed inset-0 bg-[#0b0d17] z-50 flex flex-col justify-center items-center p-6">
+        <div class="glass-panel p-6 rounded-2xl w-full max-w-sm text-center space-y-6 border-b-4 border-b-emerald-500 shadow-2xl">
+            <div class="space-y-1">
+                <div class="text-[11px] uppercase tracking-widest text-emerald-400 font-mono font-bold">Защищенный шлюз</div>
+                <h2 class="text-xl font-black text-white tracking-tight">PROFCRAFT КОНСОЛЬ</h2>
+                <p id="auth-status-text" class="text-xs text-slate-400">Синхронизация ключей безопасности...</p>
+            </div>
+
+            <div id="auth-user-card" class="flex items-center gap-3 bg-black/30 border border-white/5 p-3 rounded-xl hidden text-left">
+                <img id="auth-user-avatar" src="" class="w-10 h-10 rounded-lg border border-emerald-500/40 p-0.5 bg-slate-900">
+                <div>
+                    <p id="auth-user-name" class="font-bold text-slate-200 text-xs">Администратор</p>
+                    <p id="auth-user-id" class="text-[10px] text-slate-500 font-mono mt-0.5">ID: --</p>
+                </div>
+            </div>
+
+            <div id="auth-spinner" class="flex justify-center py-2">
+                <div class="w-6 h-6 border-2 border-emerald-500/10 border-t-emerald-400 rounded-full animate-spin"></div>
+            </div>
+
+            <div id="auth-error-block" class="hidden">
+                <p class="text-rose-400 text-xs font-mono bg-rose-950/30 border border-rose-500/20 p-3 rounded-xl">
+                    [ОТКАЗАНО] Ваш Telegram ID не найден в белом списке администраторов сервера.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ИНФОРМАЦИОННАЯ ШАПКА СЕРВЕРА -->
+    <header id="app-header" class="hidden flex items-center justify-between mb-4 bg-slate-900/40 p-3 rounded-xl border border-white/5">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h1 class="text-sm font-bold text-white font-mono tracking-tight">PROFCRAFT КОНСОЛЬ</h1>
+            </div>
+            <p id="server-v" class="text-[10px] text-slate-400 font-mono mt-0.5">Ядро: Загрузка данных...</p>
+        </div>
+        <span id="tps-badge" class="px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold border transition-all">TPS: --</span>
+    </header>
+
+    <!-- СЕГМЕНТИРОВАННЫЙ СВЕРХУ НАВИГАТОР -->
+    <nav id="app-nav" class="hidden grid grid-cols-3 gap-1 p-1 bg-slate-950 rounded-xl border border-white/5 mb-4 sticky top-2 z-40 shadow-lg">
+        <button onclick="switchView('main', this)" class="nav-active py-2 rounded-lg text-xs font-semibold text-slate-400 transition-all flex items-center justify-center gap-1.5">
+            🎛️ Пульт
+        </button>
+        <button onclick="switchView('players', this)" class="py-2 rounded-lg text-xs font-semibold text-slate-400 transition-all flex items-center justify-center gap-1.5">
+            👥 Игроки
+        </button>
+        <button onclick="switchView('logs', this)" class="py-2 rounded-lg text-xs font-semibold text-slate-400 transition-all flex items-center justify-center gap-1.5">
+            📜 Архивы
+        </button>
+    </nav>
+
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР ДЛЯ МОДУЛЕЙ -->
+    <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4 flex-1">
+        
+        <!-- МОДУЛЬ 1: ПУЛЬТ УПРАВЛЕНИЯ -->
+        <div id="view-main" class="view-content active space-y-4">
+            
+            <!-- Живые метрики -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass-panel p-3.5 rounded-xl">
+                    <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">Игроки на сервере</span>
+                    <p id="stat-online" class="text-lg font-bold mt-0.5 text-white font-mono">-- / --</p>
+                </div>
+                <div class="glass-panel p-3.5 rounded-xl">
+                    <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">Выделение ОЗУ</span>
+                    <p id="stat-ram" class="text-lg font-bold mt-0.5 text-white font-mono">-- МБ</p>
+                </div>
+            </div>
+
+            <!-- Мир и Макросы -->
+            <div class="glass-panel p-4 rounded-xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-300">Быстрое управление миром</h3>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="quickAction('time set day')" class="bg-slate-900 hover:bg-slate-800 border border-white/5 text-amber-400 py-2 rounded-lg text-center text-xs">☀️ День</button>
+                    <button onclick="quickAction('time set night')" class="bg-slate-900 hover:bg-slate-800 border border-white/5 text-indigo-400 py-2 rounded-lg text-center text-xs">🌙 Ночь</button>
+                    <button onclick="quickAction('weather world sun')" class="bg-slate-900 hover:bg-slate-800 border border-white/5 text-sky-400 py-2 rounded-lg text-center text-xs">🌤️ Ясно</button>
+                    <button onclick="quickAction('weather world storm')" class="bg-slate-900 hover:bg-slate-800 border border-white/5 text-blue-400 py-2 rounded-lg text-center text-xs">🌧️ Гроза</button>
+                </div>
+            </div>
+
+            <!-- Живой чат и трансляция -->
+            <div class="glass-panel p-4 rounded-xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-300 flex items-center justify-between">
+                    <span>Игровой чат в реальном времени</span>
+                    <span class="text-[10px] text-emerald-400 font-mono">Поток активен</span>
+                </h3>
+                
+                <div id="chat-container" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs bg-black/40 p-3 rounded-xl border border-white/5 min-h-[100px]">
+                    <p class="text-slate-500 italic text-center py-6 font-mono text-[11px]">Ожидание сообщений с сервера...</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="bc-input" onkeydown="if(event.key === 'Enter') sendBroadcast()" placeholder="Написать сообщение от имени Системы..." 
+                           class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    <button onclick="sendBroadcast()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0">ОТПРАВИТЬ</button>
+                </div>
+            </div>
+
+            <!-- Главное RCON Окно -->
+            <div class="glass-panel p-4 rounded-xl space-y-2.5">
+                <h3 class="text-xs font-bold text-slate-300">Прямой RCON Терминал</h3>
+                <div class="flex gap-2">
+                    <input type="text" id="cmd-input" placeholder="Введите команду без знака / ..." 
+                           class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
+                    <button onclick="sendConsoleCommand()" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0">ВЫПОЛНИТЬ</button>
+                </div>
+            </div>
+
+            <!-- Управление закрепом в Telegram -->
+            <div class="glass-panel p-4 rounded-xl space-y-3">
+                <h3 class="text-xs font-bold text-slate-300">Информационный виджет в канале</h3>
+                <textarea id="ann-input" rows="2" placeholder="Введите text для закрепленного сообщения в Telegram..." 
+                          class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="saveAnnouncement()" class="bg-slate-900 border border-white/5 text-slate-300 py-1.5 rounded-lg text-xs font-medium">Обновить</button>
+                    <button onclick="clearAnnouncement()" class="bg-slate-900 border border-white/5 text-rose-400 py-1.5 rounded-lg text-xs font-medium">Очистить</button>
+                </div>
+                <button onclick="forceRefreshAnnouncement()" class="w-full bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] text-slate-400 py-1.5 rounded-lg text-xs font-medium">
+                    🔄 Принудительно форсировать пуш-апдейт
+                </button>
+            </div>
+
+            <!-- Горячая перезагрузка сервера -->
+            <button onclick="askRestart()" class="w-full bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-400 py-3 rounded-xl text-xs font-bold transition-all">
+                ⚠️ Инициировать перезапуск игрового сервера
+            </button>
+        </div>
+
+        <!-- МОДУЛЬ 2: ИГРОКИ (НОВАЯ СЕТКА + МГНОВЕННЫЙ КОНТРОЛЬ) -->
+        <div id="view-players" class="view-content space-y-4">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Активные сессии игроков</h2>
+            </div>
+            
+            <!-- Сетка карточек игроков -->
+            <div id="players-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <p id="no-players-msg" class="col-span-full text-xs text-slate-500 font-mono italic p-8 text-center">Опрос игровых сокетов...</p>
+            </div>
+        </div>
+
+        <!-- МОДУЛЬ 3: АРХИВЫ -->
+        <div id="view-logs" class="view-content space-y-4">
+            
+            <!-- Блок рекордов -->
+            <div class="glass-panel p-4 rounded-xl space-y-3">
+                <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-2">Таблица глобальных рекордов</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="text-slate-500 font-mono text-[10px] uppercase border-b border-white/5">
+                                <th class="pb-2">Критерий</th>
+                                <th class="pb-2">Рекордсмен</th>
+                                <th class="pb-2 text-right">Показатель</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-data" class="divide-y divide-white/[0.02] font-mono text-xs text-slate-300">
+                            <tr><td colspan="3" class="py-4 text-center text-slate-500 italic">Загрузка базы данных...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Блок цитатника -->
+            <div class="glass-panel p-4 rounded-xl space-y-3">
+                <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider border-b border-white/5 pb-2">Локальный цитатник сервера</h2>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="text" id="quote-author" placeholder="Автор фразы" class="bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    <input type="text" id="quote-text" placeholder="Текст цитаты" class="bg-slate-950 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+                <button onclick="addQuote()" class="w-full bg-emerald-600 text-slate-950 py-2 rounded-lg text-xs font-bold transition-all">Добавить цитату в архив</button>
+                
+                <div id="quotes-list" class="space-y-2 pt-2">
+                    <p class="text-xs text-slate-500 font-mono italic text-center">Загрузка цитат...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ВЫЕЗЖАЮЩАЯ СНИЗУ ТАКТИЧЕСКАЯ ШТОРКА ДЛЯ УПРАВЛЕНИЯ ИГРОКОМ -->
+    <div id="drawer-overlay" onclick="closePlayerDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
+    <div id="player-drawer" class="fixed bottom-0 left-0 right-0 glass-panel rounded-t-3xl border-t border-white/10 p-5 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] max-w-md mx-auto">
+        <!-- Индикатор свайпа -->
+        <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
+        
+        <div class="flex items-center gap-3 border-b border-white/5 pb-3 mb-4">
+            <img id="drawer-avatar" src="" class="w-10 h-10 rounded-xl bg-slate-950 border border-white/10 p-0.5">
+            <div>
+                <h3 id="drawer-title-name" class="font-bold text-base text-white font-mono">Ник Игрока</h3>
+                <p id="drawer-subtitle" class="text-xs text-slate-400 font-mono">Мир: world</p>
+            </div>
+        </div>
+
+        <div id="drawer-body" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+            <!-- Динамический контент шторки генерируется через JS -->
+        </div>
+    </div>
+
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const API_URL = urlParams.get('api');
+
+        const metricTranslations = {
+            "blocks_broken": "⛏️ Сломано блоков", "player_kills": "⚔️ Убито игроков",
+            "mob_kills": "🦁 Уничтожено мобов", "deaths": "💀 Колич. смертей",
+            "time_played": "⏱️ Время в игре", "jumps": "🦘 Прыжки",
+            "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
+        };
+
+        let lastChatTimestamp = 0;
+        let isAuthorized = false;
+        let activeDrawerPlayer = null; 
+        let globalPlayersCache = []; 
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verifyTelegramAccess();
+        });
+
+        async function verifyTelegramAccess() {
+            const statusText = document.getElementById('auth-status-text');
+            const errorBlock = document.getElementById('auth-error-block');
+            const spinner = document.getElementById('auth-spinner');
+            
+            const initDataRaw = tg.initData; 
+            const user = tg.initDataUnsafe?.user;
+
+            if (!API_URL) {
+                alert("Ошибка: отсутствует обязательный параметр 'api' в адресе запуска!");
+                return;
+            }
+
+            if (user) {
+                document.getElementById('auth-user-card').classList.remove('hidden');
+                document.getElementById('auth-user-id').innerText = `ID: ${user.id}`;
+                document.getElementById('auth-user-name').innerText = user.username ? `@${user.username}` : `${user.first_name}`;
+                document.getElementById('auth-user-avatar').src = user.photo_url || `https://mc-heads.net/avatar/Steve/64`;
+            }
+
+            if (!initDataRaw) {
+                statusText.innerText = "Ошибка окружения";
+                spinner.classList.add('hidden');
+                errorBlock.innerHTML = `<p class="text-rose-400 text-xs font-mono">⚠️ ОШИБКА: Запуск консоли разрешен только внутри Telegram Mini App.</p>`;
+                return;
+            }
+
+            try {
+                statusText.innerText = "Проверка авторизации...";
+                axios.defaults.headers.common['Authorization'] = `Bearer ${initDataRaw}`;
+                
+                const response = await axios.get(`${API_URL}/api/stats`);
+
+                if (response.status === 200) {
+                    isAuthorized = true;
+
+                    document.getElementById('auth-screen').classList.add('hidden');
+                    document.getElementById('app-header').classList.remove('hidden');
+                    document.getElementById('app-main').classList.remove('hidden');
+                    document.getElementById('app-nav').classList.remove('hidden');
+
+                    tg.HapticFeedback.notificationOccurred('success');
+
+                    loadData();
+                    loadAnnouncement();
+                    loadChat();
+
+                    setInterval(loadData, 4000);   
+                    setInterval(loadChat, 2000);   
+                }
+            } catch (err) {
+                spinner.classList.add('hidden');
+                errorBlock.classList.remove('hidden');
+                statusText.innerText = "В доступе отказано";
+                tg.HapticFeedback.notificationOccurred('error');
+                console.error("Ошибка авторизации:", err);
+            }
+        }
+
+        function switchView(viewId, btn) {
+            if (!isAuthorized) return;
+            document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#app-nav button').forEach(el => el.classList.remove('nav-active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            btn.classList.add('nav-active');
+            tg.HapticFeedback.impactOccurred('light');
+
+            if(viewId === 'logs') {
+                loadQuotes();
+                loadLeaderboard();
+            }
+            if(viewId === 'main') {
+                loadAnnouncement();
+                loadChat();
+            }
+        }
+
+        // ОТКРЫТИЕ СНИЗУ ПОЛЗУНКА С ОПЦИЯМИ ИГРОКА
+        function openPlayerDrawer(name) {
+            const player = globalPlayersCache.find(p => (p.name || "Steve").replace('/', '_') === name);
+            if (!player) return;
+
+            activeDrawerPlayer = name;
+            tg.HapticFeedback.impactOccurred('medium');
+
+            document.getElementById('drawer-avatar').src = `https://mc-heads.net/avatar/${name}/32`;
+            document.getElementById('drawer-title-name').innerText = name;
+            document.getElementById('drawer-subtitle').innerText = `Мир: ${player.world || 'world'}`;
+
+            let coordsStr = 'Нет данных';
+            if (player.x !== undefined) coordsStr = `${Math.round(player.x)} / ${Math.round(player.y)} / ${Math.round(player.z)}`;
+            
+            let playerXp = player.xp || player.level || player.exp || player.experience || 0;
+            let playerFood = player.food !== undefined ? player.food : 20;
+
+            let otherPlayersOptions = '<option value="" disabled selected>Выберите игрока для ТП...</option>';
+            globalPlayersCache.forEach(otherP => {
+                const oName = (otherP.name || "Steve").replace('/', '_');
+                if(oName !== name) {
+                    otherPlayersOptions += `<option value="${oName}">${oName}</option>`;
+                }
+            });
+
+            const drawerBody = document.getElementById('drawer-body');
+            drawerBody.innerHTML = `
+                <!-- Инфо блок -->
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-black/30 p-3 rounded-xl border border-white/5">
+                    <p class="text-slate-400">Координаты:<br><span id="drawer-coords" class="text-slate-100 font-medium">${coordsStr}</span></p>
+                    <p class="text-slate-400">Уровень опыта:<br><span id="drawer-xp" class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
+                    <p class="text-slate-400 mt-2">Режим игры:<br><span id="drawer-gamemode" class="text-sky-400 font-bold uppercase">${player.gamemode || 'SURVIVAL'}</span></p>
+                    <p class="text-slate-400 mt-2">Сытость:<br><span id="drawer-food" class="text-amber-500 font-bold">${playerFood}/20</span></p>
+                </div>
+
+                <!-- Управление состоянием (Рокировка тыквы и сытости) -->
+                <div class="space-y-1 border-t border-white/5 pt-3">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Управление состоянием:</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                        <button onclick="quickAction('kill ${name}')" class="bg-rose-600 hover:bg-rose-500 text-white py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">💀 Убить</button>
+                        <button onclick="quickAction('effect give ${name} minecraft:hunger 5 255')" class="bg-orange-600/20 border border-orange-500/30 text-orange-400 py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">🤢 Убрать голод</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-medium mt-2">
+                        <button onclick="pumpkinPrank('${name}', true)" class="bg-amber-500/10 text-amber-500 py-2 rounded-xl flex items-center justify-center gap-1 border border-amber-500/10 transition-all active:scale-95">🎃 Надеть тыкву</button>
+                        <button onclick="pumpkinPrank('${name}', false)" class="bg-amber-600/20 border border-amber-500/30 text-amber-400 py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">❌🎃 Снять тыкву</button>
+                    </div>
+                </div>
+
+                <!-- Режимы игры -->
+                <div class="space-y-1 border-t border-white/5 pt-3">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Изменить игровой режим:</p>
+                    <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 rounded-xl border border-white/5 text-xs font-medium">
+                        <button onclick="quickAction('gamemode creative ${name}')" class="py-1.5 rounded hover:bg-white/5 text-slate-300">Креатив</button>
+                        <button onclick="quickAction('gamemode survival ${name}')" class="py-1.5 rounded hover:bg-white/5 text-slate-300">Выживание</button>
+                        <button onclick="quickAction('gamemode adventure ${name}')" class="py-1.5 rounded hover:bg-white/5 text-slate-300">Прикл</button>
+                        <button onclick="quickAction('gamemode spectator ${name}')" class="py-1.5 rounded hover:bg-white/5 text-slate-300">Наблюд</button>
+                    </div>
+                </div>
+
+                <!-- Телепортация -->
+                <div class="space-y-2 border-t border-white/5 pt-3">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Телепортация:</p>
+                    <div class="flex gap-2">
+                        <select id="drawer-tp-dest" class="w-full bg-slate-950 border border-white/10 rounded-xl px-2 py-2 text-xs text-slate-200 focus:outline-none">
+                            ${otherPlayersOptions}
+                        </select>
+                        <button onclick="teleportToPlayerFromDrawer('${name}')" class="bg-emerald-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-bold shrink-0">К игроку</button>
+                    </div>
+                    <div class="flex gap-1 items-center">
+                        <input type="number" id="drawer-tp-x" placeholder="X" class="w-full bg-slate-950 border border-white/10 rounded-lg py-1.5 text-xs text-center font-mono">
+                        <input type="number" id="drawer-tp-y" placeholder="Y" class="w-full bg-slate-950 border border-white/10 rounded-lg py-1.5 text-xs text-center font-mono">
+                        <input type="number" id="drawer-tp-z" placeholder="Z" class="w-full bg-slate-950 border border-white/10 rounded-lg py-1.5 text-xs text-center font-mono">
+                        <button onclick="teleportToCoordsFromDrawer('${name}')" class="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shrink-0">В XYZ</button>
+                    </div>
+                </div>
+
+                <!-- Роли и Кик -->
+                <div class="grid grid-cols-3 gap-2 border-t border-white/5 pt-3">
+                    <button onclick="quickAction('op ${name}')" class="bg-slate-900 border border-white/5 text-emerald-400 text-xs py-2 rounded-lg font-medium">Дать ОП</button>
+                    <button onclick="quickAction('deop ${name}')" class="bg-slate-900 border border-white/5 text-amber-500 text-xs py-2 rounded-lg font-medium">Снять ОП</button>
+                    <button onclick="kickPlayerPrompt('${name}')" class="bg-rose-950/40 border border-rose-500/20 text-rose-400 text-xs py-2 rounded-lg font-medium">Кикнуть</button>
+                </div>
+
+                <!-- Дополнительный троллинг и кастомки -->
+                <div class="space-y-2 border-t border-white/5 pt-3">
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Звуковой скример:</p>
+                    <div class="flex gap-1">
+                        <select id="drawer-sound" class="w-full bg-slate-950 border border-white/10 rounded-xl px-2 py-1.5 text-xs text-slate-200 focus:outline-none">
+                            <option value="minecraft:entity.creeper.primed">💥 Шипение Крипера</option>
+                            <option value="minecraft:entity.enderman.scream">🗣️ Крик Эндермена</option>
+                            <option value="minecraft:entity.elder_guardian.curse">👁️ Проклятие Стража</option>
+                            <option value="minecraft:ambient.cave">🕳️ Звуки пещеры</option>
+                            <option value="minecraft:entity.wither.spawn">☠️ Рёв Иссушителя</option>
+                        </select>
+                        <button onclick="sendTrollSoundFromDrawer('${name}')" class="bg-purple-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium shrink-0">Воспроизвести</button>
+                    </div>
+                    
+                    <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider mt-2">Текст на весь экран (Title):</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="drawer-title-input" placeholder="Введите текст сообщения..." class="w-full bg-slate-950 border border-white/10 rounded-xl px-3 py-1.5 text-xs">
+                        <button onclick="sendPlayerTitleFromDrawer('${name}')" class="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium shrink-0">Вывести</button>
+                    </div>
+                </div>
+            `;
+
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('player-drawer');
+            
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.style.opacity = "1";
+                drawer.classList.add('open');
+            }, 10);
+        }
+
+        function closePlayerDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('player-drawer');
+            
+            drawer.classList.remove('open');
+            overlay.style.opacity = "0";
+            activeDrawerPlayer = null;
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        async function loadData() {
+            if(!API_URL || !isAuthorized) return;
+            try {
+                const statsRes = await axios.get(`${API_URL}/api/stats`);
+                const tps = statsRes.data.tps;
+                const tpsBadge = document.getElementById('tps-badge');
+                tpsBadge.innerText = `TPS: ${tps}`;
+                tpsBadge.className = tps < 15 ? "px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-rose-500/10 text-rose-400 border-rose-500/20" : "px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+
+                document.getElementById('server-v').innerText = `Версия: ${statsRes.data.version}`;
+                document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
+                document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
+
+                const playersRes = await axios.get(`${API_URL}/api/players`);
+                globalPlayersCache = playersRes.data; 
+
+                const listDiv = document.getElementById('players-list');
+                
+                if (playersRes.data.length === 0) {
+                    listDiv.innerHTML = '<div id="no-players-msg" class="col-span-full text-center py-12 bg-slate-900/20 rounded-xl border border-white/5 text-slate-500 text-xs font-mono italic">На сервере нет игроков онлайн</div>';
+                    if (activeDrawerPlayer) closePlayerDrawer();
+                    return;
+                }
+
+                const noPlayersMsg = document.getElementById('no-players-msg');
+                if (noPlayersMsg) noPlayersMsg.remove();
+
+                const currentOnlineNames = playersRes.data.map(p => (p.name || "Steve").replace('/', '_'));
+
+                Array.from(listDiv.children).forEach(child => {
+                    if (child.dataset.playerCard && !currentOnlineNames.includes(child.dataset.playerCard)) {
+                        if (activeDrawerPlayer === child.dataset.playerCard) closePlayerDrawer();
+                        child.remove();
+                    }
+                });
+
+                playersRes.data.forEach(p => {
+                    const pName = (p.name || "Steve").replace('/', '_');
+                    const existingCard = document.getElementById(`player-card-${pName}`);
+                    
+                    if (existingCard) {
+                        document.getElementById(`ping-${pName}`).innerText = `${p.ping || 0}мс`;
+                        document.getElementById(`health-${pName}`).innerText = `❤️ ${Math.round(p.health || 20)}`;
+                    } else {
+                        const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
+                        
+                        const cardHtml = `
+                            <div id="player-card-${pName}" data-player-card="${pName}" class="glass-panel p-3.5 rounded-xl flex flex-col justify-between gap-3 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2.5">
+                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-lg bg-black/40 border border-white/10 p-0.5">
+                                        <div>
+                                            <p class="font-bold text-xs text-slate-200 font-mono">${pName}</p>
+                                            <p class="text-[10px] text-slate-400 font-mono mt-0.5"><span id="ping-${pName}" class="text-emerald-400">${p.ping || 0}мс</span></p>
+                                        </div>
+                                    </div>
+                                    <span id="health-${pName}" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/10 text-rose-400">❤️ ${Math.round(p.health || 20)}</span>
+                                </div>
+
+                                <!-- БЫСТРЫЙ ДОСТУП: Хил, Сытость, Молния, Опции -->
+                                <div class="grid grid-cols-4 gap-1.5 border-t border-white/5 pt-2.5 text-[11px] font-medium">
+                                    <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/10 text-emerald-400 py-1.5 rounded-lg border border-emerald-500/10 active:scale-95 transition-all">❤️ Хил</button>
+                                    <button onclick="modifyPlayerStatus('${pName}', 'feed')" class="bg-amber-500/10 text-amber-500 py-1.5 rounded-lg border border-amber-500/10 active:scale-95 transition-all">🍖 Сытость</button>
+                                    <button onclick="quickAction('execute at ${pName} run summon minecraft:lightning_bolt')" class="bg-sky-500/10 text-sky-400 py-1.5 rounded-lg border border-sky-500/10 active:scale-95 transition-all">⚡ Молния</button>
+                                    <button onclick="openPlayerDrawer('${pName}')" class="bg-slate-800 text-slate-200 py-1.5 rounded-lg active:scale-95 transition-all font-bold">⚙️ Опции</button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        const div = document.createElement('div');
+                        div.dataset.playerCard = pName;
+                        div.innerHTML = cardHtml;
+                        listDiv.appendChild(div);
+                    }
+                });
+
+                if (activeDrawerPlayer) {
+                    const activePlayer = playersRes.data.find(p => (p.name || "Steve").replace('/', '_') === activeDrawerPlayer);
+                    if (activePlayer) {
+                        let coordsStr = `${Math.round(activePlayer.x)} / ${Math.round(activePlayer.y)} / ${Math.round(activePlayer.z)}`;
+                        let playerXp = activePlayer.xp || activePlayer.level || activePlayer.exp || activePlayer.experience || 0;
+                        let playerFood = activePlayer.food !== undefined ? activePlayer.food : 20;
+                        let playerGm = activePlayer.gamemode || 'SURVIVAL';
+                        
+                        const xpEl = document.getElementById('drawer-xp');
+                        const coordsEl = document.getElementById('drawer-coords');
+                        const foodEl = document.getElementById('drawer-food');
+                        const gmEl = document.getElementById('drawer-gamemode');
+                        if (xpEl) xpEl.innerText = `${playerXp} LVL`;
+                        if (coordsEl) coordsEl.innerText = coordsStr;
+                        if (foodEl) foodEl.innerText = `${playerFood}/20`;
+                        if (gmEl) gmEl.innerText = playerGm;
+                    }
+                }
+
+            } catch (err) { console.error("Ошибка при получении метрик сервера", err); }
+        }
+
+        async function loadChat() {
+            if(!API_URL || !isAuthorized) return;
+            if(!document.getElementById('view-main').classList.contains('active')) return;
+            
+            try {
+                const res = await axios.get(`${API_URL}/api/chat`);
+                const chatContainer = document.getElementById('chat-container');
+                
+                if(!res.data || res.data.length === 0) {
+                    chatContainer.innerHTML = '<div class="text-center py-8 text-slate-600 font-mono italic text-[11px]">[Чат пуст]</div>';
+                    return;
+                }
+
+                let chatHtml = '';
+                res.data.forEach(msg => {
+                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const pName = (msg.sender || "Server").replace('/', '_');
+                    
+                    let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
+                    if(['Панель', 'Server', 'Console', 'Система'].includes(msg.sender)) {
+                        avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
+                    }
+
+                    let senderColor = 'text-sky-400';
+                    if(msg.sender === 'Панель' || msg.sender === 'Система') senderColor = 'text-amber-400 font-bold';
+
+                    chatHtml += `
+                        <div class="flex items-start gap-2 text-slate-300 border-b border-white/[0.02] pb-1.5 last:border-none font-mono text-xs">
+                            <span class="text-[10px] text-slate-600 shrink-0 pt-0.5">${timeStr}</span>
+                            <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/24'" class="w-3.5 h-3.5 rounded bg-slate-900 border border-white/10 shrink-0">
+                            <div class="break-all leading-snug">
+                                <span class="${senderColor} mr-1">${msg.sender}:</span>
+                                <span class="text-slate-300">${msg.message}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop <= chatContainer.clientHeight + 45;
+                chatContainer.innerHTML = chatHtml;
+                
+                if (res.data.length > 0) {
+                    const latestMsg = res.data[res.data.length - 1];
+                    if (latestMsg.timestamp > lastChatTimestamp || isAtBottom) {
+                        lastChatTimestamp = latestMsg.timestamp;
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
+            } catch (err) { console.error("Ошибка при обновлении ленты чата", err); }
+        }
+
+        async function teleportToPlayerFromDrawer(targetName) {
+            const destinationName = document.getElementById('drawer-tp-dest').value;
+            if (!destinationName) return alert("Выберите целевого игрока!");
+
+            try {
+                const response = await axios.post(`${API_URL}/api/teleport`, { target: targetName, type: "player", destination: destinationName });
+                if (response.data.success) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    closePlayerDrawer();
+                }
+            } catch (err) { alert("Ошибка маршрутизации телепорта"); }
+        }
+
+        async function teleportToCoordsFromDrawer(targetName) {
+            const xVal = document.getElementById('drawer-tp-x').value;
+            const yVal = document.getElementById('drawer-tp-y').value;
+            const zVal = document.getElementById('drawer-tp-z').value;
+
+            if (xVal === "" || yVal === "" || zVal === "") return alert("Заполните вектор координат X, Y, Z!");
+
+            try {
+                const response = await axios.post(`${API_URL}/api/teleport`, {
+                    target: targetName, type: "coords",
+                    x: parseFloat(xVal), y: parseFloat(yVal), z: parseFloat(zVal)
+                });
+                if (response.data.success) {
+                    tg.HapticFeedback.notificationOccurred('success');
+                    closePlayerDrawer();
+                }
+            } catch (err) { alert("Ошибка изменения вектора локации"); }
+        }
+
+        function sendTrollSoundFromDrawer(playerName) {
+            const sound = document.getElementById('drawer-sound').value;
+            quickAction(`execute at ${playerName} run playsound ${sound} master ${playerName}`);
+        }
+
+        async function sendPlayerTitleFromDrawer(playerName) {
+            const input = document.getElementById('drawer-title-input');
+            const text = input.value.trim();
+            if (!text) return alert("Введите строку оверлея!");
+            const escapedText = text.replace(/"/g, '\\"');
+            quickAction(`title ${playerName} title {"text":"${escapedText}","color":"red"}`);
+            input.value = '';
+        }
+
+        async function loadAnnouncement() {
+            if(!API_URL || !isAuthorized) return;
+            try {
+                const res = await axios.get(`${API_URL}/api/announcement`);
+                document.getElementById('ann-input').value = res.data.announcement || '';
+            } catch(err) { console.error(err); }
+        }
+
+        async function saveAnnouncement() {
+            const text = document.getElementById('ann-input').value.trim();
+            try {
+                await axios.post(`${API_URL}/api/announcement`, { text: text });
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("Объявление сохранено!");
+            } catch(err) { alert("Ошибка сохранения"); }
+        }
+
+        async function clearAnnouncement() {
+            try {
+                await axios.post(`${API_URL}/api/announcement`, { text: "" });
+                document.getElementById('ann-input').value = "";
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch(err) { alert("Ошибка"); }
+        }
+
+        async function forceRefreshAnnouncement() {
+            try {
+                await axios.post(`${API_URL}/api/announcement/refresh`);
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("Форсированный пуш отправлен!");
+            } catch(err) { alert("Ошибка"); }
+        }
+
+        async function loadQuotes() {
+            if(!API_URL || !isAuthorized) return;
+            const listDiv = document.getElementById('quotes-list');
+            try {
+                const res = await axios.get(`${API_URL}/api/quotes`);
+                listDiv.innerHTML = '';
+                if(!res.data || res.data.length === 0) {
+                    listDiv.innerHTML = '<div class="text-center py-4 text-slate-500 text-xs italic">Реестр цитат пуст</div>';
+                    return;
+                }
+                res.data.forEach((q, idx) => {
+                    listDiv.innerHTML += `
+                        <div class="glass-card p-3 rounded-xl flex items-center justify-between gap-3 text-xs">
+                            <div><span class="text-slate-200 italic">"${q.text}"</span> <span class="text-emerald-400 font-bold ml-1">— ${q.author}</span></div>
+                            <button onclick="deleteQuote(${idx})" class="text-rose-400 font-medium bg-rose-500/10 px-2.5 py-1 rounded-lg transition-all active:scale-95">Стереть</button>
+                        </div>
+                    `;
+                });
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-rose-400 text-center">Ошибка десериализации архива</p>'; }
+        }
+
+        async function addQuote() {
+            const author = document.getElementById('quote-author').value.trim();
+            const text = document.getElementById('quote-text').value.trim();
+            if(!author || !text) return alert("Заполните оба поля!");
+            try {
+                await axios.post(`${API_URL}/api/quotes`, { action: "add", author: author, text: text });
+                document.getElementById('quote-author').value = '';
+                document.getElementById('quote-text').value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                loadQuotes();
+            } catch(err) { alert("Ошибка добавления"); }
+        }
+
+        async function deleteQuote(index) {
+            if(!confirm("Вычеркнуть цитату из реестра проекта?")) return;
+            try {
+                await axios.post(`${API_URL}/api/quotes`, { action: "delete", index: index });
+                tg.HapticFeedback.notificationOccurred('success');
+                loadQuotes();
+            } catch(err) { alert("Ошибка удаления"); }
+        }
+
+        async function loadLeaderboard() {
+            if(!API_URL || !isAuthorized) return;
+            const tbody = document.getElementById('leaderboard-data');
+            try {
+                const res = await axios.get(`${API_URL}/api/leaderboard`);
+                tbody.innerHTML = '';
+                let hasData = false;
+
+                const createRowHtml = (key, item) => {
+                    const titleRu = metricTranslations[key] || key;
+                    return `
+                        <tr class="border-b border-white/[0.01] hover:bg-white/[0.01]">
+                            <td class="py-2.5 text-slate-400 font-sans">${titleRu}</td>
+                            <td class="py-2.5 font-bold text-slate-200">${item.player || '—'}</td>
+                            <td class="py-2.5 text-right font-bold text-emerald-400">${item.display_value !== undefined ? item.display_value : item.value}</td>
+                        </tr>`;
+                };
+
+                if(res.data.stats) {
+                    for(let key in res.data.stats) {
+                        hasData = true;
+                        tbody.innerHTML += createRowHtml(key, res.data.stats[key]);
+                    }
+                }
+                if(res.data.custom) {
+                    for(let key in res.data.custom) {
+                        hasData = true;
+                        tbody.innerHTML += createRowHtml(key, res.data.custom[key]);
+                    }
+                }
+
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-500 italic">Записи рекордов не найдены</td></tr>';
+            } catch(err) { 
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-rose-400 italic">Сбой чтения секторов рекордов</td></tr>'; 
+            }
+        }
+
+        async function modifyPlayerStatus(playerName, action) {
+            if (!isAuthorized) return;
+            tg.HapticFeedback.impactOccurred('light');
+            try {
+                if (action === 'heal') {
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:instant_health 1 255` });
+                } else if (action === 'feed') {
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:saturation 1 255` });
+                }
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 500);
+            } catch (err) { console.error(err); }
+        }
+
+        async function sendConsoleCommand() {
+            const input = document.getElementById('cmd-input');
+            const command = input.value.trim();
+            if(!command) return;
+            try {
+                await axios.post(`${API_URL}/api/command`, { command: command });
+                input.value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 300);
+            } catch(err) { alert("Ошибка выполнения RCON"); }
+        }
+
+        async function sendBroadcast() {
+            const input = document.getElementById('bc-input');
+            const message = input.value.trim();
+            if(!message) return;
+            try {
+                await axios.post(`${API_URL}/api/broadcast`, { message: message });
+                input.value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadChat, 200);
+            } catch(err) { alert("Ошибка"); }
+        }
+
+        function quickAction(cmd) {
+            if (!isAuthorized) return;
+            axios.post(`${API_URL}/api/command`, { command: cmd }).then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+                setTimeout(loadData, 400);
+            });
+        }
+
+        function askRestart() {
+            if(confirm("Вы уверены, что хотите инициировать перезапуск ядра сервера?")) quickAction("restart");
+        }
+
+        async function pumpkinPrank(playerName, apply) {
+            if (!isAuthorized) return;
+            tg.HapticFeedback.impactOccurred('medium');
+            try {
+                if (apply) {
+                    await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
+                    if(activeDrawerPlayer) closePlayerDrawer();
+                } else {
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
+                    await axios.post(`${API_URL}/api/command`, { command: `kill @e[tag=prank_${playerName}]` });
+                    if(activeDrawerPlayer) closePlayerDrawer();
+                }
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>
