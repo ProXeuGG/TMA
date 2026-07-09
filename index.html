@@ -871,6 +871,36 @@
                 tg.HapticFeedback.notificationOccurred('success');
             } catch (err) { console.error(err); }
         }
+        async function kickPlayerPrompt(playerName) {
+            if (!isAuthorized) return;
+        
+            // Вызываем нативное диалоговое окно для ввода причины
+            const reason = prompt(`Введите причину кика для игрока ${playerName}:`, "Нарушение правил сервера");
+        
+            // Если админ нажал "Отмена" (null), прекращаем выполнение
+            if (reason === null) return;
+        
+            // Если оставил поле пустым, ставим дефолтную причину
+            const finalReason = reason.trim() || "Кикнут администратором";
+        
+            tg.HapticFeedback.impactOccurred('medium');
+            try {
+                // Отправляем стандартную команду кика через существующий терминал бэкенда
+                await axios.post(`${API_URL}/api/command`, { 
+                    command: `kick ${playerName} ${finalReason}` 
+                });
+        
+                tg.HapticFeedback.notificationOccurred('success');
+                closePlayerDrawer();
+                
+                // Краткое уведомление в интерфейсе панели
+                alert(`Игрок ${playerName} успешно кикнут.`);
+                setTimeout(loadData, 500);
+            } catch (err) {
+                console.error("Ошибка при выполнении команды кика:", err);
+                alert("Не удалось кикнуть игрока. Проверьте соединение с API.");
+            }
+        }
     </script>
 </body>
 </html>
