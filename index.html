@@ -867,13 +867,13 @@
         
             try {
                 if (apply) {
-                    // 1. Спавним стойку под игроком (на -5 блоков вниз, чтобы не маячила перед глазами)
+                    // 1. Спавним стойку под игроком (тут execute at нужен только чтобы понять, ГДЕ её заспавнить)
                     await axios.post(`${API_URL}/api/command`, { 
                         command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${pUuid}"],Invisible:1b,Invulnerable:1b,NoGravity:1b,Marker:1b}` 
                     });
-                    // 2. Копируем шлем в созданную стойку (ищем её в радиусе 50 блоков)
+                    // 2. Копируем шлем в созданную стойку напрямую по уникальному тегу (без distance)
                     await axios.post(`${API_URL}/api/command`, { 
-                        command: `execute at ${playerName} run minecraft:item replace entity @e[tag=prank_${pUuid},distance=..50,limit=1] armor.head from entity ${playerName} armor.head` 
+                        command: `minecraft:item replace entity @e[tag=prank_${pUuid},limit=1] armor.head from entity ${playerName} armor.head` 
                     });
                     // 3. Надеваем на игрока тыкву
                     await axios.post(`${API_URL}/api/command`, { 
@@ -881,13 +881,13 @@
                     });
                     if(activeDrawerPlayer) closePlayerDrawer();
                 } else {
-                    // 1. Возвращаем старый шлем обратно из стойки, которая находится в радиусе 50 блоков от игрока
+                    // 1. Возвращаем старый шлем обратно игроку из стойки (поиск по уникальному тегу по всему серверу)
                     await axios.post(`${API_URL}/api/command`, { 
-                        command: `execute at ${playerName} run minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${pUuid},distance=..50,limit=1] armor.head` 
+                        command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${pUuid},limit=1] armor.head` 
                     });
-                    // 2. Уничтожаем только нашу стойку в радиусе 50 блоков
+                    // 2. Уничтожаем стойку напрямую через консоль. Никаких ошибок с координатами больше не будет!
                     await axios.post(`${API_URL}/api/command`, { 
-                        command: `execute at ${playerName} run kill @e[tag=prank_${pUuid},distance=..50]` 
+                        command: `kill @e[tag=prank_${pUuid}]` 
                     });
                     if(activeDrawerPlayer) closePlayerDrawer();
                 }
