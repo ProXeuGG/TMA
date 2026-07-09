@@ -204,7 +204,7 @@
             </div>
         </div>
 
-        <!-- МОДУЛЬ 3: АРХИВЫ (ЦИТАТЫ И РЕКОРДЫ В ОДНОМ МЕСТЕ) -->
+        <!-- МОДУЛЬ 3: АРХИВЫ -->
         <div id="view-logs" class="view-content space-y-4">
             
             <!-- Блок рекордов -->
@@ -399,7 +399,7 @@
                     <p class="text-slate-400 mt-2">Сытость:<br><span id="drawer-food" class="text-amber-500 font-bold">${playerFood}/20</span></p>
                 </div>
 
-                <!-- Управление состоянием (Новые кнопки) -->
+                <!-- Управление состоянием (Рокировка тыквы и сытости) -->
                 <div class="space-y-1 border-t border-white/5 pt-3">
                     <p class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Управление состоянием:</p>
                     <div class="grid grid-cols-2 gap-2 text-xs font-medium">
@@ -407,7 +407,7 @@
                         <button onclick="pumpkinPrank('${name}', false)" class="bg-amber-600/20 border border-amber-500/30 text-amber-400 py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">❌🎃 Снять тыкву</button>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs font-medium mt-2">
-                        <button onclick="quickAction('effect give ${name} minecraft:saturation 1 255')" class="bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">🍖 Восстановить голод</button>
+                        <button onclick="pumpkinPrank('${name}', true)" class="bg-amber-500/10 text-amber-500 py-2 rounded-xl flex items-center justify-center gap-1 border border-amber-500/10 transition-all active:scale-95">🎃 Надеть тыкву</button>
                         <button onclick="quickAction('effect give ${name} minecraft:hunger 5 255')" class="bg-orange-600/20 border border-orange-500/30 text-orange-400 py-2 rounded-xl flex items-center justify-center gap-1 transition-all active:scale-95">🤢 Убрать голод</button>
                     </div>
                 </div>
@@ -550,11 +550,11 @@
                                     <span id="health-${pName}" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/10 text-rose-400">❤️ ${Math.round(p.health || 20)}</span>
                                 </div>
 
-                                <!-- Быстрые макро-кнопки в один клик -->
+                                <!-- БЫСТРЫЙ ДОСТУП: Хил, Сытость, Молния, Опции -->
                                 <div class="grid grid-cols-4 gap-1.5 border-t border-white/5 pt-2.5 text-[11px] font-medium">
                                     <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/10 text-emerald-400 py-1.5 rounded-lg border border-emerald-500/10 active:scale-95 transition-all">❤️ Хил</button>
+                                    <button onclick="modifyPlayerStatus('${pName}', 'feed')" class="bg-amber-500/10 text-amber-500 py-1.5 rounded-lg border border-amber-500/10 active:scale-95 transition-all">🍖 Сытость</button>
                                     <button onclick="quickAction('execute at ${pName} run summon minecraft:lightning_bolt')" class="bg-sky-500/10 text-sky-400 py-1.5 rounded-lg border border-sky-500/10 active:scale-95 transition-all">⚡ Молния</button>
-                                    <button onclick="pumpkinPrank('${pName}', true)" class="bg-amber-500/10 text-amber-500 py-1.5 rounded-lg border border-amber-500/10 active:scale-95 transition-all">🎃 Тыква</button>
                                     <button onclick="openPlayerDrawer('${pName}')" class="bg-slate-800 text-slate-200 py-1.5 rounded-lg active:scale-95 transition-all font-bold">⚙️ Опции</button>
                                 </div>
                             </div>
@@ -567,7 +567,6 @@
                     }
                 });
 
-                // ДИНАМИЧЕСКИЙ СИНХРОН ДАННЫХ ВНУТРИ ШТОРКИ (ФИКС ЖИВОЙ СЫТОСТИ И КООРДИНАТ)
                 if (activeDrawerPlayer) {
                     const activePlayer = playersRes.data.find(p => (p.name || "Steve").replace('/', '_') === activeDrawerPlayer);
                     if (activePlayer) {
@@ -807,6 +806,8 @@
             try {
                 if (action === 'heal') {
                     await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:instant_health 1 255` });
+                } else if (action === 'feed') {
+                    await axios.post(`${API_URL}/api/command`, { command: `effect give ${playerName} minecraft:saturation 1 255` });
                 }
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 500);
@@ -857,6 +858,7 @@
                     await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
+                    if(activeDrawerPlayer) closePlayerDrawer();
                 } else {
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
                     await axios.post(`${API_URL}/api/command`, { command: `kill @e[tag=prank_${playerName}]` });
