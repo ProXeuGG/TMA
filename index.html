@@ -519,6 +519,34 @@
                                         </div>
                                     </div>
 
+                                    <div class="space-y-2 border-t border-white/5 pt-3">
+                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">🎁 Раздел «Сюрприз» (Дружеский троллинг):</p>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button onclick="quickAction('effect give ${pName} minecraft:levitation 5 5')" class="bg-indigo-500/5 border border-indigo-500/15 hover:bg-indigo-500/15 text-indigo-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🚀 В космос</button>
+                                            <button onclick="quickAction('effect give ${pName} minecraft:glowing 30')" class="bg-yellow-500/5 border border-yellow-500/15 hover:bg-yellow-500/15 text-yellow-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💡 Подсветка</button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <p class="text-[9px] text-zinc-500 font-medium">👻 Включить страшный скример игроку:</p>
+                                            <div class="flex gap-2">
+                                                <select id="troll-sound-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
+                                                    <option value="minecraft:entity.creeper.primed" class="bg-[#0e0e18] text-zinc-200">💥 Шипение Крипера</option>
+                                                    <option value="minecraft:entity.enderman.scream" class="bg-[#0e0e18] text-zinc-200">🗣️ Крик Эндермена</option>
+                                                    <option value="minecraft:entity.elder_guardian.curse" class="bg-[#0e0e18] text-zinc-200">👁️ Проклятие Стража</option>
+                                                    <option value="minecraft:ambient.cave" class="bg-[#0e0e18] text-zinc-200">🕳️ Звуки тёмной пещеры</option>
+                                                    <option value="minecraft:entity.wither.spawn" class="bg-[#0e0e18] text-zinc-200">☠️ Рёв Иссушителя</option>
+                                                </select>
+                                                <button onclick="sendTrollSound('${pName}')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">Воспроизвести</button>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <p class="text-[9px] text-zinc-500 font-medium">📺 Текст на весь экран (Title):</p>
+                                            <div class="flex gap-2">
+                                                <input type="text" id="title-text-${pName}" placeholder="Текст объявления для игрока..." class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all">
+                                                <button onclick="sendPlayerTitle('${pName}')" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">Вывести</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="grid grid-cols-3 gap-2 pt-1">
                                         <button onclick="quickAction('op ${pName}')" class="bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Выдать OP</button>
                                         <button onclick="quickAction('deop ${pName}')" class="bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Снять OP</button>
@@ -823,6 +851,29 @@
             } catch (err) {
                 console.error("Ошибка ТП по координатам:", err);
                 alert("Не удалось телепортировать по координатам");
+            }
+        }
+
+        function sendTrollSound(playerName) {
+            if (!isAuthorized) return;
+            const sound = document.getElementById(`troll-sound-${playerName}`).value;
+            quickAction(`playsound ${sound} master ${playerName}`);
+        }
+
+        async function sendPlayerTitle(playerName) {
+            if (!isAuthorized) return;
+            const input = document.getElementById(`title-text-${playerName}`);
+            const text = input.value.trim();
+            if (!text) return alert("Введите текст объявления!");
+            const escapedText = text.replace(/"/g, '\\"');
+            const cmd = `title ${playerName} title {"text":"${escapedText}","color":"red"}`;
+            try {
+                await axios.post(`${API_URL}/api/command`, { command: cmd });
+                input.value = '';
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (err) {
+                console.error("Ошибка отправки title:", err);
+                alert("Ошибка выполнения команды");
             }
         }
     </script>
