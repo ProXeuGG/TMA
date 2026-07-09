@@ -857,45 +857,19 @@
         async function pumpkinPrank(playerName, apply) {
             if (!isAuthorized) return;
             tg.HapticFeedback.impactOccurred('medium');
-            
-            // Находим игрока в кэше, чтобы взять его уникальный UUID
-            const player = globalPlayersCache.find(p => (p.name || "Steve").replace('/', '_') === playerName);
-            if (!player) return alert("Игрок не найден в кэше панели!");
-            
-            // Безопасный ID для тегов на основе UUID
-            const pUuid = player.uuid.replace(/-/g, ''); 
-        
             try {
                 if (apply) {
-                    // 1. Спавним стойку под игроком (тут execute at нужен только чтобы понять, ГДЕ её заспавнить)
-                    await axios.post(`${API_URL}/api/command`, { 
-                        command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${pUuid}"],Invisible:1b,Invulnerable:1b,NoGravity:1b,Marker:1b}` 
-                    });
-                    // 2. Копируем шлем в созданную стойку напрямую по уникальному тегу (без distance)
-                    await axios.post(`${API_URL}/api/command`, { 
-                        command: `minecraft:item replace entity @e[tag=prank_${pUuid},limit=1] armor.head from entity ${playerName} armor.head` 
-                    });
-                    // 3. Надеваем на игрока тыкву
-                    await axios.post(`${API_URL}/api/command`, { 
-                        command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` 
-                    });
+                    await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
                     if(activeDrawerPlayer) closePlayerDrawer();
                 } else {
-                    // 1. Возвращаем старый шлем обратно игроку из стойки (поиск по уникальному тегу по всему серверу)
-                    await axios.post(`${API_URL}/api/command`, { 
-                        command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${pUuid},limit=1] armor.head` 
-                    });
-                    // 2. Уничтожаем стойку напрямую через консоль. Никаких ошибок с координатами больше не будет!
-                    await axios.post(`${API_URL}/api/command`, { 
-                        command: `kill @e[tag=prank_${pUuid}]` 
-                    });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
+                    await axios.post(`${API_URL}/api/command`, { command: `kill @e[tag=prank_${playerName}]` });
                     if(activeDrawerPlayer) closePlayerDrawer();
                 }
                 tg.HapticFeedback.notificationOccurred('success');
-            } catch (err) { 
-                console.error("Ошибка операции с тыквой:", err); 
-                alert("Не удалось выполнить команду пранка.");
-            }
+            } catch (err) { console.error(err); }
         }
         async function kickPlayerPrompt(playerName) {
             if (!isAuthorized) return;
