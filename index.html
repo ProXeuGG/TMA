@@ -10,7 +10,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap');
         
-        /* ЖИВЫЕ ГРАДИЕНТЫ БЕЗ СИНЕГО ЦВЕТА */
+        /* ГАРДЕРОБ ЖИВЫХ ГРАДИЕНТОВ (8 СТИЛЕЙ) */
         :root, [data-theme="emerald"] {
             --bg-gradient: linear-gradient(-45deg, #04140e, #0b3a24, #065f46, #0a2419);
             --accent: #10b981;
@@ -43,31 +43,59 @@
             --glass-bg: rgba(16, 22, 6, 0.78);
             --card-bg: rgba(163, 230, 53, 0.06);
         }
+        [data-theme="nebula"] {
+            --bg-gradient: linear-gradient(-45deg, #090514, #2e0854, #8a2be2, #ff007f, #05020a);
+            --accent: #ff007f;
+            --accent-glow: rgba(255, 0, 127, 0.35);
+            --text-accent: #2e0854;
+            --glass-bg: rgba(13, 8, 24, 0.78);
+            --card-bg: rgba(255, 0, 127, 0.06);
+        }
+        [data-theme="synthwave"] {
+            --bg-gradient: linear-gradient(-45deg, #12041d, #2a0845, #b827fc, #ff6b6b, #12041d);
+            --accent: #b827fc;
+            --accent-glow: rgba(184, 39, 252, 0.35);
+            --text-accent: #12041d;
+            --glass-bg: rgba(18, 8, 26, 0.78);
+            --card-bg: rgba(184, 39, 252, 0.06);
+        }
+        [data-theme="lava"] {
+            --bg-gradient: linear-gradient(-45deg, #110303, #4a0000, #990000, #ff3300, #1a0505);
+            --accent: #ff3300;
+            --accent-glow: rgba(255, 51, 0, 0.4);
+            --text-accent: #4a0000;
+            --glass-bg: rgba(20, 6, 6, 0.8);
+            --card-bg: rgba(255, 51, 0, 0.06);
+        }
+        [data-theme="aurora"] {
+            --bg-gradient: linear-gradient(-45deg, #051405, #0d3b1b, #00ff88, #bd00ff, #0a0514);
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.35);
+            --text-accent: #051405;
+            --glass-bg: rgba(7, 18, 12, 0.78);
+            --card-bg: rgba(0, 255, 136, 0.06);
+        }
 
         body {
             background: var(--bg-gradient);
             background-size: 400% 400%;
-            animation: gradientBg 15s ease infinite;
+            animation: gradientBg 18s ease infinite;
             color: #f8fafc;
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            transition: background 0.5s ease;
+            transition: background 0.6s ease;
         }
 
-        /* Анимация перелива фона */
+        /* Плавная бесконечная анимация перелива */
         @keyframes gradientBg {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        .font-header {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .font-header { font-family: 'Space Grotesk', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
         .view-content { display: none; }
         .view-content.active { display: block; animation: viewSlide 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
         
@@ -79,9 +107,9 @@
         .glass-panel {
             background: var(--glass-bg);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
         
         .glass-card {
@@ -99,9 +127,7 @@
             transform: translateY(100%);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        #player-drawer.open {
-            transform: translateY(0);
-        }
+        #player-drawer.open { transform: translateY(0); }
 
         #chat-container::-webkit-scrollbar { width: 4px; }
         #chat-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
@@ -342,13 +368,17 @@
         let activeDrawerPlayer = null; 
         let globalPlayersCache = []; 
 
-        // ОБНОВЛЕННАЯ СИСТЕМА СТИЛЕЙ С ГРАДИЕНТАМИ
-        const themes = ['emerald', 'sunset', 'amber', 'lime'];
+        // РАСШИРЕННАЯ ДО 8 ТЕМ СИСТЕМА
+        const themes = ['emerald', 'sunset', 'amber', 'lime', 'nebula', 'synthwave', 'lava', 'aurora'];
         const themeNames = { 
             emerald: '💚 Изумруд', 
             sunset: '🌆 Закат', 
             amber: '🔥 Янтарь', 
-            lime: '🍋 Лайм' 
+            lime: '🍋 Лайм',
+            nebula: '🌌 Небула',
+            synthwave: '🎸 Ретровейв',
+            lava: '🌋 Лава',
+            aurora: '✨ Сияние'
         };
         let currentThemeIndex = 0;
 
@@ -572,9 +602,7 @@
             drawer.classList.remove('open');
             overlay.style.opacity = "0";
             activeDrawerPlayer = null;
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 300);
+            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         }
 
         async function loadData() {
@@ -728,7 +756,6 @@
         async function teleportToPlayerFromDrawer(targetName) {
             const destinationName = document.getElementById('drawer-tp-dest').value;
             if (!destinationName) return alert("Выберите целевого игрока!");
-
             try {
                 const response = await axios.post(`${API_URL}/api/teleport`, { target: targetName, type: "player", destination: destinationName });
                 if (response.data.success) {
@@ -877,7 +904,6 @@
                         tbody.innerHTML += createRowHtml(key, res.data.custom[key]);
                     }
                 }
-
                 if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400 italic">Записи рекордов не найдены</td></tr>';
             } catch(err) { 
                 console.error(err);
