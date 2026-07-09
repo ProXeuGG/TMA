@@ -187,8 +187,8 @@
         </div>
     </div>
 
-    <!-- ИНФОРМАЦИОННАЯ ШАПКА СЕРВЕРА -->
-    <header id="app-header" class="hidden flex items-center justify-between mb-4 bg-black/30 p-3 rounded-xl border border-white/5 backdrop-blur-md relative z-30">
+    <!-- ИНФОРМАЦИОННАЯ ШАПКА СЕРВЕРА (Повышен z-index до z-50 для перекрытия липкого nav) -->
+    <header id="app-header" class="hidden flex items-center justify-between mb-4 bg-black/30 p-3 rounded-xl border border-white/5 backdrop-blur-md relative z-50">
         <div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]"></span>
@@ -205,8 +205,8 @@
                     <span class="text-[9px] opacity-60">▼</span>
                 </button>
                 
-                <!-- ВЫПАДАЮЩИЙ СПИСОК -->
-                <div id="theme-menu" class="absolute right-0 mt-2 w-40 rounded-xl bg-slate-950/95 border border-white/10 p-1 shadow-2xl backdrop-blur-xl space-y-0.5 z-100">
+                <!-- ВЫПАДАЮЩИЙ СПИСОК (Повышен z-index до z-[100]) -->
+                <div id="theme-menu" class="absolute right-0 mt-2 w-40 rounded-xl bg-slate-950/95 border border-white/10 p-1 shadow-2xl backdrop-blur-xl space-y-0.5 z-[100]">
                     <button onclick="selectTheme('emerald')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>💚 Изумруд</span></button>
                     <button onclick="selectTheme('sunset')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🌆 Закат</span></button>
                     <button onclick="selectTheme('amber')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🔥 Янтарь</span></button>
@@ -727,7 +727,7 @@
                     
                     <p class="text-[11px] text-slate-300 uppercase font-bold tracking-wider mt-2 font-header">Текст на весь экран (Title):</p>
                     <div class="flex gap-2">
-                        <input type="text" id="drawer-title-input" placeholder="Введите текст сообщения..." class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs">
+                        <input type="text" id="drawer-title-input" placeholder="Введите text сообщения..." class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-1.5 text-xs">
                         <button onclick="sendPlayerTitleFromDrawer('${name}')" class="bg-rose-600 text-white px-3 py-1.5 rounded-xl text-xs font-medium shrink-0">Вывести</button>
                     </div>
                 </div>
