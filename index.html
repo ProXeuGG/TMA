@@ -519,6 +519,60 @@
                                         </div>
                                     </div>
 
+                                    <!-- НОВЫЙ БЛОК: КОНСТРУКТОР ПРЕДМЕТОВ (/give) -->
+                                    <div class="space-y-2.5 border-t border-white/5 pt-3">
+                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">📦 Конструктор предметов (/give):</p>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <select id="give-item-${pName}" class="col-span-2 premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none bg-[#040407]">
+                                                <option value="minecraft:diamond_sword">⚔️ Алмазный меч</option>
+                                                <option value="minecraft:netherite_sword">🛡️ Незеритовый меч</option>
+                                                <option value="minecraft:diamond_pickaxe">⛏️ Алмазная кирка</option>
+                                                <option value="minecraft:netherite_pickaxe">🌋 Незеритовая кирка</option>
+                                                <option value="minecraft:diamond_axe">🪓 Алмазный топор</option>
+                                                <option value="minecraft:netherite_chestplate">👕 Незеритов. нагрудник</option>
+                                                <option value="minecraft:elytra">🚀 Элитра</option>
+                                                <option value="minecraft:totem_of_undying">👼 Тотем бессмертия</option>
+                                                <option value="minecraft:enchanted_golden_apple">🍏 Зачар. яблоко</option>
+                                                <option value="minecraft:golden_apple">🍎 Золотое яблоко</option>
+                                            </select>
+                                            <div class="flex items-center gap-1 bg-black/40 rounded-xl px-2 border border-white/5">
+                                                <span class="text-[9px] text-zinc-500 font-mono">Шт:</span>
+                                                <input type="number" id="give-count-${pName}" value="1" min="1" max="64" class="w-full bg-transparent text-center text-xs font-mono text-zinc-200 focus:outline-none">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-black/40 p-2.5 rounded-xl border border-white/5 space-y-2">
+                                            <p class="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">Выбрать чары (Макс. уровень):</p>
+                                            <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-sharp-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Острота V</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-eff-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Эффективность V</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-unbr-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Прочность III</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-mend-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Починка</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-prot-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Защита IV</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer select-none py-0.5">
+                                                    <input type="checkbox" id="ench-silk-${pName}" class="accent-indigo-500 rounded bg-black/60 border-white/10 w-3.5 h-3.5">
+                                                    <span class="text-zinc-300 text-[11px]">Шёлк. касание</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <button onclick="giveCustomItem('${pName}')" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] shadow-md shadow-emerald-950/20">🎁 Выдать предмет</button>
+                                    </div>
+
                                     <div class="space-y-2 border-t border-white/5 pt-3">
                                         <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">⚡ Раздел «Быстрые пранки»:</p>
                                         <div class="grid grid-cols-2 gap-2">
@@ -881,32 +935,76 @@
                 alert("Ошибка выполнения команды");
             }
         }
+
         async function pumpkinPrank(playerName, apply) {
             if (!isAuthorized) return;
             try {
                 if (apply) {
-                    // 1. Создаем скрытую стойку для брони под игроком
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
                     await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
-                    
-                    // 2. ИСПРАВЛЕНО: Копируем шлем С игрока НА стойку (заменяем на стойке ИЗ игрока)
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
-                    
-                    // 3. Надеваем тыкву
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
                 } else {
-                    // 4. ИСПРАВЛЕНО: Возвращаем шлем (заменяем у игрока ИЗ стойки)
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
-                    
-                    // 5. ИСПРАВЛЕНО: Заставляем сервер применить ванильный килл к стойке, обходя EssentialsX
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
-                    
-                    // 6. На всякий случай чистим тыкву через ванильный clear
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:clear ${playerName} minecraft:carved_pumpkin` });
                 }
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 500);
             } catch (err) {
                 console.error("Ошибка выполнения пранка с тыквой:", err);
+            }
+        }
+
+        async function giveCustomItem(playerName) {
+            if (!isAuthorized) return;
+            const item = document.getElementById(`give-item-${playerName}`).value;
+            const count = parseInt(document.getElementById(`give-count-${playerName}`).value) || 1;
+            
+            // Собираем выбранные чекбоксы чар
+            const enchants = [];
+            if (document.getElementById(`ench-sharp-${playerName}`).checked) enchants.push({ id: 'minecraft:sharpness', lvl: 5 });
+            if (document.getElementById(`ench-eff-${playerName}`).checked) enchants.push({ id: 'minecraft:efficiency', lvl: 5 });
+            if (document.getElementById(`ench-unbr-${playerName}`).checked) enchants.push({ id: 'minecraft:unbreaking', lvl: 3 });
+            if (document.getElementById(`ench-mend-${playerName}`).checked) enchants.push({ id: 'minecraft:mending', lvl: 1 });
+            if (document.getElementById(`ench-prot-${playerName}`).checked) enchants.push({ id: 'minecraft:protection', lvl: 4 });
+            if (document.getElementById(`ench-silk-${playerName}`).checked) enchants.push({ id: 'minecraft:silk_touch', lvl: 1 });
+
+            let command = '';
+            
+            // Сборка команды под синтаксис Minecraft 1.20.5+ (Компоненты данных)
+            if (enchants.length > 0) {
+                const levelsJson = enchants.map(e => `"${e.id}":${e.lvl}`).join(',');
+                command = `give ${playerName} ${item}[enchantments={levels:{${levelsJson}}}] ${count}`;
+            } else {
+                command = `give ${playerName} ${item} ${count}`;
+            }
+            
+            /* 
+               ЕСЛИ ВАШ СЕРВЕР НА СТАРЫХ ВЕРСИЯХ (Ниже 1.20.5), раскомментируйте блок ниже, 
+               а верхний блок "if (enchants.length > 0)" удалите или закомментируйте:
+               
+               if (enchants.length > 0) {
+                   const nbtJson = enchants.map(e => `{id:"${e.id}",lvl:${e.lvl}s}`).join(',');
+                   command = `give ${playerName} ${item}{Enchantments:[${nbtJson}]} ${count}`;
+               }
+            */
+
+            try {
+                await axios.post(`${API_URL}/api/command`, { command: command });
+                tg.HapticFeedback.notificationOccurred('success');
+                
+                // Полностью сбрасываем форму после успешной выдачи
+                document.getElementById(`ench-sharp-${playerName}`).checked = false;
+                document.getElementById(`ench-eff-${playerName}`).checked = false;
+                document.getElementById(`ench-unbr-${playerName}`).checked = false;
+                document.getElementById(`ench-mend-${playerName}`).checked = false;
+                document.getElementById(`ench-prot-${playerName}`).checked = false;
+                document.getElementById(`ench-silk-${playerName}`).checked = false;
+                document.getElementById(`give-count-${playerName}`).value = 1;
+            } catch (err) {
+                console.error("Ошибка при сборке/выдаче предмета через конструктор:", err);
+                alert("Ошибка выполнения команды выдачи");
             }
         }
     </script>
