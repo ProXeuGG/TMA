@@ -881,23 +881,27 @@
                 alert("Ошибка выполнения команды");
             }
         }
-
         async function pumpkinPrank(playerName, apply) {
             if (!isAuthorized) return;
             try {
                 if (apply) {
-                    // Создаем скрытый маркер-стойку глубоко под игроком для сохранения шлема
+                    // 1. Создаем скрытую стойку для брони под игроком
                     await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
-                    // Безопасно клонируем шлем игрока на созданную стойку
-                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item copy entity ${playerName} armor.head to entity @e[tag=prank_${playerName},limit=1] armor.head` });                    // Надеваем тыкву
+                    
+                    // 2. ИСПРАВЛЕНО: Копируем шлем С игрока НА стойку (заменяем на стойке ИЗ игрока)
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
+                    
+                    // 3. Надеваем тыкву
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
                 } else {
-                    // Возвращаем сохраненный шлем обратно на игрока
-                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item copy entity @e[tag=prank_${playerName},limit=1] armor.head to entity ${playerName} armor.head` });
-                    // Уничтожаем временную стойку под землей
-                    await axios.post(`${API_URL}/api/command`, { command: `kill @e[tag=prank_${playerName}]` });
-                    // Зачищаем тыкву, если игрок умудрился переместить её в инвентарь
-                    await axios.post(`${API_URL}/api/command`, { command: `clear ${playerName} minecraft:carved_pumpkin` });
+                    // 4. ИСПРАВЛЕНО: Возвращаем шлем (заменяем у игрока ИЗ стойки)
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
+                    
+                    // 5. ИСПРАВЛЕНО: Заставляем сервер применить ванильный килл к стойке, обходя EssentialsX
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
+                    
+                    // 6. На всякий случай чистим тыкву через ванильный clear
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:clear ${playerName} minecraft:carved_pumpkin` });
                 }
                 tg.HapticFeedback.notificationOccurred('success');
                 setTimeout(loadData, 500);
