@@ -16,7 +16,7 @@
             --accent: #10b981;
             --accent-glow: rgba(16, 185, 129, 0.3);
             --text-accent: #022c16;
-            --glass-bg: rgba(6, 18, 14, 0.75);
+            --glass-bg: rgba(6, 18, 14, 0.8);
             --card-bg: rgba(16, 185, 129, 0.06);
         }
         [data-theme="sunset"] {
@@ -24,7 +24,7 @@
             --accent: #f43f5e;
             --accent-glow: rgba(244, 63, 94, 0.35);
             --text-accent: #4c0519;
-            --glass-bg: rgba(24, 6, 18, 0.75);
+            --glass-bg: rgba(24, 6, 18, 0.8);
             --card-bg: rgba(244, 63, 94, 0.06);
         }
         [data-theme="amber"] {
@@ -32,7 +32,7 @@
             --accent: #f59e0b;
             --accent-glow: rgba(245, 158, 11, 0.35);
             --text-accent: #451a03;
-            --glass-bg: rgba(24, 14, 4, 0.78);
+            --glass-bg: rgba(24, 14, 4, 0.82);
             --card-bg: rgba(245, 158, 11, 0.06);
         }
         [data-theme="lime"] {
@@ -40,7 +40,7 @@
             --accent: #a3e635;
             --accent-glow: rgba(163, 230, 53, 0.35);
             --text-accent: #1a2e05;
-            --glass-bg: rgba(16, 22, 6, 0.78);
+            --glass-bg: rgba(16, 22, 6, 0.82);
             --card-bg: rgba(163, 230, 53, 0.06);
         }
         [data-theme="nebula"] {
@@ -48,7 +48,7 @@
             --accent: #ff007f;
             --accent-glow: rgba(255, 0, 127, 0.35);
             --text-accent: #2e0854;
-            --glass-bg: rgba(13, 8, 24, 0.78);
+            --glass-bg: rgba(13, 8, 24, 0.82);
             --card-bg: rgba(255, 0, 127, 0.06);
         }
         [data-theme="synthwave"] {
@@ -56,7 +56,7 @@
             --accent: #b827fc;
             --accent-glow: rgba(184, 39, 252, 0.35);
             --text-accent: #12041d;
-            --glass-bg: rgba(18, 8, 26, 0.78);
+            --glass-bg: rgba(18, 8, 26, 0.82);
             --card-bg: rgba(184, 39, 252, 0.06);
         }
         [data-theme="lava"] {
@@ -64,7 +64,7 @@
             --accent: #ff3300;
             --accent-glow: rgba(255, 51, 0, 0.4);
             --text-accent: #4a0000;
-            --glass-bg: rgba(20, 6, 6, 0.8);
+            --glass-bg: rgba(20, 6, 6, 0.85);
             --card-bg: rgba(255, 51, 0, 0.06);
         }
         [data-theme="aurora"] {
@@ -72,22 +72,21 @@
             --accent: #00ff88;
             --accent-glow: rgba(0, 255, 136, 0.35);
             --text-accent: #051405;
-            --glass-bg: rgba(7, 18, 12, 0.78);
+            --glass-bg: rgba(7, 18, 12, 0.82);
             --card-bg: rgba(0, 255, 136, 0.06);
         }
 
         body {
             background: var(--bg-gradient);
             background-size: 400% 400%;
-            animation: gradientBg 18s ease infinite;
+            animation: gradientBg 22s ease infinite;
             color: #f8fafc;
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            transition: background 0.6s ease;
+            transition: background 0.8s ease;
         }
 
-        /* Плавная бесконечная анимация перелива */
         @keyframes gradientBg {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -106,10 +105,12 @@
 
         .glass-panel {
             background: var(--glass-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
         }
         
         .glass-card {
@@ -126,6 +127,7 @@
         #player-drawer {
             transform: translateY(100%);
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 60;
         }
         #player-drawer.open { transform: translateY(0); }
 
@@ -136,9 +138,25 @@
             border-color: var(--accent) !important;
             box-shadow: 0 0 12px var(--accent-glow);
         }
+
+        /* Анимация раскрытия выпадающего списка тем */
+        #theme-menu {
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+        }
+        #theme-menu.show {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="p-4 antialiased min-h-screen flex flex-col justify-start relative">
+
+    <!-- ФОНОВЫЙ ХОЛСТ ДЛЯ ЖИВЫХ СПЕЦЭФФЕКТОВ -->
+    <canvas id="theme-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-60"></canvas>
 
     <!-- ЭКРАН ЗАГРУЗКИ И АВТОРИЗАЦИИ -->
     <div id="auth-screen" class="fixed inset-0 bg-[#07090e] z-50 flex flex-col justify-center items-center p-6">
@@ -149,7 +167,7 @@
                 <p id="auth-status-text" class="text-xs text-slate-400">Синхронизация ключей безопасности...</p>
             </div>
 
-            <div id="auth-user-card" class="flex items-center gap-3 bg-black/30 border border-white/5 p-3 rounded-xl hidden text-left">
+            <div id="auth-user-card" class="flex items-center gap-3 bg-black/30 border border border-white/5 p-3 rounded-xl hidden text-left">
                 <img id="auth-user-avatar" src="" class="w-10 h-10 rounded-lg border border-[var(--accent)]/40 p-0.5 bg-slate-900">
                 <div>
                     <p id="auth-user-name" class="font-bold text-slate-200 text-xs">Администратор</p>
@@ -170,7 +188,7 @@
     </div>
 
     <!-- ИНФОРМАЦИОННАЯ ШАПКА СЕРВЕРА -->
-    <header id="app-header" class="hidden flex items-center justify-between mb-4 bg-black/30 p-3 rounded-xl border border-white/5 backdrop-blur-md">
+    <header id="app-header" class="hidden flex items-center justify-between mb-4 bg-black/30 p-3 rounded-xl border border-white/5 backdrop-blur-md relative z-30">
         <div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]"></span>
@@ -178,11 +196,27 @@
             </div>
             <p id="server-v" class="text-[10px] text-slate-400 font-mono mt-0.5">Ядро: Загрузка данных...</p>
         </div>
-        <div class="flex items-center gap-2">
-            <!-- КНОПКА СМЕНЫ СТИЛЯ -->
-            <button onclick="toggleTheme()" class="px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all text-slate-200 flex items-center gap-1 active:scale-95 shadow-sm">
-                <span id="theme-btn-text">💚 Изумруд</span>
-            </button>
+        
+        <div class="flex items-center gap-2 relative">
+            <!-- СЕЛЕКТОР ТЕМ В ОДИН ТАП -->
+            <div class="relative">
+                <button onclick="toggleThemeMenu(event)" id="theme-dropdown-btn" class="px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all text-slate-200 flex items-center gap-1 active:scale-95 shadow-sm">
+                    <span id="theme-btn-text">💚 Изумруд</span>
+                    <span class="text-[9px] opacity-60">▼</span>
+                </button>
+                
+                <!-- ВЫПАДАЮЩИЙ СПИСОК -->
+                <div id="theme-menu" class="absolute right-0 mt-2 w-40 rounded-xl bg-slate-950/95 border border-white/10 p-1 shadow-2xl backdrop-blur-xl space-y-0.5 z-50">
+                    <button onclick="selectTheme('emerald')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>💚 Изумруд</span></button>
+                    <button onclick="selectTheme('sunset')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🌆 Закат</span></button>
+                    <button onclick="selectTheme('amber')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🔥 Янтарь</span></button>
+                    <button onclick="selectTheme('lime')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🍋 Лайм</span></button>
+                    <button onclick="selectTheme('nebula')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🌌 Небула</span></button>
+                    <button onclick="selectTheme('synthwave')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🎸 Ретровейв</span></button>
+                    <button onclick="selectTheme('lava')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>🌋 Лава</span></button>
+                    <button onclick="selectTheme('aurora')" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-mono hover:bg-white/5 text-slate-300 flex items-center justify-between"><span>✨ Сияние</span></button>
+                </div>
+            </div>
             <span id="tps-badge" class="px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold border transition-all">TPS: --</span>
         </div>
     </header>
@@ -201,7 +235,7 @@
     </nav>
 
     <!-- ГЛАВНЫЙ КОНТЕЙНЕР ДЛЯ МОДУЛЕЙ -->
-    <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4 flex-1">
+    <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4 flex-1 relative z-10">
         
         <!-- МОДУЛЬ 1: ПУЛЬТ УПРАВЛЕНИЯ -->
         <div id="view-main" class="view-content active space-y-4">
@@ -260,7 +294,7 @@
             <!-- Управление закрепом в Telegram -->
             <div class="glass-panel p-4 rounded-xl space-y-3">
                 <h3 class="text-xs font-bold text-slate-200 font-header uppercase tracking-wider">Информационный виджет в канале</h3>
-                <textarea id="ann-input" rows="2" placeholder="Введите текст для закрепленного сообщения в Telegram..." 
+                <textarea id="ann-input" rows="2" placeholder="Введите text для закрепленного сообщения в Telegram..." 
                           class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none resize-none"></textarea>
                 
                 <div class="grid grid-cols-2 gap-2">
@@ -284,7 +318,6 @@
                 <h2 class="text-xs font-bold text-slate-300 uppercase tracking-wider font-header">Активные сессии игроков</h2>
             </div>
             
-            <!-- Сетка карточек игроков -->
             <div id="players-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <p id="no-players-msg" class="col-span-full text-xs text-slate-400 font-mono italic p-8 text-center">Опрос игровых сокетов...</p>
             </div>
@@ -331,8 +364,7 @@
 
     <!-- ВЫЕЗЖАЮЩАЯ СНИЗУ ТАКТИЧЕСКАЯ ШТОРКА ДЛЯ УПРАВЛЕНИЯ ИГРОКОМ -->
     <div id="drawer-overlay" onclick="closePlayerDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0"></div>
-    <div id="player-drawer" class="fixed bottom-0 left-0 right-0 glass-panel rounded-t-3xl border-t border-white/10 p-5 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] max-w-md mx-auto">
-        <!-- Индикатор свайпа -->
+    <div id="player-drawer" class="fixed bottom-0 left-0 right-0 glass-panel rounded-t-3xl border-t border-white/10 p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] max-w-md mx-auto">
         <div class="w-12 h-1 bg-slate-700 rounded-full mx-auto mb-4"></div>
         
         <div class="flex items-center gap-3 border-b border-white/5 pb-3 mb-4">
@@ -343,12 +375,10 @@
             </div>
         </div>
 
-        <div id="drawer-body" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-            <!-- Динамический контент шторки -->
-        </div>
+        <div id="drawer-body" class="space-y-4 max-h-[60vh] overflow-y-auto pr-1"></div>
     </div>
 
-    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ И ДВИЖОК ЭФФЕКТОВ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -368,37 +398,158 @@
         let activeDrawerPlayer = null; 
         let globalPlayersCache = []; 
 
-        // РАСШИРЕННАЯ ДО 8 ТЕМ СИСТЕМА
+        // СИСТЕМА СТИЛЕЙ И ЭФФЕКТОВ
         const themes = ['emerald', 'sunset', 'amber', 'lime', 'nebula', 'synthwave', 'lava', 'aurora'];
         const themeNames = { 
-            emerald: '💚 Изумруд', 
-            sunset: '🌆 Закат', 
-            amber: '🔥 Янтарь', 
-            lime: '🍋 Лайм',
-            nebula: '🌌 Небула',
-            synthwave: '🎸 Ретровейв',
-            lava: '🌋 Лава',
-            aurora: '✨ Сияние'
+            emerald: '💚 Изумруд', sunset: '🌆 Закат', amber: '🔥 Янтарь', lime: '🍋 Лайм',
+            nebula: '🌌 Небула', synthwave: '🎸 Ретровейв', lava: '🌋 Лава', aurora: '✨ Сияние'
         };
-        let currentThemeIndex = 0;
+        let currentTheme = 'emerald';
 
-        function initTheme() {
-            const savedTheme = localStorage.getItem('profcraft_theme') || 'emerald';
-            currentThemeIndex = themes.indexOf(savedTheme);
-            if (currentThemeIndex === -1) currentThemeIndex = 0;
-            const theme = themes[currentThemeIndex];
-            document.documentElement.setAttribute('data-theme', theme);
-            const btnText = document.getElementById('theme-btn-text');
-            if (btnText) btnText.innerText = themeNames[theme];
+        // ДВИЖОК ЧАСТИЦ КАНВАСА
+        const canvas = document.getElementById('theme-canvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class ThemeParticle {
+            constructor() {
+                this.reset(true);
+            }
+
+            reset(init = false) {
+                this.x = Math.random() * canvas.width;
+                this.size = Math.random() * 3 + 1;
+                this.alpha = Math.random() * 0.5 + 0.2;
+                
+                // Специфичное поведение под темы
+                if (currentTheme === 'lava') { // Тлеющие искры летят вверх
+                    this.y = init ? Math.random() * canvas.height : canvas.height + 10;
+                    this.speedY = -(Math.random() * 1.5 + 0.5);
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.color = Math.random() > 0.5 ? '#ff3300' : '#ff9900';
+                    this.shape = 'circle';
+                } else if (currentTheme === 'lime') { // Цифровая матрица капает вниз
+                    this.y = init ? Math.random() * canvas.height : -10;
+                    this.speedY = Math.random() * 2 + 1;
+                    this.speedX = 0;
+                    this.size = Math.random() * 2 + 1;
+                    this.color = '#a3e635';
+                    this.shape = 'square';
+                } else if (currentTheme === 'nebula' || currentTheme === 'synthwave') { // Космическая пыль/Мерцание
+                    this.y = Math.random() * canvas.height;
+                    this.speedY = (Math.random() - 0.5) * 0.2;
+                    this.speedX = (Math.random() - 0.5) * 0.2;
+                    this.color = currentTheme === 'nebula' ? (Math.random() > 0.5 ? '#ff007f' : '#8a2be2') : '#b827fc';
+                    this.shape = 'circle';
+                } else if (currentTheme === 'amber') { // Медленный дым-огонь вверх
+                    this.y = init ? Math.random() * canvas.height : canvas.height + 10;
+                    this.speedY = -(Math.random() * 0.8 + 0.2);
+                    this.speedX = (Math.random() - 0.5) * 0.3;
+                    this.color = '#d97706';
+                    this.shape = 'circle';
+                    this.size = Math.random() * 4 + 1;
+                } else if (currentTheme === 'aurora') { // Горизонтальные дрейфующие волны сияния
+                    this.y = Math.random() * canvas.height;
+                    this.speedY = (Math.random() - 0.5) * 0.1;
+                    this.speedX = Math.random() * 0.4 + 0.1;
+                    this.size = Math.random() * 6 + 2;
+                    this.color = Math.random() > 0.5 ? '#00ff88' : '#bd00ff';
+                    this.shape = 'circle';
+                } else { // Дефолт (Изумруд и Закат) - Плавающие светлячки
+                    this.y = init ? Math.random() * canvas.height : canvas.height + 10;
+                    this.speedY = -(Math.random() * 0.5 + 0.2);
+                    this.speedX = (Math.random() - 0.5) * 0.4;
+                    this.color = currentTheme === 'emerald' ? '#10b981' : '#f43f5e';
+                    this.shape = 'circle';
+                }
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Граничные условия
+                if (this.y < -20 || this.y > canvas.height + 20 || this.x < -20 || this.x > canvas.width + 20) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                if (currentTheme === 'synthwave' || currentTheme === 'lime') {
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                }
+                
+                ctx.beginPath();
+                if (this.shape === 'square') {
+                    ctx.fillRect(this.x, this.y, this.size, this.size * 2);
+                } else {
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
         }
 
-        function toggleTheme() {
-            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-            const newTheme = themes[currentThemeIndex];
-            document.documentElement.setAttribute('data-theme', newTheme);
-            document.getElementById('theme-btn-text').innerText = themeNames[newTheme];
-            tg.HapticFeedback.impactOccurred('light');
-            localStorage.setItem('profcraft_theme', newTheme);
+        function initParticles() {
+            particlesArray = [];
+            let count = Math.min(Math.floor(canvas.width / 15), 60); // оптимизация плотности под экраны
+            for (let i = 0; i < count; i++) {
+                particlesArray.push(new ThemeParticle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // РАБОТА С МЕНЮ ВЫБОРА ТЕМЫ
+        function toggleThemeMenu(e) {
+            e.stopPropagation();
+            document.getElementById('theme-menu').classList.toggle('show');
+        }
+
+        function selectTheme(themeId) {
+            currentTheme = themeId;
+            document.documentElement.setAttribute('data-theme', themeId);
+            document.getElementById('theme-btn-text').innerText = themeNames[themeId];
+            document.getElementById('theme-menu').classList.remove('show');
+            
+            tg.HapticFeedback.impactOccurred('medium');
+            localStorage.setItem('profcraft_theme', themeId);
+            
+            // Сброс и перезапуск контроллера частиц под новые параметры
+            initParticles();
+        }
+
+        // Закрытие меню при клике в любое другое место экрана
+        document.addEventListener('click', () => {
+            const menu = document.getElementById('theme-menu');
+            if (menu) menu.classList.remove('show');
+        });
+
+        function initTheme() {
+            currentTheme = localStorage.getItem('profcraft_theme') || 'emerald';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            const btnText = document.getElementById('theme-btn-text');
+            if (btnText) btnText.innerText = themeNames[currentTheme];
+            initParticles();
+            animateParticles();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -448,9 +599,6 @@
                     document.getElementById('app-nav').classList.remove('hidden');
 
                     tg.HapticFeedback.notificationOccurred('success');
-
-                    const currentTheme = themes[currentThemeIndex];
-                    document.getElementById('theme-btn-text').innerText = themeNames[currentTheme];
 
                     loadData();
                     loadAnnouncement();
