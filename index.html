@@ -862,11 +862,9 @@
                     await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
-                    if(activeDrawerPlayer) closePlayerDrawer();
                 } else {
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
-                    if(activeDrawerPlayer) closePlayerDrawer();
                 }
                 tg.HapticFeedback.notificationOccurred('success');
             } catch (err) { console.error(err); }
