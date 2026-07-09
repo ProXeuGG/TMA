@@ -857,7 +857,7 @@
         function sendTrollSound(playerName) {
             if (!isAuthorized) return;
             const sound = document.getElementById(`troll-sound-${playerName}`).value;
-            quickAction(`playsound ${sound} master ${playerName}`);
+            quickAction(`execute at ${playerName} run playsound ${sound} master ${playerName}`);
         }
 
         async function sendPlayerTitle(playerName) {
