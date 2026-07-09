@@ -865,7 +865,7 @@
                     if(activeDrawerPlayer) closePlayerDrawer();
                 } else {
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
-                    await axios.post(`${API_URL}/api/command`, { command: `kill @e[tag=prank_${playerName}]` });
+                    await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
                     if(activeDrawerPlayer) closePlayerDrawer();
                 }
                 tg.HapticFeedback.notificationOccurred('success');
