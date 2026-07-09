@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ProfCraft Premium Admin Panel</title>
+    <title>ProfCraft Tactical Admin Console</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,261 +11,261 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
         
         body {
-            background-color: #030307;
-            color: #f4f4f5;
+            background-color: #07080e;
+            color: #f1f5f9;
             font-family: 'Plus Jakarta Sans', sans-serif;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         .font-mono {
             font-family: 'JetBrains Mono', monospace;
         }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: layoutReveal 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .tab-content.active { display: block; animation: smoothReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         
         .tg-btn-active { 
-            color: #ffffff !important; 
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(168, 85, 247, 0.18) 100%);
-            border-color: rgba(139, 92, 246, 0.4) !important;
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            color: #14b8a6 !important;
+            background: rgba(20, 184, 166, 0.06);
+            border-color: rgba(20, 184, 166, 0.3) !important;
+            box-shadow: 0 0 20px rgba(20, 184, 166, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.02);
         }
 
-        @keyframes nebulaMotionOne {
-            0% { transform: translate(0px, 0px) scale(1); filter: blur(120px); }
-            100% { transform: translate(30px, 50px) scale(1.15); filter: blur(140px); }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); opacity: 0.15; filter: blur(80px); }
+            100% { transform: scale(1.1); opacity: 0.25; filter: blur(100px); }
         }
-        @keyframes nebulaMotionTwo {
-            0% { transform: translate(0px, 0px) scale(1.1); filter: blur(130px); }
-            100% { transform: translate(-40px, -20px) scale(0.95); filter: blur(110px); }
-        }
-        @keyframes layoutReveal {
-            from { opacity: 0; transform: scale(0.98) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes smoothReveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .space-bg-1 { animation: nebulaMotionOne 14s infinite alternate ease-in-out; }
-        .space-bg-2 { animation: nebulaMotionTwo 18s infinite alternate ease-in-out; }
+        .glow-sphere { animation: pulseGlow 8s infinite alternate ease-in-out; }
 
-        .premium-card {
-            background: linear-gradient(180deg, rgba(18, 18, 28, 0.65) 0%, rgba(10, 10, 18, 0.8) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            backdrop-blur: 20px;
-            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.02);
+        .tactical-card {
+            background: rgba(13, 15, 24, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
         }
-        .premium-input {
-            background: rgba(4, 4, 7, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+        .tactical-input {
+            background: rgba(8, 9, 15, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .premium-input:focus {
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.6);
+        .tactical-input:focus {
+            border-color: rgba(20, 184, 166, 0.4);
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.1);
         }
 
-        #chat-container::-webkit-scrollbar { width: 4px; }
+        #chat-container::-webkit-scrollbar { width: 3px; }
         #chat-container::-webkit-scrollbar-track { background: transparent; }
-        #chat-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
-        #chat-container::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.3); }
+        #chat-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+        #chat-container::-webkit-scrollbar-thumb:hover { background: rgba(20, 184, 166, 0.3); }
     </style>
 </head>
 <body class="p-4 antialiased pb-28 min-h-screen relative flex flex-col justify-start">
 
+    <!-- Фновые тактические сферы размытия -->
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div class="absolute top-[-15%] left-[-15%] w-[550px] h-[550px] rounded-full bg-indigo-600/15 space-bg-1"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] rounded-full bg-purple-600/15 space-bg-2"></div>
-        <div class="absolute top-[40%] right-[20%] w-[400px] h-[400px] rounded-full bg-fuchsia-600/5 filter blur-[100px] animate-pulse duration-[7000ms]"></div>
+        <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/10 glow-sphere"></div>
+        <div class="absolute bottom-[20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-emerald-500/5 glow-sphere" style="animation-delay: -3s;"></div>
     </div>
 
+    <!-- ЭКРАН АВТОРИЗАЦИИ -->
     <div id="auth-screen" class="w-full max-w-md mx-auto my-auto pt-12 flex flex-col justify-center items-center z-50">
-        <div class="premium-card p-6 rounded-3xl w-full space-y-6 border border-white/10 relative overflow-hidden shadow-2xl text-center">
-            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
-            
-            <div class="space-y-2">
-                <h2 class="text-xl font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
-                    ProfCraft Console
-                </h2>
-                <p id="auth-status-text" class="text-xs text-zinc-500 font-medium">Инициализация защищенной сессии...</p>
+        <div class="tactical-card p-6 rounded-2xl w-full space-y-6 text-center border-t-2 border-t-cyan-500/50">
+            <div class="space-y-1.5">
+                <div class="text-[10px] tracking-widest text-cyan-400 font-mono uppercase font-bold">Secure Core Interface</div>
+                <h2 class="text-2xl font-black text-white tracking-tight font-mono">PROFCRAFT // OPERATOR</h2>
+                <p id="auth-status-text" class="text-xs text-zinc-400 font-medium">Ожидание зашифрованного рукопожатия...</p>
             </div>
 
-            <div id="auth-user-card" class="flex flex-col items-center justify-center space-y-3 bg-black/30 border border-white/5 p-4 rounded-2xl hidden">
-                <img id="auth-user-avatar" src="" class="w-16 h-16 rounded-2xl border-2 border-indigo-500/30 p-0.5 bg-black/50 shadow-md">
+            <div id="auth-user-card" class="flex flex-col items-center justify-center space-y-3 bg-[#08090f]/60 border border-white/5 p-4 rounded-xl hidden">
+                <img id="auth-user-avatar" src="" class="w-14 h-14 rounded-xl border border-cyan-500/30 p-0.5 bg-black/40 shadow-lg">
                 <div>
                     <p id="auth-user-name" class="font-bold text-zinc-200 text-sm tracking-tight">Администратор</p>
-                    <p id="auth-user-id" class="text-[10px] text-zinc-600 font-mono mt-0.5">ID: --</p>
+                    <p id="auth-user-id" class="text-[10px] text-zinc-500 font-mono mt-0.5">ID: --</p>
                 </div>
             </div>
 
             <div id="auth-spinner" class="flex justify-center py-2">
-                <div class="w-6 h-6 border-2 border-indigo-500/20 border-t-indigo-400 rounded-full animate-spin"></div>
+                <div class="w-5 h-5 border-2 border-cyan-500/10 border-t-cyan-400 rounded-full animate-spin"></div>
             </div>
 
             <div id="auth-error-block" class="space-y-3 hidden">
-                <p class="text-rose-400 text-xs font-bold bg-rose-500/5 border border-rose-500/10 p-3 rounded-xl leading-relaxed">
-                    🛑 Доступ заблокирован. <br><span class="text-[11px] font-medium text-zinc-400">Вашего Telegram ID нет в реестре администраторов проекта.</span>
+                <p class="text-rose-400 text-xs font-mono bg-rose-950/20 border border-rose-500/20 p-3 rounded-xl leading-relaxed">
+                    [ACCESS_DENIED] Ваш Telegram ID отсутствует в конфигурационном реестре ядра проекта.
                 </p>
             </div>
         </div>
     </div>
 
-    <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg-[#030307]/70 backdrop-blur-xl z-40 pt-1 flex items-center justify-between">
+    <!-- ШАПКА ПРИЛОЖЕНИЯ -->
+    <header id="app-header" class="hidden mb-5 border-b border-white/5 pb-4 sticky top-0 bg(#07080e)/80 backdrop-blur-md z-40 pt-1 flex items-center justify-between">
         <div>
-            <h1 class="text-lg font-extrabold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent tracking-tight">
-                ProfCraft Console
-            </h1>
-            <p id="server-v" class="text-[10px] text-zinc-500 font-mono mt-0.5 tracking-wide">Версия: загрузка...</p>
+            <h1 class="text-base font-black tracking-wider text-white font-mono">PROFCRAFT // ADM</h1>
+            <p id="server-v" class="text-[9px] text-zinc-400 font-mono mt-0.5 uppercase tracking-tight">Владелец: загрузка системы...</p>
         </div>
         <div>
-            <span id="tps-badge" class="px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all duration-300 border backdrop-blur-md">TPS: --</span>
+            <span id="tps-badge" class="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold transition-all duration-300 border">TPS: --</span>
         </div>
     </header>
 
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
     <main id="app-main" class="hidden w-full max-w-md mx-auto space-y-4">
         
+        <!-- ВКЛАДКА: ГЛАВНАЯ -->
         <div id="tab-dash" class="tab-content active space-y-4">
             <div class="grid grid-cols-2 gap-3">
-                <div class="premium-card p-4 rounded-2xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-24 h-[1px] bg-indigo-500/50"></div>
-                    <span class="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">● Онлайн игроков</span>
-                    <p id="stat-online" class="text-2xl font-bold mt-1 text-zinc-100 font-mono tracking-tight">-- / --</p>
+                <div class="tactical-card p-4 rounded-xl border-l-2 border-l-cyan-500/40">
+                    <span class="text-[9px] text-zinc-400 font-mono uppercase tracking-wider block">ONLINE_USERS</span>
+                    <p id="stat-online" class="text-xl font-bold mt-1 text-white font-mono">-- / --</p>
                 </div>
-                <div class="premium-card p-4 rounded-2xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-24 h-[1px] bg-purple-500/50"></div>
-                    <span class="text-[10px] text-zinc-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">● Выделенная память</span>
-                    <p id="stat-ram" class="text-2xl font-bold mt-1 text-zinc-100 font-mono tracking-tight">-- МБ</p>
+                <div class="tactical-card p-4 rounded-xl border-l-2 border-l-purple-500/40">
+                    <span class="text-[9px] text-zinc-400 font-mono uppercase tracking-wider block">RAM_ALLOCATED</span>
+                    <p id="stat-ram" class="text-xl font-bold mt-1 text-white font-mono">-- МБ</p>
                 </div>
             </div>
 
-            <div class="premium-card p-4 rounded-2xl space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>Игровой чат (LIVE)
+            <div class="tactical-card p-4 rounded-xl space-y-3">
+                <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                    <h3 class="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>LIVE_STREAM_CHAT
                     </h3>
-                    <span class="text-[9px] text-indigo-400 font-mono tracking-widest">REALTIME</span>
+                    <span class="text-[9px] text-zinc-500 font-mono">SYNC: OK</span>
                 </div>
                 
-                <div id="chat-container" class="space-y-2.5 max-h-52 overflow-y-auto pr-1 font-sans text-xs bg-black/50 p-3 rounded-xl border border-white/5 min-h-[120px] shadow-inner">
-                    <p class="text-zinc-600 italic text-center py-10">Синхронизация игрового чата...</p>
+                <div id="chat-container" class="space-y-2 max-h-52 overflow-y-auto pr-1 font-sans text-xs bg-[#08090f]/60 p-3 rounded-xl border border-white/5 min-h-[120px]">
+                    <p class="text-zinc-500 italic text-center py-10 font-mono text-[10px]">Подключение к шине данных чата...</p>
                 </div>
 
-                <div class="flex gap-2 pt-0.5">
-                    <input type="text" id="bc-input" onkeydown="if(event.key === 'Enter') sendBroadcast()" placeholder="Написать в чат от имени Панели..." 
-                           class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none text-zinc-100 transition-all placeholder:text-zinc-700 font-medium">
-                    <button onclick="sendBroadcast()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.95] shadow-md shadow-indigo-600/10 shrink-0">Отправить</button>
+                <div class="flex gap-2 pt-1">
+                    <input type="text" id="bc-input" onkeydown="if(event.key === 'Enter') sendBroadcast()" placeholder="Сообщение от Системы..." 
+                           class="w-full tactical-input rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none placeholder:text-zinc-600 font-medium">
+                    <button onclick="sendBroadcast()" class="bg-cyan-600 hover:bg-cyan-500 text-black px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95 shrink-0">SEND</button>
                 </div>
             </div>
 
-            <div class="premium-card p-4 rounded-2xl space-y-3.5">
-                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Информационная панель Telegram</h3>
-                <textarea id="ann-input" rows="2" placeholder="Текст закрепленной плашки в Telegram канале..." 
-                          class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none text-zinc-100 transition-all placeholder:text-zinc-700 resize-none font-medium"></textarea>
+            <div class="tactical-card p-4 rounded-xl space-y-3">
+                <h3 class="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider">TELEGRAM_ANNOUNCEMENT</h3>
+                <textarea id="ann-input" rows="2" placeholder="Контекст закрепленного виджета в канале..." 
+                          class="w-full tactical-input rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none placeholder:text-zinc-600 resize-none font-medium"></textarea>
                 
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="saveAnnouncement()" class="bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400 border border-emerald-500/20 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Сохранить text</button>
-                    <button onclick="clearAnnouncement()" class="bg-red-500/5 hover:bg-red-500/15 text-red-400 border border-red-500/10 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95]">Очистить плашку</button>
+                    <button onclick="saveAnnouncement()" class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 py-2 rounded-lg text-[10px] font-mono font-bold transition-all active:scale-95">COMMIT</button>
+                    <button onclick="clearAnnouncement()" class="bg-rose-500/10 border border-rose-500/20 text-rose-400 py-2 rounded-lg text-[10px] font-mono font-bold transition-all active:scale-95">WIPE</button>
                 </div>
-                <button onclick="forceRefreshAnnouncement()" class="w-full bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 text-indigo-300 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-2 active:scale-[0.97]">
-                    🔄 Синхронизировать данные виджета
+                <button onclick="forceRefreshAnnouncement()" class="w-full bg-white/[0.02] border border-white/5 hover:border-cyan-500/20 text-cyan-400 py-2 rounded-lg text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 active:scale-95">
+                    ⚡ BROADCAST_FORCE_REFRESH
                 </button>
             </div>
         </div>
 
+        <!-- ВКЛАДКА: ИГРОКИ -->
         <div id="tab-players" class="tab-content space-y-3">
-            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Управление активными сессиями</h2>
+            <h2 class="text-[10px] font-bold text-zinc-400 font-mono uppercase tracking-wider px-1">ACTIVE_SESSIONS_NODE</h2>
             <div id="players-list" class="space-y-2.5">
-                <p id="no-players-msg" class="text-xs text-zinc-600 italic p-6 text-center">Получение списка игроков...</p>
+                <p id="no-players-msg" class="text-xs text-zinc-500 font-mono italic p-6 text-center">Опрос активных сокетов игроков...</p>
             </div>
         </div>
 
+        <!-- ВКЛАДКА: ЦИТАТЫ -->
         <div id="tab-quotes" class="tab-content space-y-3">
-            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">База данных цитат сервера</h2>
-            <div class="premium-card p-4 rounded-2xl space-y-3">
-                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Добавить запись в реестр</h3>
+            <h2 class="text-[10px] font-bold text-zinc-400 font-mono uppercase tracking-wider px-1">SERVER_QUOTES_REGISTRY</h2>
+            <div class="tactical-card p-4 rounded-xl space-y-3">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="quote-author" placeholder="Автор (Ник)" class="premium-input rounded-xl px-3 py-2.5 text-xs text-zinc-100 focus:outline-none transition-all placeholder:text-zinc-700 font-medium">
-                    <input type="text" id="quote-text" placeholder="Текст цитаты" class="premium-input rounded-xl px-3 py-2.5 text-xs text-zinc-100 focus:outline-none transition-all placeholder:text-zinc-700 font-medium">
+                    <input type="text" id="quote-author" placeholder="Оператор (Ник)" class="tactical-input rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none placeholder:text-zinc-600 font-medium">
+                    <input type="text" id="quote-text" placeholder="Текст записи" class="tactical-input rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none placeholder:text-zinc-600 font-medium">
                 </div>
-                <button onclick="addQuote()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.95]">Добавить цитату</button>
+                <button onclick="addQuote()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95">PUSH_TO_REGISTRY</button>
             </div>
             <div id="quotes-list" class="space-y-2">
-                <p class="text-xs text-zinc-600 italic p-6 text-center">Загрузка архива цитат...</p>
+                <p class="text-xs text-zinc-500 font-mono italic p-6 text-center">Десериализация архива записей...</p>
             </div>
         </div>
 
+        <!-- ВКЛАДКА: ЛИДЕРЫ -->
         <div id="tab-leader" class="tab-content space-y-3">
-            <h2 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 px-1">Сводная таблица рекордов</h2>
-            <div class="premium-card rounded-2xl overflow-hidden shadow-xl">
+            <h2 class="text-[10px] font-bold text-zinc-400 font-mono uppercase tracking-wider px-1">METRICS_LEADERBOARD</h2>
+            <div class="tactical-card rounded-xl overflow-hidden">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="bg-white/[0.02] border-b border-white/5 text-zinc-400 font-bold uppercase text-[9px] tracking-wider">
-                            <th class="p-4 pl-5">Номинация</th>
-                            <th class="p-4">Лидер</th>
-                            <th class="p-4 text-right pr-5">Значение</th>
+                        <tr class="bg-white/[0.02] border-b border-white/5 text-zinc-400 font-mono text-[9px] tracking-wider uppercase">
+                            <th class="p-3 pl-4">OBJECTIVE</th>
+                            <th class="p-3">HOLDER</th>
+                            <th class="p-3 text-right pr-4">VALUE</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-data" class="divide-y divide-white/[0.03] text-zinc-300 font-medium">
-                        <tr><td colspan="3" class="p-6 text-center text-zinc-600 italic">Считывание статистики базы данных...</td></tr>
+                    <tbody id="leaderboard-data" class="divide-y divide-white/[0.02] text-zinc-300 font-medium font-mono text-[11px]">
+                        <tr><td colspan="3" class="p-6 text-center text-zinc-500 italic">Чтение секторов базы данных...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <!-- ВКЛАДКА: СИСТЕМА -->
         <div id="tab-sys" class="tab-content space-y-4">
-            <div class="premium-card p-4 rounded-2xl space-y-3">
-                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Управление миром (Время и Погода)</h3>
+            <div class="tactical-card p-4 rounded-xl space-y-3">
+                <h3 class="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider">ENVIRONMENT_CONTROL</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="quickAction('time set day')" class="bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/15 text-amber-400 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">☀️ День</button>
-                    <button onclick="quickAction('time set night')" class="bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/15 text-indigo-300 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌙 Ночь</button>
+                    <button onclick="quickAction('time set day')" class="bg-zinc-900 border border-white/5 hover:border-amber-500/20 text-amber-400 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95">☀️ DAYTIME</button>
+                    <button onclick="quickAction('time set night')" class="bg-zinc-900 border border-white/5 hover:border-indigo-500/20 text-indigo-400 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95">🌙 NIGHTTIME</button>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="quickAction('weather world sun')" class="bg-sky-500/5 border border-sky-500/10 hover:bg-sky-500/15 text-sky-400 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌤️ Ясно</button>
-                    <button onclick="quickAction('weather world strom')" class="bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/15 text-blue-400 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] flex items-center justify-center gap-1">🌧️ Шторм</button>
-                </div>
-            </div>
-
-            <div class="premium-card p-4 rounded-2xl">
-                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider mb-3">Системные макросы ядра</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="quickAction('whitelist on')" class="bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.95]">Включить Whitelist</button>
-                    <button onclick="quickAction('whitelist off')" class="bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.95]">Выключить Whitelist</button>
-                    <button onclick="quickAction('save-all')" class="bg-gradient-to-r from-indigo-950/30 to-purple-950/30 border border-indigo-500/20 hover:border-indigo-500/40 text-indigo-300 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.95] col-span-2">💾 Принудительное сохранение мира</button>
-                    <button onclick="askRestart()" class="bg-gradient-to-r from-red-950/30 to-rose-950/30 border border-red-500/20 text-red-400 py-3 rounded-xl text-xs font-extrabold hover:from-red-950/50 hover:to-rose-950/50 transition-all active:scale-[0.95] col-span-2 mt-1 shadow-lg shadow-red-950/30">⚠️ Выполнить перезагрузку сервера</button>
+                    <button onclick="quickAction('weather world sun')" class="bg-zinc-900 border border-white/5 hover:border-sky-500/20 text-sky-400 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95">🌤️ WEATHER_CLEAR</button>
+                    <button onclick="quickAction('weather world strom')" class="bg-zinc-900 border border-white/5 hover:border-blue-500/20 text-blue-400 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95">🌧️ WEATHER_STORM</button>
                 </div>
             </div>
 
-            <div class="premium-card p-4 rounded-2xl space-y-2.5">
-                <h3 class="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Интерфейс командной строки (RCON)</h3>
+            <div class="tactical-card p-4 rounded-xl">
+                <h3 class="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider mb-3">SYSTEM_MACROS</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="quickAction('whitelist on')" class="bg-zinc-900/60 border border-white/5 text-zinc-300 py-2 rounded-lg text-[11px] font-mono font-bold transition-all active:scale-95">WL_ENABLE</button>
+                    <button onclick="quickAction('whitelist off')" class="bg-zinc-900/60 border border-white/5 text-zinc-300 py-2 rounded-lg text-[11px] font-mono font-bold transition-all active:scale-95">WL_DISABLE</button>
+                    <button onclick="quickAction('save-all')" class="bg-zinc-900 border border-cyan-500/20 text-cyan-400 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95 col-span-2">💾 FORCE_WORLD_SAVE</button>
+                    <button onclick="askRestart()" class="bg-rose-950/20 border border-rose-500/30 text-rose-400 py-2.5 rounded-lg text-xs font-mono font-bold hover:bg-rose-950/40 transition-all active:scale-95 col-span-2 mt-1">⚠️ HOT_REBOOT_SERVER</button>
+                </div>
+            </div>
+
+            <div class="tactical-card p-4 rounded-xl space-y-2.5">
+                <h3 class="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider">REMOTE_TERMINAL_INTERFACE (RCON)</h3>
                 <div class="flex gap-2">
-                    <input type="text" id="cmd-input" placeholder="Команда сервера (без символа /)..." 
-                           class="w-full premium-input rounded-xl px-3.5 py-2.5 text-sm focus:outline-none font-mono text-indigo-300 transition-all placeholder:text-zinc-700">
-                    <button onclick="sendConsoleCommand()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.95] shrink-0">Выполнить</button>
+                    <input type="text" id="cmd-input" placeholder="Команда (без /)..." 
+                           class="w-full tactical-input rounded-lg px-3 py-2 text-xs font-mono text-cyan-400 focus:outline-none placeholder:text-zinc-700">
+                    <button onclick="sendConsoleCommand()" class="bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white px-4 py-2 rounded-lg text-xs font-mono font-bold transition-all active:scale-95 shrink-0">EXEC</button>
                 </div>
             </div>
 
-            <div class="premium-card p-4 rounded-2xl">
-                <h3 class="text-[10px] font-bold text-amber-400/80 uppercase tracking-wider mb-2">Лог телеметрии JSON данных</h3>
-                <pre id="debug-json" class="text-[10px] bg-black/70 p-3.5 rounded-xl border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36 shadow-inner">Ожидание входящих пакетов...</pre>
+            <div class="tactical-card p-4 rounded-xl">
+                <h3 class="text-[10px] font-bold text-cyan-400/80 font-mono uppercase tracking-wider mb-2">RAW_JSON_TELEMETRY</h3>
+                <pre id="debug-json" class="text-[9px] bg-black/60 p-3 rounded-lg border border-white/5 text-emerald-400 overflow-x-auto font-mono max-h-36">Ожидание стека пакетов...</pre>
             </div>
         </div>
     </main>
 
-    <div id="app-nav" class="hidden fixed bottom-5 left-4 right-4 bg-[#06060c]/75 border border-white/10 p-1.5 flex justify-around items-center backdrop-blur-2xl z-50 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] max-w-md mx-auto">
-        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full tg-btn-active">
-            <span class="text-base leading-none">📊</span>Главная
+    <!-- НИЖНЯЯ НАВИГАЦИЯ (DYNAMIC DOCK) -->
+    <div id="app-nav" class="hidden fixed bottom-5 left-4 right-4 bg-[#0a0c14]/80 border border-white/10 p-1 flex justify-around items-center backdrop-blur-xl z-50 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] max-w-md mx-auto">
+        <button onclick="switchTab('dash', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-lg transition-all duration-200 text-[9px] font-mono font-bold border border-transparent w-full tg-btn-active">
+            <span class="text-sm leading-none">📊</span>DSH
         </button>
-        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
-            <span class="text-base leading-none">👥</span>Игроки
+        <button onclick="switchTab('players', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-lg transition-all duration-200 text-[9px] font-mono font-bold border border-transparent w-full hover:text-zinc-200">
+            <span class="text-sm leading-none">👥</span>PLY
         </button>
-        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
-            <span class="text-base leading-none">💬</span>Цитаты
+        <button onclick="switchTab('quotes', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-lg transition-all duration-200 text-[9px] font-mono font-bold border border-transparent w-full hover:text-zinc-200">
+            <span class="text-sm leading-none">💬</span>QTE
         </button>
-        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
-            <span class="text-base leading-none">🏆</span>Топ
+        <button onclick="switchTab('leader', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-lg transition-all duration-200 text-[9px] font-mono font-bold border border-transparent w-full hover:text-zinc-200">
+            <span class="text-sm leading-none">🏆</span>TOP
         </button>
-        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-xl transition-all duration-200 text-[10px] font-bold border border-transparent w-full hover:text-zinc-200">
-            <span class="text-base leading-none">⚙️</span>Система
+        <button onclick="switchTab('sys', this)" class="flex flex-col items-center gap-1 text-zinc-500 px-1 py-2 rounded-lg transition-all duration-200 text-[9px] font-mono font-bold border border-transparent w-full hover:text-zinc-200">
+            <span class="text-sm leading-none">⚙️</span>SYS
         </button>
     </div>
 
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -314,12 +314,12 @@
             if (!initDataRaw) {
                 statusText.innerText = "Ошибка среды выполнения";
                 spinner.classList.add('hidden');
-                errorBlock.innerHTML = `<p class="text-rose-400 text-xs font-bold">⚠️ Приложение должно быть запущено строго внутри Telegram!</p>`;
+                errorBlock.innerHTML = `<p class="text-rose-400 text-xs font-mono">⚠️ ENGINE_ERROR: Запуск разрешен только внутри контейнера Telegram Mini App.</p>`;
                 return;
             }
 
             try {
-                statusText.innerText = "Проверка цифровой подписи...";
+                statusText.innerText = "Авторизация токена...";
                 
                 axios.defaults.headers.common['Authorization'] = `Bearer ${initDataRaw}`;
                 
@@ -345,7 +345,7 @@
             } catch (err) {
                 spinner.classList.add('hidden');
                 errorBlock.classList.remove('hidden');
-                statusText.innerText = "В доступе отказано";
+                statusText.innerText = "Отказ в доступе";
                 tg.HapticFeedback.notificationOccurred('error');
                 console.error("Ошибка авторизации по Telegram ID:", err);
             }
@@ -381,9 +381,9 @@
                 const tps = statsRes.data.tps;
                 const tpsBadge = document.getElementById('tps-badge');
                 tpsBadge.innerText = `TPS: ${tps}`;
-                tpsBadge.className = tps < 15 ? "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-red-500/10 text-red-400 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]";
+                tpsBadge.className = tps < 15 ? "px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-rose-500/10 text-rose-400 border-rose-500/20" : "px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
 
-                document.getElementById('server-v').innerText = `Ядро: ${statsRes.data.version} | Whitelist: ${statsRes.data.whitelist ? 'ВКЛЮЧЕН' : 'ВЫКЛЮЧЕН'}`;
+                document.getElementById('server-v').innerText = `CORE: ${statsRes.data.version} | WL: ${statsRes.data.whitelist ? 'ON' : 'OFF'}`;
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
                 document.getElementById('stat-ram').innerText = `${statsRes.data.usedMemory} / ${statsRes.data.totalMemory}`;
 
@@ -393,7 +393,7 @@
                 const listDiv = document.getElementById('players-list');
                 
                 if (playersRes.data.length === 0) {
-                    listDiv.innerHTML = '<div id="no-players-msg" class="text-center py-10 premium-card rounded-2xl text-zinc-500 text-xs italic">На сервере сейчас нет активных игроков</div>';
+                    listDiv.innerHTML = '<div id="no-players-msg" class="text-center py-10 tactical-card rounded-xl text-zinc-500 text-xs font-mono italic">EMPTY_SESSION: Нет игроков онлайн</div>';
                     return;
                 }
 
@@ -408,17 +408,17 @@
                     }
                 });
 
-                let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите игрока для ТП...</option>';
+                let otherPlayersOptions = '<option value="" disabled selected class="text-zinc-600">Выберите цель ТП...</option>';
                 playersRes.data.forEach(otherP => {
                     const otherName = (otherP.name || "Steve").replace('/', '_');
-                    otherPlayersOptions += `<option value="${otherName}" class="bg-[#0e0e18] text-zinc-200">${otherName}</option>`;
+                    otherPlayersOptions += `<option value="${otherName}" class="bg-[#0d0f18] text-zinc-200">${otherName}</option>`;
                 });
 
                 playersRes.data.forEach(p => {
                     const pName = (p.name || "Steve").replace('/', '_');
                     const existingCard = document.getElementById(`player-wrapper-${pName}`);
                     
-                    let coordsStr = 'Не определено';
+                    let coordsStr = 'N/A';
                     if (typeof p.x !== 'undefined' && p.x !== null) coordsStr = `${Math.round(p.x)} / ${Math.round(p.y)} / ${Math.round(p.z)}`;
                     else if (p.location && typeof p.location.x !== 'undefined') coordsStr = `${Math.round(p.location.x)} / ${Math.round(p.location.y)} / ${Math.round(p.location.z)}`;
                     else if (p.coords && typeof p.coords.x !== 'undefined') coordsStr = `${Math.round(p.coords.x)} / ${Math.round(p.coords.y)} / ${Math.round(p.coords.z)}`;
@@ -440,122 +440,118 @@
                         const tpSelect = document.getElementById(`tp-dest-${pName}`);
                         if (tpSelect && document.activeElement !== tpSelect) {
                             const currentVal = tpSelect.value;
-                            const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0e0e18] text-zinc-200">${pName}</option>`, '');
+                            const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0d0f18] text-zinc-200">${pName}</option>`, '');
                             tpSelect.innerHTML = specificOptions;
                             if (currentVal) tpSelect.value = currentVal;
                         }
                     } else {
                         const avatarUrl = `https://mc-heads.net/avatar/${pName}/32`;
-                        const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0e0e18] text-zinc-200">${pName}</option>`, '');
+                        const specificOptions = otherPlayersOptions.replace(`<option value="${pName}" class="bg-[#0d0f18] text-zinc-200">${pName}</option>`, '');
                         
                         const cardHtml = `
-                            <div class="premium-card rounded-2xl overflow-hidden shadow-md mb-2.5">
-                                <div onclick="togglePlayerCard('${pName}')" class="p-3.5 flex items-center justify-between hover:bg-white/[0.02] transition-all cursor-pointer">
+                            <div class="tactical-card rounded-xl overflow-hidden shadow-md mb-2">
+                                <div onclick="togglePlayerCard('${pName}')" class="p-3 flex items-center justify-between hover:bg-white/[0.02] transition-all cursor-pointer">
                                     <div class="flex items-center gap-3">
-                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-xl bg-black/40 border border-white/10 p-0.5 shadow-sm">
+                                        <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/32'" class="w-8 h-8 rounded-lg bg-black/40 border border-white/10 p-0.5">
                                         <div>
-                                            <p class="font-bold text-sm text-zinc-100 tracking-tight">${pName}</p>
-                                            <p class="text-[10px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-800">|</span> <span id="ping-${pName}" class="text-indigo-400 font-medium">${p.ping || 0}ms</span></p>
+                                            <p class="font-bold text-sm text-zinc-100 font-mono">${pName}</p>
+                                            <p class="text-[9px] text-zinc-500 font-mono mt-0.5">${p.world || 'world'} <span class="text-zinc-700">|</span> <span id="ping-${pName}" class="text-cyan-400 font-medium">${p.ping || 0}ms</span></p>
                                         </div>
                                     </div>
                                     <div class="text-right flex flex-col items-end gap-1">
-                                        <span id="health-${pName}" class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
-                                        <p class="text-[9px] text-zinc-600 font-medium tracking-wide">Управление ▾</p>
+                                        <span id="health-${pName}" class="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/10">❤️ ${Math.round(p.health || 20)}</span>
+                                        <p class="text-[8px] text-zinc-500 font-mono uppercase tracking-wider">Expand ▾</p>
                                     </div>
                                 </div>
 
-                                <div id="details-${pName}" class="hidden p-4 border-t border-white/5 bg-black/30 space-y-4">
-                                    <div class="grid grid-cols-1 gap-1.5 text-xs bg-black/50 p-3 rounded-xl border border-white/5 font-mono">
-                                        <p class="text-zinc-500 flex justify-between"><span>Координаты XYZ:</span> <span id="coords-${pName}" class="text-zinc-200 font-medium text-[10px]">${coordsStr}</span></p>
+                                <div id="details-${pName}" class="hidden p-4 border-t border-white/5 bg-[#08090f]/50 space-y-4">
+                                    <div class="grid grid-cols-1 gap-1.5 text-xs bg-black/40 p-3 rounded-lg border border-white/5 font-mono text-[11px]">
+                                        <p class="text-zinc-500 flex justify-between"><span>XYZ:</span> <span id="coords-${pName}" class="text-zinc-300 font-medium">${coordsStr}</span></p>
                                         <p class="text-zinc-500 flex justify-between"><span>Сытость:</span> <span id="food-${pName}" class="text-amber-400 font-medium">${p.food !== undefined ? p.food : '20'} / 20 🍖</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Уровень опыта:</span> <span id="xp-${pName}" class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
-                                        <p class="text-zinc-500 flex justify-between"><span>Игровой режим:</span> <span id="gm-${pName}" class="text-indigo-400 font-bold uppercase tracking-wider">${p.gamemode || 'SURVIVAL'}</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Опыт:</span> <span id="xp-${pName}" class="text-emerald-400 font-bold">${playerXp} LVL</span></p>
+                                        <p class="text-zinc-500 flex justify-between"><span>Режим:</span> <span id="gm-${pName}" class="text-cyan-400 font-bold uppercase">${p.gamemode || 'SURVIVAL'}</span></p>
                                     </div>
 
-                                    <div class="space-y-2">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Организм и Здоровье:</p>
+                                    <div class="space-y-1.5">
+                                        <p class="text-[9px] text-zinc-400 font-mono uppercase font-bold tracking-wider">VITAL_STATUS_CONTROL:</p>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-emerald-500/5 border border-emerald-500/15 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💖 Вылечить</button>
-                                            <button onclick="modifyPlayerStatus('${pName}', 'feed')" class="bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🍖 Накормить</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'heal')" class="bg-zinc-900 border border-white/5 hover:border-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">HEAL</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'feed')" class="bg-zinc-900 border border-white/5 hover:border-amber-500/20 text-amber-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">FEED</button>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="modifyPlayerStatus('${pName}', 'kill')" class="bg-rose-500/5 border border-rose-500/15 hover:bg-rose-500/15 text-rose-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💀 Ликвидировать</button>
-                                            <button onclick="modifyPlayerStatus('${pName}', 'starve')" class="bg-orange-500/5 border border-orange-500/15 hover:bg-orange-500/15 text-orange-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🍂 Истощить голодом</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'kill')" class="bg-zinc-900 border border-white/5 hover:border-rose-500/20 text-rose-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">TERMINATE</button>
+                                            <button onclick="modifyPlayerStatus('${pName}', 'starve')" class="bg-zinc-900 border border-white/5 hover:border-orange-500/20 text-orange-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">STARVE</button>
                                         </div>
                                     </div>
 
                                     <div class="space-y-1.5">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Изменить режим сессии:</p>
-                                        <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 rounded-xl border border-white/5">
-                                            <button onclick="quickAction('gamemode creative ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Креатив</button>
-                                            <button onclick="quickAction('gamemode survival ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Выжив.</button>
-                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Прикл.</button>
-                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="text-[10px] py-2 rounded-lg font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.03] transition-all">Наблюд.</button>
+                                        <p class="text-[9px] text-zinc-400 font-mono uppercase font-bold tracking-wider">GAMEMODE_SET:</p>
+                                        <div class="grid grid-cols-4 gap-1 p-1 bg-black/40 rounded-lg border border-white/5">
+                                            <button onclick="quickAction('gamemode creative ${pName}')" class="text-[9px] font-mono py-1.5 rounded font-bold text-zinc-400 hover:text-white transition-all">CRT</button>
+                                            <button onclick="quickAction('gamemode survival ${pName}')" class="text-[9px] font-mono py-1.5 rounded font-bold text-zinc-400 hover:text-white transition-all">SRV</button>
+                                            <button onclick="quickAction('gamemode adventure ${pName}')" class="text-[9px] font-mono py-1.5 rounded font-bold text-zinc-400 hover:text-white transition-all">ADV</button>
+                                            <button onclick="quickAction('gamemode spectator ${pName}')" class="text-[9px] font-mono py-1.5 rounded font-bold text-zinc-400 hover:text-white transition-all">SPC</button>
                                         </div>
                                     </div>
 
                                     <div class="space-y-2 border-t border-white/5 pt-3">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Телепортация игрока:</p>
+                                        <p class="text-[9px] text-zinc-400 font-mono uppercase font-bold tracking-wider">TELEPORT_NODE:</p>
                                         <div class="flex gap-2">
-                                            <select id="tp-dest-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
+                                            <select id="tp-dest-${pName}" class="w-full tactical-input rounded-lg px-2 py-1.5 text-xs text-zinc-200 focus:outline-none bg-[#08090f]">
                                                 ${specificOptions}
                                             </select>
-                                            <button onclick="teleportToPlayer('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">К проекту</button>
+                                            <button onclick="teleportToPlayer('${pName}')" class="bg-cyan-600 text-black px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold active:scale-95 transition-all shrink-0">TO_PLAYER</button>
                                         </div>
 
                                         <div class="flex gap-1.5 items-center">
-                                            <input type="number" id="tp-x-${pName}" placeholder="X" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
-                                            <input type="number" id="tp-y-${pName}" placeholder="Y" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
-                                            <input type="number" id="tp-z-${pName}" placeholder="Z" class="w-full premium-input rounded-xl px-2 py-2 text-xs text-center text-zinc-200 focus:outline-none transition-all font-mono" step="any">
-                                            <button onclick="teleportToCoords('${pName}')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">По XYZ</button>
+                                            <input type="number" id="tp-x-${pName}" placeholder="X" class="w-full tactical-input rounded-lg px-1 py-1.5 text-xs text-center text-zinc-200 focus:outline-none font-mono" step="any">
+                                            <input type="number" id="tp-y-${pName}" placeholder="Y" class="w-full tactical-input rounded-lg px-1 py-1.5 text-xs text-center text-zinc-200 focus:outline-none font-mono" step="any">
+                                            <input type="number" id="tp-z-${pName}" placeholder="Z" class="w-full tactical-input rounded-lg px-1 py-1.5 text-xs text-center text-zinc-200 focus:outline-none font-mono" step="any">
+                                            <button onclick="teleportToCoords('${pName}')" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold active:scale-95 transition-all shrink-0">TO_XYZ</button>
                                         </div>
                                     </div>
 
                                     <div class="space-y-1.5 border-t border-white/5 pt-3">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">Отправить личное сообщение (ЛС):</p>
+                                        <p class="text-[9px] text-zinc-400 font-mono uppercase font-bold tracking-wider">DIRECT_MESSAGE:</p>
                                         <div class="flex gap-2">
-                                            <input type="text" id="msg-${pName}" placeholder="Текст приватного сообщения..." class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all">
-                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-xl text-xs font-semibold active:scale-[0.95] transition-all">Послать</button>
+                                            <input type="text" id="msg-${pName}" placeholder="Конфиденциальное сообщение..." class="w-full tactical-input rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none">
+                                            <button onclick="sendPrivateMsg('${pName}')" class="bg-zinc-800 border border-white/10 text-white px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold active:scale-95 transition-all">WHISPER</button>
                                         </div>
                                     </div>
 
                                     <div class="space-y-2 border-t border-white/5 pt-3">
-                                        <p class="text-[9px] text-zinc-400 uppercase font-bold tracking-wider">⚡ Раздел «Быстрые пранки»:</p>
+                                        <p class="text-[9px] text-zinc-400 font-mono uppercase font-bold tracking-wider">⚡ TROLL_INJECTORS:</p>
                                         <div class="grid grid-cols-2 gap-2">
-                                            <button onclick="quickAction('effect give ${pName} minecraft:levitation 5 5')" class="bg-indigo-500/5 border border-indigo-500/15 hover:bg-indigo-500/15 text-indigo-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🚀 В космос</button>
-                                            <button onclick="quickAction('effect give ${pName} minecraft:glowing 30')" class="bg-yellow-500/5 border border-yellow-500/15 hover:bg-yellow-500/15 text-yellow-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">💡 Подсветка</button>
-                                            <button onclick="quickAction('execute at ${pName} run summon minecraft:lightning_bolt')" class="bg-amber-500/5 border border-amber-500/15 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95] col-span-2">⚡ Внезапная молния</button>
+                                            <button onclick="quickAction('effect give ${pName} minecraft:levitation 5 5')" class="bg-zinc-900 border border-white/5 text-purple-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">🚀 ORBITAL</button>
+                                            <button onclick="quickAction('effect give ${pName} minecraft:glowing 30')" class="bg-zinc-900 border border-white/5 text-yellow-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">💡 GLOW</button>
+                                            <button onclick="quickAction('execute at ${pName} run summon minecraft:lightning_bolt')" class="bg-zinc-900 border border-white/5 text-cyan-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95 col-span-2">⚡ LIGHTNING_STRIKE</button>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 mt-1">
-                                            <button onclick="pumpkinPrank('${pName}', true)" class="bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/25 text-orange-400 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">🎃 Надеть тыкву</button>
-                                            <button onclick="pumpkinPrank('${pName}', false)" class="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold py-2 rounded-xl transition-all active:scale-[0.95]">❌ Снять тыкву</button>
+                                            <button onclick="pumpkinPrank('${pName}', true)" class="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">🎃 PUMPKIN_ON</button>
+                                            <button onclick="pumpkinPrank('${pName}', false)" class="bg-zinc-900 border border-white/5 text-zinc-400 text-[10px] font-mono font-bold py-1.5 rounded-lg transition-all active:scale-95">❌ PUMPKIN_OFF</button>
                                         </div>
                                         <div class="space-y-1 mt-2">
-                                            <p class="text-[9px] text-zinc-500 font-medium">👻 Включить страшный скример игроку:</p>
-                                            <div class="flex gap-2">
-                                                <select id="troll-sound-${pName}" class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all bg-[#040407]">
-                                                    <option value="minecraft:entity.creeper.primed" class="bg-[#0e0e18] text-zinc-200">💥 Шипение Крипера</option>
-                                                    <option value="minecraft:entity.enderman.scream" class="bg-[#0e0e18] text-zinc-200">🗣️ Крик Эндермена</option>
-                                                    <option value="minecraft:entity.elder_guardian.curse" class="bg-[#0e0e18] text-zinc-200">👁️ Проклятие Стража</option>
-                                                    <option value="minecraft:ambient.cave" class="bg-[#0e0e18] text-zinc-200">🕳️ Звуки тёмной пещеры</option>
-                                                    <option value="minecraft:entity.wither.spawn" class="bg-[#0e0e18] text-zinc-200">☠️ Рёв Иссушителя</option>
-                                                </select>
-                                                <button onclick="sendTrollSound('${pName}')" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">Воспроизвести</button>
-                                            </div>
+                                            <select id="troll-sound-${pName}" class="w-full tactical-input rounded-lg px-2 py-1.5 text-xs text-zinc-200 focus:outline-none bg-[#08090f]">
+                                                <option value="minecraft:entity.creeper.primed" class="bg-[#0d0f18] text-zinc-200">💥 Шипение Крипера</option>
+                                                <option value="minecraft:entity.enderman.scream" class="bg-[#0d0f18] text-zinc-200">🗣️ Крик Эндермена</option>
+                                                <option value="minecraft:entity.elder_guardian.curse" class="bg-[#0d0f18] text-zinc-200">👁️ Проклятие Стража</option>
+                                                <option value="minecraft:ambient.cave" class="bg-[#0d0f18] text-zinc-200">🕳️ Звуки тёмной пещеры</option>
+                                                <option value="minecraft:entity.wither.spawn" class="bg-[#0d0f18] text-zinc-200">☠️ Рёв Иссушителя</option>
+                                            </select>
+                                            <button onclick="sendTrollSound('${pName}')" class="w-full bg-purple-950/40 border border-purple-500/20 text-purple-300 py-1.5 rounded-lg text-[10px] font-mono font-bold active:scale-95 transition-all mt-1">INJECT_AUDIO_SCREAMER</button>
                                         </div>
-                                        <div class="space-y-1">
-                                            <p class="text-[9px] text-zinc-500 font-medium">📺 Текст на весь экран (Title):</p>
+                                        <div class="space-y-1 mt-2">
                                             <div class="flex gap-2">
-                                                <input type="text" id="title-text-${pName}" placeholder="Текст объявления для игрока..." class="w-full premium-input rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none transition-all">
-                                                <button onclick="sendPlayerTitle('${pName}')" class="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white px-3 py-2 rounded-xl text-xs font-bold active:scale-[0.95] transition-all shrink-0">Вывести</button>
+                                                <input type="text" id="title-text-${pName}" placeholder="Текст оверлея на экран..." class="w-full tactical-input rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none">
+                                                <button onclick="sendPlayerTitle('${pName}')" class="bg-rose-950/40 border border-rose-500/20 text-rose-400 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold active:scale-95 transition-all shrink-0">RENDER</button>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-3 gap-2 pt-1">
-                                        <button onclick="quickAction('op ${pName}')" class="bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/15 text-emerald-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Выдать OP</button>
-                                        <button onclick="quickAction('deop ${pName}')" class="bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/15 text-amber-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Снять OP</button>
-                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-red-500/5 border border-red-500/15 hover:bg-red-500/20 text-red-400 text-[10px] font-bold py-2.5 rounded-xl transition-all active:scale-[0.95]">Кикнуть</button>
+                                    <div class="grid grid-cols-3 gap-2 pt-1 border-t border-white/5">
+                                        <button onclick="quickAction('op ${pName}')" class="bg-zinc-900 border border-white/5 text-emerald-400 text-[9px] font-mono font-bold py-2 rounded-lg transition-all active:scale-95">GRANT_OP</button>
+                                        <button onclick="quickAction('deop ${pName}')" class="bg-zinc-900 border border-white/5 text-amber-400 text-[9px] font-mono font-bold py-2 rounded-lg transition-all active:scale-95">REVOKE_OP</button>
+                                        <button onclick="kickPlayerPrompt('${pName}')" class="bg-rose-950/20 border border-rose-500/20 text-rose-400 text-[9px] font-mono font-bold py-2 rounded-lg transition-all active:scale-95">KICK_NODE</button>
                                     </div>
                                 </div>
                             </div>
@@ -580,7 +576,7 @@
                 const chatContainer = document.getElementById('chat-container');
                 
                 if(!res.data || res.data.length === 0) {
-                    chatContainer.innerHTML = '<div class="text-center py-10 text-zinc-600 italic text-[11px]">В игровом чате пока нет сообщений</div>';
+                    chatContainer.innerHTML = '<div class="text-center py-10 text-zinc-600 font-mono italic text-[10px]">[LOG_EMPTY] Журнал сообщений пуст</div>';
                     return;
                 }
 
@@ -594,16 +590,16 @@
                         avatarUrl = 'https://mc-heads.net/avatar/Steve/24';
                     }
 
-                    let senderColor = 'text-indigo-400';
+                    let senderColor = 'text-cyan-400';
                     if(msg.sender === 'Панель') senderColor = 'text-fuchsia-400';
 
                     chatHtml += `
-                        <div class="flex items-start gap-2 text-zinc-300 border-b border-white/[0.02] pb-1.5 last:border-none">
-                            <span class="text-[9px] text-zinc-600 font-mono pt-0.5 shrink-0">${timeStr}</span>
-                            <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/24'" class="w-5 h-5 rounded-md bg-black/40 border border-white/10 p-0.5 shrink-0 shadow-sm">
-                            <div class="break-all leading-normal text-[11px]">
+                        <div class="flex items-start gap-2 text-zinc-300 border-b border-white/[0.01] pb-1.5 last:border-none font-mono text-[11px]">
+                            <span class="text-[9px] text-zinc-600 shrink-0 pt-0.5">${timeStr}</span>
+                            <img src="${avatarUrl}" onerror="this.src='https://mc-heads.net/avatar/Steve/24'" class="w-4 h-4 rounded bg-black/40 border border-white/10 p-0.5 shrink-0">
+                            <div class="break-all leading-normal">
                                 <span class="font-bold ${senderColor} mr-1">${msg.sender}:</span>
-                                <span class="text-zinc-200 font-medium">${msg.message}</span>
+                                <span class="text-zinc-300">${msg.message}</span>
                             </div>
                         </div>
                     `;
@@ -676,18 +672,18 @@
                 const res = await axios.get(`${API_URL}/api/quotes`);
                 listDiv.innerHTML = '';
                 if(!res.data || res.data.length === 0) {
-                    listDiv.innerHTML = '<div class="text-center py-6 premium-card rounded-2xl text-zinc-500 text-xs italic">Список сохраненных цитат пуст</div>';
+                    listDiv.innerHTML = '<div class="text-center py-6 tactical-card rounded-xl text-zinc-500 text-xs font-mono italic">[REGISTRY_EMPTY] Записи отсутствуют</div>';
                     return;
                 }
                 res.data.forEach((q, idx) => {
                     listDiv.innerHTML += `
-                        <div class="premium-card p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm relative overflow-hidden">
-                            <div class="text-xs leading-relaxed"><span class="text-zinc-100 font-medium italic">"${q.text}"</span> <span class="text-purple-400 font-bold ml-1">— ${q.author}</span></div>
-                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] font-bold bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl transition-all hover:bg-rose-500/20 active:scale-[0.95]">Удалить</button>
+                        <div class="tactical-card p-3.5 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+                            <div class="text-xs font-mono"><span class="text-zinc-300 italic">"${q.text}"</span> <span class="text-purple-400 font-bold ml-1">— ${q.author}</span></div>
+                            <button onclick="deleteQuote(${idx})" class="text-rose-400 text-[10px] font-mono font-bold bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg transition-all active:scale-95">WIPE</button>
                         </div>
                     `;
                 });
-            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-red-400 p-4 text-center">Ошибка загрузки конфигурации цитат</p>'; }
+            } catch(err) { listDiv.innerHTML = '<p class="text-xs text-rose-400 font-mono p-4 text-center">[PARSING_ERROR] Сбой чтения структуры цитат</p>'; }
         }
 
         async function addQuote() {
@@ -704,7 +700,7 @@
         }
 
         async function deleteQuote(index) {
-            if(!confirm("Удалить?")) return;
+            if(!confirm("Удалить запись из реестра?")) return;
             try {
                 await axios.post(`${API_URL}/api/quotes`, { action: "delete", index: index });
                 tg.HapticFeedback.notificationOccurred('success');
@@ -722,10 +718,10 @@
 
                 const createRowHtml = (key, item) => {
                     return `
-                        <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.02]">
-                            <td class="p-4 pl-5 text-zinc-400 font-medium">${item.title || key}</td>
-                            <td class="p-4 text-zinc-100 font-bold text-xs tracking-wide">${item.player || '—'}</td>
-                            <td class="p-4 text-right pr-5 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-bold font-mono text-sm">${item.display_value !== undefined ? item.display_value : item.value}</td>
+                        <tr class="hover:bg-white/[0.01] transition-all border-b border-white/[0.01]">
+                            <td class="p-3 pl-4 text-zinc-400">${item.title || key}</td>
+                            <td class="p-3 text-zinc-100 font-bold tracking-wide">${item.player || '—'}</td>
+                            <td class="p-3 text-right pr-4 font-bold text-cyan-400 font-mono">${item.display_value !== undefined ? item.display_value : item.value}</td>
                         </tr>`;
                 };
 
@@ -743,10 +739,10 @@
                     }
                 }
 
-                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-zinc-500 text-xs italic">Метрики отсутствуют.</td></tr>';
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-zinc-500 italic">[METRICS_NOT_FOUND]</td></tr>';
             } catch(err) { 
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-red-400 text-xs italic">Ошибка парсинга таблицы рекордов</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="3" class="p-5 text-center text-rose-400 italic">[DB_FETCH_FAILED] Критическая ошибка парсинга рекордов</td></tr>'; 
             }
         }
 
@@ -802,7 +798,7 @@
         }
 
         function askRestart() {
-            if(confirm("Рестартнуть сервер?")) quickAction("restart");
+            if(confirm("Инициировать полный горячий перезапуск ядра сервера?")) quickAction("restart");
         }
 
         async function teleportToPlayer(targetName) {
@@ -810,7 +806,7 @@
             const destinationName = selectEl.value;
 
             if (!destinationName) {
-                alert("Пожалуйста, выберите целевого игрока!");
+                alert("Выберите целевую сессию игрока!");
                 return;
             }
 
@@ -825,7 +821,7 @@
                 }
             } catch (err) {
                 console.error("Ошибка ТП к игроку:", err);
-                alert("Не удалось телепортировать игрока");
+                alert("Ошибка маршрутизации телепортации");
             }
         }
 
@@ -835,7 +831,7 @@
             const zVal = document.getElementById(`tp-z-${targetName}`).value;
 
             if (xVal === "" || yVal === "" || zVal === "") {
-                alert("Заполните все три координаты: X, Y и Z!");
+                alert("Укажите полный вектор координат: X, Y, Z!");
                 return;
             }
 
@@ -855,7 +851,7 @@
                 }
             } catch (err) {
                 console.error("Ошибка ТП по координатам:", err);
-                alert("Не удалось телепортировать по координатам");
+                alert("Ошибка принудительного изменения координат");
             }
         }
 
@@ -869,7 +865,7 @@
             if (!isAuthorized) return;
             const input = document.getElementById(`title-text-${playerName}`);
             const text = input.value.trim();
-            if (!text) return alert("Введите текст объявления!");
+            if (!text) return alert("Введите строку оверлея!");
             const escapedText = text.replace(/"/g, '\\"');
             const cmd = `title ${playerName} title {"text":"${escapedText}","color":"red"}`;
             try {
@@ -878,29 +874,20 @@
                 tg.HapticFeedback.notificationOccurred('success');
             } catch (err) {
                 console.error("Ошибка отправки title:", err);
-                alert("Ошибка выполнения команды");
+                alert("Ошибка отправки команды рендеринга");
             }
         }
+
         async function pumpkinPrank(playerName, apply) {
             if (!isAuthorized) return;
             try {
                 if (apply) {
-                    // 1. Создаем скрытую стойку для брони под игроком
                     await axios.post(`${API_URL}/api/command`, { command: `execute at ${playerName} run summon minecraft:armor_stand ~ ~-5 ~ {Tags:["prank_${playerName}"],Invisible:1b,Invulnerable:1b,NoGravity:1b}` });
-                    
-                    // 2. ИСПРАВЛЕНО: Копируем шлем С игрока НА стойку (заменяем на стойке ИЗ игрока)
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity @e[tag=prank_${playerName},limit=1] armor.head from entity ${playerName} armor.head` });
-                    
-                    // 3. Надеваем тыкву
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head with minecraft:carved_pumpkin` });
                 } else {
-                    // 4. ИСПРАВЛЕНО: Возвращаем шлем (заменяем у игрока ИЗ стойки)
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:item replace entity ${playerName} armor.head from entity @e[tag=prank_${playerName},limit=1] armor.head` });
-                    
-                    // 5. ИСПРАВЛЕНО: Заставляем сервер применить ванильный килл к стойке, обходя EssentialsX
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:kill @e[tag=prank_${playerName}]` });
-                    
-                    // 6. На всякий случай чистим тыкву через ванильный clear
                     await axios.post(`${API_URL}/api/command`, { command: `minecraft:clear ${playerName} minecraft:carved_pumpkin` });
                 }
                 tg.HapticFeedback.notificationOccurred('success');
