@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель Управления Проектом ProfCraft</title>
+    <title>Панель Управления Проектом</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -241,7 +241,7 @@
         <div class="glass-panel p-6 rounded-2xl w-full max-w-sm text-center space-y-6 border-b-4 border-b-[var(--accent)] shadow-2xl">
             <div class="space-y-1">
                 <div class="text-[11px] uppercase tracking-widest text-[var(--accent)] font-mono font-bold">Защищенный шлюз</div>
-                <h2 class="text-xl font-black text-white tracking-tight font-header">PROFCRAFT КОНСОЛЬ</h2>
+                <h2 id="auth-server-title" class="text-xl font-black text-white tracking-tight font-header">ЗАГРУЗКА КОНСОЛИ</h2>
                 <p id="auth-status-text" class="text-xs text-slate-400">Синхронизация ключей безопасности...</p>
             </div>
 
@@ -270,7 +270,7 @@
         <div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_8px_var(--accent)]"></span>
-                <h1 class="text-sm font-bold text-white font-header tracking-tight">PROFCRAFT КОНСОЛЬ</h1>
+                <h1 id="header-server-title" class="text-sm font-bold text-white font-header tracking-tight">ЗАГРУЗКА...</h1>
             </div>
             <p id="server-v" class="text-[10px] text-slate-400 font-mono mt-0.5">Ядро: Загрузка данных...</p>
         </div>
@@ -631,7 +631,7 @@
             document.getElementById('theme-menu').classList.remove('show');
             
             tg.HapticFeedback.impactOccurred('medium');
-            localStorage.setItem('profcraft_theme', themeId);
+            localStorage.setItem('panel_theme', themeId);
             
             initParticles();
         }
@@ -642,7 +642,7 @@
         });
 
         function initTheme() {
-            currentTheme = localStorage.getItem('profcraft_theme') || 'emerald';
+            currentTheme = localStorage.getItem('panel_theme') || 'emerald';
             document.documentElement.setAttribute('data-theme', currentTheme);
             const btnText = document.getElementById('theme-btn-text');
             if (btnText) btnText.innerText = themeNames[currentTheme];
@@ -654,6 +654,21 @@
             initTheme();
             verifyTelegramAccess();
         });
+
+        // Функция вспомогательного обновления текстовых полей проекта
+        function updateServerNameUI(name) {
+            if (!name) return;
+            const cleanName = name.trim();
+            const upperName = cleanName.toUpperCase();
+            
+            document.title = `Панель Управления Проектом ${cleanName}`;
+            
+            const authTitle = document.getElementById('auth-server-title');
+            if (authTitle) authTitle.innerText = `${upperName} КОНСОЛЬ`;
+            
+            const headerTitle = document.getElementById('header-server-title');
+            if (headerTitle) headerTitle.innerText = `${upperName} КОНСОЛЬ`;
+        }
 
         async function verifyTelegramAccess() {
             const statusText = document.getElementById('auth-status-text');
@@ -690,6 +705,9 @@
 
                 if (response.status === 200) {
                     isAuthorized = true;
+
+                    // Обновляем название из пришедшего первого ответа
+                    updateServerNameUI(response.data.server_name || 'СЕРВЕР');
 
                     document.getElementById('auth-screen').classList.add('hidden');
                     document.getElementById('app-header').classList.remove('hidden');
@@ -859,6 +877,9 @@
                 const tpsBadge = document.getElementById('tps-badge');
                 tpsBadge.innerText = `TPS: ${tps}`;
                 tpsBadge.className = tps < 15 ? "px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-rose-500/10 text-rose-400 border-rose-500/20" : "px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20";
+
+                // Циклически поддерживаем актуальное название проекта из конфига
+                updateServerNameUI(statsRes.data.server_name || 'СЕРВЕР');
 
                 document.getElementById('server-v').innerText = `Версия: ${statsRes.data.version}`;
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
