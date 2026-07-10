@@ -386,26 +386,35 @@
         const urlParams = new URLSearchParams(window.location.search);
         const API_URL = urlParams.get('api');
 
+        // Словарь для ключей, которые бэкенд не перевел сам
         const metricTranslations = {
-            "blocks_broken": "⛏️ Сломано блоков", 
-            "player_kills": "⚔️ Убито игроков",
-            "mob_kills": "🦁 Уничтожено мобов", 
-            "deaths": "💀 Смертей",
-            "time_played": "⏱️ Время в игре", 
-            "jumps": "🦘 Прыжки",
-            "damage_dealt": "💥 Нанесено урона", 
-            "fish_caught": "🎣 Поймано рыбы",
-            "walk_one_cm": "🏃 Пройдено (см)",
-            "time_since_rest": "🛌 Время с отдыха",
-            "traded_with_villager": "💰 Торговля"
-            // Добавь сюда любые другие ключи, которые видишь в консоли
+            "total_crafted": "⚒️ Скрафчено предметов",
+            "total_used": "🧪 Использовано предметов",
+            "ANIMALS_BRED": "❤️ Выращено животных",
+            "CHEST_OPENED": "🧰 Открыто сундуков",
+            "SNEAK_TIME": "👟 Время на корточках",
+            "TIME_SINCE_REST": "🛌 Время без сна",
+            "TRADED_WITH_VILLAGER": "🧑‍🌾 Сделок с жителями"
         };
         
-        // Функция для красивого отображения неизвестных ключей (на случай, если забудешь добавить перевод)
-        function getPrettyName(key) {
+        // Умное определение красивого заголовка
+        function getPrettyTitle(key, item) {
             if (metricTranslations[key]) return metricTranslations[key];
-            // Превращаем "some_cool_stat" в "Some Cool Stat"
+            if (item.title && item.title !== key) return item.title;
             return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
+
+        // Исправление багов бэкенда со значениями
+        function getPrettyValue(key, item) {
+            if (key === 'SNEAK_TIME' || key === 'TIME_SINCE_REST') {
+                const totalSeconds = item.value / 20;
+                const totalMinutes = totalSeconds / 60;
+                if (totalMinutes > 60) {
+                    return (totalMinutes / 60).toFixed(1) + ' ч.';
+                }
+                return totalMinutes.toFixed(1) + ' мин.';
+            }
+            return item.display_value !== undefined ? item.display_value : item.value;
         }
 
         let lastChatTimestamp = 0;
@@ -1042,16 +1051,15 @@
             const tbody = document.getElementById('leaderboard-data');
             try {
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
-                console.log("Данные лидерборда:", res.data); // ВАЖНО: Смотри это в F12 -> Console
+                console.log("Данные лидерборда:", res.data);
                 
                 tbody.innerHTML = '';
                 let hasData = false;
         
                 const renderRow = (key, item) => {
-                    // Используем новую функцию перевода
-                    const title = getPrettyName(key);
-                    // Если значение очень большое (например, тики), тут можно добавить форматирование
-                    const val = item.display_value !== undefined ? item.display_value : item.value;
+                    // Используем новые функции обработки
+                    const title = getPrettyTitle(key, item);
+                    const val = getPrettyValue(key, item);
                     
                     return `
                         <tr class="border-b border-white/[0.01] hover:bg-white/[0.01]">
