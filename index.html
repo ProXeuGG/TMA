@@ -1042,35 +1042,41 @@
             const tbody = document.getElementById('leaderboard-data');
             try {
                 const res = await axios.get(`${API_URL}/api/leaderboard`);
+                console.log("Данные лидерборда:", res.data); // ВАЖНО: Смотри это в F12 -> Console
+                
                 tbody.innerHTML = '';
                 let hasData = false;
-
-                const createRowHtml = (key, item) => {
-                    const titleRu = metricTranslations[key] || key;
+        
+                const renderRow = (key, item) => {
+                    // Используем новую функцию перевода
+                    const title = getPrettyName(key);
+                    // Если значение очень большое (например, тики), тут можно добавить форматирование
+                    const val = item.display_value !== undefined ? item.display_value : item.value;
+                    
                     return `
                         <tr class="border-b border-white/[0.01] hover:bg-white/[0.01]">
-                            <td class="py-2.5 text-slate-300 font-sans">${titleRu}</td>
+                            <td class="py-2.5 text-slate-300 font-sans">${title}</td>
                             <td class="py-2.5 font-bold text-slate-200">${item.player || '—'}</td>
-                            <td class="py-2.5 text-right font-bold text-[var(--accent)]">${item.display_value !== undefined ? item.display_value : item.value}</td>
+                            <td class="py-2.5 text-right font-bold text-[var(--accent)]">${val}</td>
                         </tr>`;
                 };
-
+        
                 if(res.data.stats) {
                     for(let key in res.data.stats) {
                         hasData = true;
-                        tbody.innerHTML += createRowHtml(key, res.data.stats[key]);
+                        tbody.innerHTML += renderRow(key, res.data.stats[key]);
                     }
                 }
                 if(res.data.custom) {
                     for(let key in res.data.custom) {
                         hasData = true;
-                        tbody.innerHTML += createRowHtml(key, res.data.custom[key]);
+                        tbody.innerHTML += renderRow(key, res.data.custom[key]);
                     }
                 }
-                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400 italic">Записи рекордов не найдены</td></tr>';
+                if(!hasData) tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-slate-400 italic">Данные пока не собраны</td></tr>';
             } catch(err) { 
-                console.error(err);
-                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-rose-400 italic">Сбой чтения секторов рекордов</td></tr>'; 
+                console.error("Ошибка лидерборда:", err);
+                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-rose-400 italic">Сбой загрузки данных</td></tr>'; 
             }
         }
 
