@@ -986,7 +986,7 @@
                 res.data.forEach(msg => {
                     // Стало (если сервер не прислал timestamp, берем текущее время):
                     const messageDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
-                    const timeStr = messageDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});                    
+                    const timeStr = msg.time ? msg.time.substring(0, 5) : '00:00';                    
                     const pName = (msg.sender || "Server").replace('/', '_');
                     
                     let avatarUrl = `https://mc-heads.net/avatar/${pName}/24`;
