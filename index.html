@@ -387,11 +387,26 @@
         const API_URL = urlParams.get('api');
 
         const metricTranslations = {
-            "blocks_broken": "⛏️ Сломано блоков", "player_kills": "⚔️ Убито игроков",
-            "mob_kills": "🦁 Уничтожено мобов", "deaths": "💀 Колич. смертей",
-            "time_played": "⏱️ Время в игре", "jumps": "🦘 Прыжки",
-            "damage_dealt": "💥 Нанесено урона", "fish_caught": "🎣 Поймано рыбы"
+            "blocks_broken": "⛏️ Сломано блоков", 
+            "player_kills": "⚔️ Убито игроков",
+            "mob_kills": "🦁 Уничтожено мобов", 
+            "deaths": "💀 Смертей",
+            "time_played": "⏱️ Время в игре", 
+            "jumps": "🦘 Прыжки",
+            "damage_dealt": "💥 Нанесено урона", 
+            "fish_caught": "🎣 Поймано рыбы",
+            "walk_one_cm": "🏃 Пройдено (см)",
+            "time_since_rest": "🛌 Время с отдыха",
+            "traded_with_villager": "💰 Торговля"
+            // Добавь сюда любые другие ключи, которые видишь в консоли
         };
+        
+        // Функция для красивого отображения неизвестных ключей (на случай, если забудешь добавить перевод)
+        function getPrettyName(key) {
+            if (metricTranslations[key]) return metricTranslations[key];
+            // Превращаем "some_cool_stat" в "Some Cool Stat"
+            return key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
 
         let lastChatTimestamp = 0;
         let isAuthorized = false;
