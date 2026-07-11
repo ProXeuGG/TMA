@@ -495,7 +495,7 @@
                 "btn-clear": "Очистить",
                 "btn-force": "🔄 Принудительно форсировать пуш-апдейт",
                 "btn-restart": "⚠️ Инициировать перезапуск игрового сервера",
-                "active-sessions": "Активные сессии игроков",
+                "active-sessions": "Active Player Sessions",
                 "polling-sockets": "Опрос игровых сокетов...",
                 "leaderboard-title": "Таблица глобальных рекордов",
                 "th-criterion": "Критерий",
@@ -606,7 +606,23 @@
                 "title-prefix": "Панель Управления Проектом",
                 "core-loading": "Ядро: Загрузка данных...",
                 "loading": "ЗАГРУЗКА...",
-                "version-prefix": "Версия: "
+                "version-prefix": "Версия: ",
+
+                // Новые адаптивные ключи локализации
+                "server-default": "СЕРВЕР",
+                "auth-env-err": "Ошибка окружения",
+                "player-no-coords": "Нет данных",
+                "gamemode-survival": "Выживание",
+                "gamemode-creative": "Творчество",
+                "gamemode-adventure": "Приключение",
+                "gamemode-spectator": "Наблюдатель",
+                "PLAYER_KILLS": "⚔️ Убийств игроков",
+                "DEATHS": "💀 Смертей",
+                "MOB_KILLS": "🏹 Убийств мобов",
+                "WALK_ONE_CM": "👣 Пройдено пешком",
+                "SWIM_ONE_CM": "🏊 Пройдено вплавь",
+                "JUMP": "🦘 Прыжков",
+                "DAMAGE_DEALT": "💥 Нанесено урона"
             },
             en: {
                 "secure-gateway": "Secure Gateway",
@@ -743,7 +759,23 @@
                 "title-prefix": "Project Control Panel",
                 "core-loading": "Core: Loading data...",
                 "loading": "LOADING...",
-                "version-prefix": "Version: "
+                "version-prefix": "Version: ",
+
+                // New localized adaptive keys
+                "server-default": "SERVER",
+                "auth-env-err": "Environment error",
+                "player-no-coords": "No data",
+                "gamemode-survival": "Survival",
+                "gamemode-creative": "Creative",
+                "gamemode-adventure": "Adventure",
+                "gamemode-spectator": "Spectator",
+                "PLAYER_KILLS": "⚔️ Player Kills",
+                "DEATHS": "💀 Deaths",
+                "MOB_KILLS": "🏹 Mob Kills",
+                "WALK_ONE_CM": "👣 Distance Walked",
+                "SWIM_ONE_CM": "🏊 Distance Swam",
+                "JUMP": "🦘 Jumps",
+                "DAMAGE_DEALT": "💥 Damage Dealt"
             }
         };
 
@@ -775,7 +807,7 @@
 
         const themes = ['emerald', 'minecraft', 'sunset', 'amber', 'lime', 'nebula', 'synthwave', 'lava', 'aurora'];
         const themeNames = { 
-            ru: { emerald: '💚 Ижумруд', minecraft: '🧱 Майнкрафт', sunset: '🌆 Закат', amber: '🔥 Янтарь', lime: '🍋 Лайм', nebula: '🌌 Небула', synthwave: '🎸 Ретровейв', lava: '🌋 Лава', aurora: '✨ Сияние' },
+            ru: { emerald: '💚 Изумруд', minecraft: '🧱 Майнкрафт', sunset: '🌆 Закат', amber: '🔥 Янтарь', lime: '🍋 Лайм', nebula: '🌌 Небула', synthwave: '🎸 Ретровейв', lava: '🌋 Лава', aurora: '✨ Сияние' },
             en: { emerald: '💚 Emerald', minecraft: '🧱 Minecraft', sunset: '🌆 Sunset', amber: '🔥 Amber', lime: '🍋 Lime', nebula: '🌌 Nebula', synthwave: '🎸 Synthwave', lava: '🌋 Lava', aurora: '✨ Aurora' }
         };
         let currentTheme = 'emerald';
@@ -1030,7 +1062,7 @@
             }
 
             if (!initDataRaw) {
-                statusText.innerText = currentLang === 'ru' ? "Ошибка окружения" : "Environment error";
+                statusText.innerText = translations[currentLang]['auth-env-err'] || "Environment error";
                 spinner.classList.add('hidden');
                 errorBlock.innerHTML = `<p class="text-rose-400 text-xs font-mono">${translations[currentLang]['auth-err-env']}</p>`;
                 return;
@@ -1045,7 +1077,7 @@
                 if (response.status === 200) {
                     isAuthorized = true;
 
-                    updateServerNameUI(response.data.server_name || 'СЕРВЕР');
+                    updateServerNameUI(response.data.server_name || (translations[currentLang]['server-default'] || 'SERVER'));
 
                     document.getElementById('auth-screen').classList.add('hidden');
                     document.getElementById('app-header').classList.remove('hidden');
@@ -1100,11 +1132,15 @@
             document.getElementById('drawer-title-name').innerText = name;
             document.getElementById('drawer-subtitle').innerText = langData['dr-world'].replace('{world}', player.world || 'world');
 
-            let coordsStr = langData['leaderboard-empty'];
+            let coordsStr = langData['player-no-coords'] || 'No data';
             if (player.x !== undefined) coordsStr = `${Math.round(player.x)} / ${Math.round(player.y)} / ${Math.round(player.z)}`;
             
             let playerXp = player.xp || player.level || player.exp || player.experience || 0;
             let playerFood = player.foodLevel !== undefined ? player.foodLevel : (player.hunger !== undefined ? player.hunger : (player.food !== undefined ? player.food : 20));
+
+            const rawGm = player.gamemode || 'SURVIVAL';
+            const localizedGm = langData[`gamemode-${rawGm.toLowerCase()}`] || rawGm;
+            const lvlSuffix = currentLang === 'ru' ? 'УРВ' : 'LVL';
 
             let otherPlayersOptions = `<option value="" disabled selected>${langData['dr-tp-select']}</option>`;
             globalPlayersCache.forEach(otherP => {
@@ -1118,8 +1154,8 @@
             drawerBody.innerHTML = `
                 <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-black/40 p-3 rounded-xl border border-white/5">
                     <p class="text-slate-300">${langData['dr-coords']}<br><span id="drawer-coords" class="text-slate-100 font-medium">${coordsStr}</span></p>
-                    <p class="text-slate-300">${langData['dr-xp']}<br><span id="drawer-xp" class="text-[var(--accent)] font-bold">${playerXp} LVL</span></p>
-                    <p class="text-slate-300 mt-2">${langData['dr-gamemode']}<br><span id="drawer-gamemode" class="text-purple-400 font-bold uppercase">${player.gamemode || 'SURVIVAL'}</span></p>
+                    <p class="text-slate-300">${langData['dr-xp']}<br><span id="drawer-xp" class="text-[var(--accent)] font-bold">${playerXp} ${lvlSuffix}</span></p>
+                    <p class="text-slate-300 mt-2">${langData['dr-gamemode']}<br><span id="drawer-gamemode" class="text-purple-400 font-bold uppercase">${localizedGm}</span></p>
                     <p class="text-slate-300 mt-2">${langData['dr-food']}<br><span id="drawer-food" class="text-amber-500 font-bold">${playerFood}/20</span></p>
                 </div>
 
@@ -1218,7 +1254,7 @@
                 tpsBadge.innerText = `TPS: ${tps}`;
                 tpsBadge.className = tps < 15 ? "px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-rose-500/10 text-rose-400 border-rose-500/20" : "px-2.5 py-1.5 rounded-xl text-[11px] font-mono font-bold bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20";
 
-                updateServerNameUI(statsRes.data.server_name || 'СЕРВЕР');
+                updateServerNameUI(statsRes.data.server_name || (translations[currentLang]['server-default'] || 'SERVER'));
 
                 document.getElementById('server-v').innerText = `${langData['version-prefix']}${statsRes.data.version}`;
                 document.getElementById('stat-online').innerText = `${statsRes.data.online} / ${statsRes.data.maxPlayers}`;
@@ -1287,21 +1323,25 @@
                 });
 
                 if (activeDrawerPlayer) {
-                    const activePlayer = playersRes.data.find(p => (p.name || "Steve").replace('/', '_') === activeDrawerPlayer);
+                    const activePlayer = globalPlayersCache.find(p => (p.name || "Steve").replace('/', '_') === activeDrawerPlayer);
                     if (activePlayer) {
-                        let coordsStr = `${Math.round(activePlayer.x)} / ${Math.round(activePlayer.y)} / ${Math.round(activePlayer.z)}`;
+                        let coordsStr = activePlayer.x !== undefined 
+                            ? `${Math.round(activePlayer.x)} / ${Math.round(activePlayer.y)} / ${Math.round(activePlayer.z)}` 
+                            : (langData['player-no-coords'] || 'No data');
                         let playerXp = activePlayer.xp || activePlayer.level || activePlayer.exp || activePlayer.experience || 0;
                         let playerFood = activePlayer.foodLevel !== undefined ? activePlayer.foodLevel : (activePlayer.hunger !== undefined ? activePlayer.hunger : (activePlayer.food !== undefined ? activePlayer.food : 20));
-                        let playerGm = activePlayer.gamemode || 'SURVIVAL';
+                        let rawGm = activePlayer.gamemode || 'SURVIVAL';
+                        let playerGm = langData[`gamemode-${rawGm.toLowerCase()}`] || rawGm;
+                        const lvlSuffix = currentLang === 'ru' ? 'УРВ' : 'LVL';
                         
                         const xpEl = document.getElementById('drawer-xp');
                         const coordsEl = document.getElementById('drawer-coords');
                         const foodEl = document.getElementById('drawer-food');
                         const gmEl = document.getElementById('drawer-gamemode');
-                        if (xpEl) xpEl.innerText = `${playerXp} LVL`;
+                        if (xpEl) xpEl.innerText = `${playerXp} ${lvlSuffix}`;
                         if (coordsEl) coordsEl.innerText = coordsStr;
                         if (foodEl) foodEl.innerText = `${playerFood}/20`;
-                        if (gmEl) gmEl.innerText = playerGm;
+                        if (gmEl) gmEl.innerText = playerGm.toUpperCase();
                     }
                 }
 
